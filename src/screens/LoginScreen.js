@@ -1,4 +1,3 @@
-// LoginScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -9,12 +8,14 @@ import {
   StyleSheet,
   Alert,
   Dimensions,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { auth } from '../../firebase/firebase-config'; // Ajusta la ruta según la ubicación del archivo
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const { height } = Dimensions.get('window');
 
@@ -24,19 +25,20 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    if (email === 'peña@example.com' && password === 'peña123') {
-      navigation.navigate('Home');
-    } else {
-      Alert.alert('Error', 'Credenciales inválidas');
+  const handleLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigation.navigate('Home'); // Redirige al usuario después del inicio de sesión
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
   return (
     <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-      keyboardVerticalOffset={Platform.select({ ios: 60, android: 80 })}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // Ajusta el offset según sea necesario
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         <View style={styles.container}>
@@ -47,7 +49,7 @@ const LoginScreen = () => {
             <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
             <TextInput
               style={styles.input}
-              placeholder="Usuario"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -73,9 +75,9 @@ const LoginScreen = () => {
               <Text style={styles.buttonText}>Ingresar</Text>
             </TouchableOpacity>
             <Text style={styles.footerText}>
-              ¿No tenes una cuenta?{' '}
+              ¿No tienes una cuenta?{' '}
               <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>
-                Registrate
+                Regístrate
               </Text>
             </Text>
           </View>

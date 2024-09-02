@@ -1,7 +1,15 @@
-// SignUpScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener este paquete instalado
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons'; 
+import { auth } from '../../firebase/firebase-config'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -12,10 +20,21 @@ const SignUpScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (email && phone && username && password && confirmPassword) {
       if (password === confirmPassword) {
-        navigation.navigate('Home');
+        if (password.length >= 8) { 
+          try {
+            // Registro en Firebase
+            await createUserWithEmailAndPassword(auth, email, password);
+            Alert.alert('Éxito', 'Registro exitoso');
+            navigation.navigate('Home');
+          } catch (error) {
+            Alert.alert('Error', error.message);
+          }
+        } else {
+          Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+        }
       } else {
         Alert.alert('Error', 'Las contraseñas no coinciden');
       }
@@ -23,6 +42,7 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert('Error', 'Por favor completa todos los campos');
     }
   };
+  
 
   return (
     <View style={styles.container}>
