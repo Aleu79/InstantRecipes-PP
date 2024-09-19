@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener este paquete instalado
 import { UserContext } from '../context/UserContext';
@@ -13,7 +13,6 @@ const UserProfile = () => {
       <View style={styles.profileContainer}>
         <Icon name="person-circle-outline" size={100} color="#333" />
         <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text> 
-
         <View style={styles.editSection}>
           <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.editTextContainer}>
             <Text style={[styles.editText, !isEditing && styles.activeText]}>Editar perfil</Text>
