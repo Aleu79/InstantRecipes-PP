@@ -1,18 +1,53 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener este paquete instalado
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 
 const UserProfile = () => {
-  const [isEditing, setIsEditing] = useState(false); // Estado para alternar entre las dos vistas
-  const { user } = useContext(UserContext); // Obtener el usuario del contexto
+  const [isEditing, setIsEditing] = useState(false);
+  const [image, setImage] = useState(null);
+  const { user } = useContext(UserContext);
 
+  // Función para abrir la galería y seleccionar una imagen
+  const pickImage = async () => {
+    // Solicitar permisos para la galería
+    const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (mediaLibraryStatus !== 'granted') {
+      alert('Lo sentimos, necesitamos permisos para acceder a la galería.');
+      return;
+    }
+
+    // Solicitar permisos para la cámara (opcional)
+    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    if (cameraStatus !== 'granted') {
+      alert('Lo sentimos, necesitamos permisos para acceder a la cámara.');
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.uri);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
-        <Icon name="person-circle-outline" size={100} color="#333" />
-        <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text> 
+        <TouchableOpacity onPress={pickImage}>
+          {image ? (
+            <Image source={{ uri: image }} style={styles.profileImage} />
+          ) : (
+            <Icon name="person-circle-outline" size={100} color="#333" />
+          )}
+        </TouchableOpacity>
+        <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text>
         <View style={styles.editSection}>
           <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.editTextContainer}>
             <Text style={[styles.editText, !isEditing && styles.activeText]}>Editar perfil</Text>
@@ -24,7 +59,6 @@ const UserProfile = () => {
       </View>
 
       {isEditing ? (
-        // Sección de edición de contacto
         <View style={styles.settingsContainer}>
           <Text style={styles.sectionTitle}>Cambiar e-mail de contacto</Text>
           <TextInput
@@ -41,7 +75,6 @@ const UserProfile = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        // Sección de cambio de nombre y contraseña
         <View style={styles.settingsContainer}>
           <Text style={styles.sectionTitle}>Cambiar nombre de usuario</Text>
           <TextInput
@@ -83,6 +116,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
   username: {
     fontSize: 22,
     marginVertical: 10,
@@ -100,7 +140,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   activeText: {
-    color: '#FFA500', // Cambia el color del texto al seleccionar
+    color: '#FFA500',
   },
   settingsContainer: {
     marginTop: 20,
@@ -120,7 +160,7 @@ const styles = StyleSheet.create({
     borderColor: '#CCC',
   },
   saveButton: {
-    backgroundColor: '#388E3C', // Verde más oscuro
+    backgroundColor: '#388E3C',
     borderRadius: 40,
     paddingVertical: 12,
     alignItems: 'center',
@@ -130,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deleteButton: {
-    backgroundColor: '#8B0000', // Rojo más oscuro
+    backgroundColor: '#8B0000',
     borderRadius: 40,
     paddingVertical: 12,
     alignItems: 'center',
