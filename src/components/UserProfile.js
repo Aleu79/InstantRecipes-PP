@@ -1,12 +1,15 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebase/firebase-config'; 
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const { user } = useContext(UserContext);
 
   // Función para abrir la galería y seleccionar una imagen
@@ -14,13 +17,14 @@ const UserProfile = () => {
     // Solicitar permisos para la galería
     const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (mediaLibraryStatus !== 'granted') {
+      console.log('Permiso de galería no concedido:', mediaLibraryStatus);
       alert('Lo sentimos, necesitamos permisos para acceder a la galería.');
       return;
     }
 
-    // Solicitar permisos para la cámara (opcional)
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
     if (cameraStatus !== 'granted') {
+      console.log('Permiso de cámara no concedido:', cameraStatus);
       alert('Lo sentimos, necesitamos permisos para acceder a la cámara.');
       return;
     }
@@ -32,10 +36,37 @@ const UserProfile = () => {
       quality: 1,
     });
 
-    if (!result.canceled) {
-      setImage(result.uri);
+    console.log('Resultado de la selección de imagen:', result);
+
+    if (result.assets && result.assets.length > 0) {
+      const selectedImage = result.assets[0];
+      console.log('URI de la imagen seleccionada:', selectedImage.uri);
+
+      // Subir la imagen a Firebase Storage
+      const response = await fetch(selectedImage.uri);
+      const blob = await response.blob();
+
+      const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
+      const imageRef = ref(storage, `profileImages/${filename}`);
+      
+      setUploading(true);
+
+      try {
+        await uploadBytes(imageRef, blob);
+        const url = await getDownloadURL(imageRef);
+        console.log('URL de la imagen subida:', url);
+        setImage(url); // Actualiza el estado con la URL de la imagen subida
+      } catch (error) {
+        console.error('Error al subir la imagen:', error);
+      } finally {
+        setUploading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    console.log('Estado de la imagen al renderizar:', image);
+  }, [image]);
 
   return (
     <View style={styles.container}>
