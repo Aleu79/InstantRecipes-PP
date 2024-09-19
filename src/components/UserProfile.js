@@ -1,16 +1,18 @@
-// UserProfile.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener este paquete instalado
+import { UserContext } from '../context/UserContext';
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false); // Estado para alternar entre las dos vistas
+  const { user } = useContext(UserContext); // Obtener el usuario del contexto
+
 
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <Icon name="person-circle-outline" size={100} color="#333" />
-        <Text style={styles.username}>User_203754</Text>
+        <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text> 
 
         <View style={styles.editSection}>
           <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.editTextContainer}>

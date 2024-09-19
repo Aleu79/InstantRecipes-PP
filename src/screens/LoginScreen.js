@@ -1,24 +1,11 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-  Dimensions,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { auth } from '../../firebase/firebase-config'; // Ajusta la ruta según la ubicación del archivo
+import { useState } from 'react';
+import { auth } from '../../firebase/firebase-config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const { height } = Dimensions.get('window');
-
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -28,9 +15,25 @@ const LoginScreen = () => {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home'); // Redirige al usuario después del inicio de sesión
+      navigation.navigate('Home'); 
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.log('Código de error:', error.code);  // Imprime el código de error en la consola
+      switch (error.code) {
+        case 'auth/wrong-password':
+          Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
+          break;
+        case 'auth/invalid-email':
+          Alert.alert('Error', 'El formato del correo no es válido.');
+          break;
+        case 'auth/too-many-requests':
+          Alert.alert('Error', 'Demasiados intentos fallidos. Inténtalo más tarde.');
+          break;
+        case 'auth/invalid-credential':
+          Alert.alert('Error', 'No se encontró una cuenta con este correo. Por favor, regístrate.');
+          break;
+        default:
+          Alert.alert('Error', 'Ocurrió un error inesperado. Por favor, inténtalo más tarde.');
+      }
     }
   };
 
@@ -38,7 +41,7 @@ const LoginScreen = () => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // Ajusta el offset según sea necesario
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         <View style={styles.container}>

@@ -1,11 +1,12 @@
-// SideMenu.js
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native'; // Importar el hook de navegación
+import { UserContext } from '../context/UserContext';
 
 const SideMenu = ({ visible, onClose }) => {
   const navigation = useNavigation(); // Hook para manejar la navegación
+  const { user } = useContext(UserContext); // Obtener el usuario del contexto
 
   // Función para manejar la navegación a una ruta específica
   const handleNavigation = (route) => {
@@ -27,7 +28,7 @@ const SideMenu = ({ visible, onClose }) => {
           </TouchableOpacity>
           <View style={styles.userContainer}>
             <Icon name="person-circle-outline" size={50} color="#333" />
-            <Text style={styles.username}>User_203754</Text>
+            <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text> 
           </View>
           <TouchableOpacity
             style={styles.menuItem}

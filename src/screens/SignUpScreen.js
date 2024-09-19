@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; 
-import { auth } from '../../firebase/firebase-config'; 
+import Icon from 'react-native-vector-icons/Ionicons';
+import { auth } from '../../firebase/firebase-config';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { UserContext } from '../context/UserContext';
+import zxcvbn from 'zxcvbn'; // Importamos zxcvbn para medir la seguridad de la contraseña
 
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -20,13 +22,35 @@ const SignUpScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const { setUser } = useContext(UserContext);
+
+  // Función para obtener la fortaleza de la contraseña
+  const passwordStrength = password ? zxcvbn(password).score : -1;
+
+  const getPasswordStrengthLabel = () => {
+    switch (passwordStrength) {
+      case 0:
+        return { label: 'Muy débil', color: 'red' };
+      case 1:
+        return { label: 'Débil', color: 'orange' };
+      case 2:
+        return { label: 'Regular', color: 'yellow' };
+      case 3:
+        return { label: 'Bien', color: '#d2d72c' };
+      case 4:
+        return { label: 'Seguro', color: 'green' };
+      default:
+        return { label: '', color: 'transparent' };
+    }
+  };
+
   const handleSignUp = async () => {
     if (email && phone && username && password && confirmPassword) {
       if (password === confirmPassword) {
-        if (password.length >= 8) { 
+        if (password.length >= 8) {
           try {
-            // Registro en Firebase
             await createUserWithEmailAndPassword(auth, email, password);
+            setUser({ username });
             Alert.alert('Éxito', 'Registro exitoso');
             navigation.navigate('Home');
           } catch (error) {
@@ -42,7 +66,6 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert('Error', 'Por favor completa todos los campos');
     }
   };
-  
 
   return (
     <View style={styles.container}>
@@ -100,6 +123,13 @@ const SignUpScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
+
+        {/* Mostrar la fortaleza de la contraseña */}
+        {password !== '' && (
+          <Text style={{ color: getPasswordStrengthLabel().color, marginLeft: 20 }}>
+            {getPasswordStrengthLabel().label}
+          </Text>
+        )}
 
         <Text style={styles.label}>Repetí la contraseña</Text>
         <View style={styles.passwordContainer}>
