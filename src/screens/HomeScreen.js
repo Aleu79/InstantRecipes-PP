@@ -1,8 +1,7 @@
-// HomeScreen.js
 import React, { useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Importa los iconos
-import SideMenu from '../components/SideMenu'; // Importa el componente SideMenu
+import Icon from 'react-native-vector-icons/Ionicons'; 
+import SideMenu from '../components/SideMenu'; 
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); // Referencia para el scroll view del carrusel
@@ -11,7 +10,6 @@ const HomeScreen = ({ navigation }) => {
   const scrollLeft = () => {
     categoriesScrollRef.current.scrollTo({ x: 0, animated: true });
   };
-
   const scrollRight = () => {
     categoriesScrollRef.current.scrollToEnd({ animated: true });
   };
@@ -27,7 +25,7 @@ const HomeScreen = ({ navigation }) => {
           <Icon name="search" size={28} color="#333" />
         </TouchableOpacity>
       </View>
-
+  
       <ScrollView>
         {/* Título de Ingredientes */}
         <Text style={styles.sectionTitle}>Ingredientes</Text>

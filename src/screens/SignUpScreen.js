@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,12 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { auth } from '../../firebase/firebase-config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
-import zxcvbn from 'zxcvbn'; // Importamos zxcvbn para medir la seguridad de la contraseña
+import zxcvbn from 'zxcvbn';
+import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
+
+const db = getFirestore();
 
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -21,49 +24,83 @@ const SignUpScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const { setUser } = useContext(UserContext);
 
-  // Función para obtener la fortaleza de la contraseña
+  // Verificar la fortaleza de la contraseña
   const passwordStrength = password ? zxcvbn(password).score : -1;
 
   const getPasswordStrengthLabel = () => {
     switch (passwordStrength) {
-      case 0:
-        return { label: 'Muy débil', color: 'red' };
-      case 1:
-        return { label: 'Débil', color: 'orange' };
-      case 2:
-        return { label: 'Regular', color: 'yellow' };
-      case 3:
-        return { label: 'Bien', color: '#d2d72c' };
-      case 4:
-        return { label: 'Seguro', color: 'green' };
-      default:
-        return { label: '', color: 'transparent' };
+      case 0: return { label: 'Muy débil', color: 'red' };
+      case 1: return { label: 'Débil', color: 'orange' };
+      case 2: return { label: 'Regular', color: 'yellow' };
+      case 3: return { label: 'Bien', color: '#d2d72c' };
+      case 4: return { label: 'Seguro', color: 'green' };
+      default: return { label: '', color: 'transparent' };
     }
   };
 
-  const handleSignUp = async () => {
-    if (email && phone && username && password && confirmPassword) {
-      if (password === confirmPassword) {
-        if (password.length >= 8) {
-          try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            setUser({ username });
-            Alert.alert('Éxito', 'Registro exitoso');
-            navigation.navigate('Home');
-          } catch (error) {
-            Alert.alert('Error', error.message);
-          }
-        } else {
-          Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
-        }
-      } else {
-        Alert.alert('Error', 'Las contraseñas no coinciden');
-      }
-    } else {
+  const validateFields = () => {
+    if (!email || !phone || !username || !password || !confirmPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return false;
+    }
+
+    if (password.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignUp = async () => {
+    if (!validateFields()) return;
+
+    try {
+      // Crear usuario en Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Enviar correo de verificación
+      await sendEmailVerification(user);
+      Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
+
+      // Guardar en Firestore
+      const userDoc = doc(collection(db, 'users'), email);
+      await setDoc(userDoc, { username, phone, email });
+
+      // Verificar si el correo fue validado en segundo plano
+      const intervalId = setInterval(async () => {
+        await user.reload(); // Recarga el usuario para obtener el estado más reciente
+        if (user.emailVerified) {
+          clearInterval(intervalId); // Detenemos el chequeo
+          setUser(user); // Guardar usuario en el contexto
+          Alert.alert('Cuenta verifica2da', 'Bienvenido a la aplicación');
+          navigation.navigate('Home'); 
+        }
+      }, 1000); // Chequear cada segundo si el correo fue verificado
+    } catch (error) {
+      // Control específico de errores
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          Alert.alert('Error', 'El correo ya está registrado.');
+          break;
+        case 'auth/invalid-email':
+          Alert.alert('Error', 'Correo no válido.');
+          break;
+        case 'auth/weak-password':
+          Alert.alert('Error', 'Contraseña débil.');
+          break;
+        default:
+          Alert.alert('Error', error.message);
+          break;
+      }
     }
   };
 
@@ -72,8 +109,7 @@ const SignUpScreen = ({ navigation }) => {
       <View style={styles.form}>
         <Text style={styles.title}>Bienvenido!</Text>
         <Text style={styles.subtitle}>Registra tu cuenta</Text>
-
-        <Text style={styles.label}>Ingresá tu número de celular</Text>
+        <Text style={styles.label}>Número de celular</Text>
         <TextInput
           style={styles.input}
           placeholder="Número de celular"
@@ -82,8 +118,7 @@ const SignUpScreen = ({ navigation }) => {
           keyboardType="phone-pad"
           placeholderTextColor="#666"
         />
-
-        <Text style={styles.label}>Ingresá tu usuario</Text>
+        <Text style={styles.label}>Usuario</Text>
         <TextInput
           style={styles.input}
           placeholder="Usuario"
@@ -91,8 +126,7 @@ const SignUpScreen = ({ navigation }) => {
           onChangeText={setUsername}
           placeholderTextColor="#666"
         />
-
-        <Text style={styles.label}>Ingresá tu e-mail</Text>
+        <Text style={styles.label}>E-mail</Text>
         <TextInput
           style={styles.input}
           placeholder="E-mail"
@@ -101,8 +135,7 @@ const SignUpScreen = ({ navigation }) => {
           keyboardType="email-address"
           placeholderTextColor="#666"
         />
-
-        <Text style={styles.label}>Ingresá tu contraseña</Text>
+        <Text style={styles.label}>Contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.passwordInput}
@@ -112,10 +145,7 @@ const SignUpScreen = ({ navigation }) => {
             onChangeText={setPassword}
             placeholderTextColor="#666"
           />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-          >
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Icon
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
               size={24}
@@ -123,28 +153,22 @@ const SignUpScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
-
-        {/* Mostrar la fortaleza de la contraseña */}
         {password !== '' && (
           <Text style={{ color: getPasswordStrengthLabel().color, marginLeft: 20 }}>
             {getPasswordStrengthLabel().label}
           </Text>
         )}
-
-        <Text style={styles.label}>Repetí la contraseña</Text>
+        <Text style={styles.label}>Repetir contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.passwordInput}
-            placeholder="Contraseña"
+            placeholder="Repetir contraseña"
             secureTextEntry={!showConfirmPassword}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholderTextColor="#666"
           />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
             <Icon
               name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
               size={24}
@@ -153,7 +177,6 @@ const SignUpScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Registrar</Text>
       </TouchableOpacity>
@@ -227,9 +250,6 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 8,
   },
   button: {
     width: '80%',

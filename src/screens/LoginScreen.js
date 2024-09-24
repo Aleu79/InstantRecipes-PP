@@ -3,7 +3,7 @@ import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet,
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useState } from 'react';
 import { auth } from '../../firebase/firebase-config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 const { height } = Dimensions.get('window');
 const LoginScreen = () => {
@@ -11,13 +11,14 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
 
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigation.navigate('Home'); 
     } catch (error) {
-      console.log('Código de error:', error.code);  // Imprime el código de error en la consola
+      console.log('Código de error:', error.code); 
       switch (error.code) {
         case 'auth/wrong-password':
           Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
@@ -36,7 +37,20 @@ const LoginScreen = () => {
       }
     }
   };
-
+  const handleForgotPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert('Éxito', 'Se ha enviado un correo electrónico para restablecer tu contraseña.');
+    } catch (error) {
+      if (error.code === 'auth/invalid-email') {
+        Alert.alert('Error', 'El correo electrónico no es válido.');
+      } else if (error.code === 'auth/user-not-found') {
+        Alert.alert('Error', 'No se encontró una cuenta con este correo electrónico.');
+      } else {
+        Alert.alert('Error', 'Ocurrió un error al enviar el correo electrónico para restablecer tu contraseña.');
+      }
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -83,6 +97,9 @@ const LoginScreen = () => {
                 Regístrate
               </Text>
             </Text>
+            <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
+              <Text style={styles.forgotPasswordText}>Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -99,6 +116,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: height * 0.5,
     resizeMode: 'cover',
+  },
+  forgotPasswordButton: {
+    width: '80%',
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#000',
+    textAlign: 'center',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

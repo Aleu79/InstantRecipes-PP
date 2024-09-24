@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native'; // Importar el hook de navegación
+import { useNavigation } from '@react-navigation/native'; 
 import { UserContext } from '../context/UserContext';
 
 const SideMenu = ({ visible, onClose }) => {

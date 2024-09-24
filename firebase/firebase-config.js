@@ -1,11 +1,9 @@
-// firebase/firebase-config.js
-
 import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getStorage } from 'firebase/storage'; // Importar Storage
+import { getStorage } from 'firebase/storage'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Tu configuración de Firebase
+// configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBeZr0RwYv37DNycEMYxhkc1qiC_qNBAQU",
   authDomain: "recetas-instantaneas.firebaseapp.com",

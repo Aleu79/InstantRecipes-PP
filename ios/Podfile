@@ -1,0 +1,9 @@
+platform :ios, '12.0'
+
+project '/home/aguero/Escuela/pp/PP/ios/PP.xcodeproj'
+
+target 'instantrecipes' do
+  pod 'React', :path => '../node_modules/react-native'
+  pod 'React-Core', :path => '../node_modules/react-native/React'
+  pod 'React-DevSupport', :path => '../node_modules/react-native/React'
+end

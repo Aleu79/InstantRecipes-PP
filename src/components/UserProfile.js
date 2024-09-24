@@ -4,13 +4,17 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase/firebase-config'; 
+import { storage } from '../../firebase/firebase-config';
+import { auth } from '../../firebase/firebase-config';
+import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const { user } = useContext(UserContext);
+  const navigation = useNavigation();
 
   // Función para abrir la galería y seleccionar una imagen
   const pickImage = async () => {
@@ -48,7 +52,7 @@ const UserProfile = () => {
 
       const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
       const imageRef = ref(storage, `profileImages/${filename}`);
-      
+
       setUploading(true);
 
       try {
@@ -63,7 +67,23 @@ const UserProfile = () => {
       }
     }
   };
-
+  const handleDeleteProfile = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        console.log('Usuario autenticado:', user);
+        await user.delete();
+        Alert.alert('Éxito', 'Perfil eliminado con éxito')
+        navigation.navigate('Login'); 
+        //agregar código para limpiar el contexto de usuario y otros datos relacionados
+      } else {
+        Alert.alert('Error', 'No hay usuario autenticado');
+      }
+    } catch (error) {
+      console.error('Error al eliminar perfil:', error);
+      Alert.alert('Error', error.message);
+    }
+  };
   useEffect(() => {
     console.log('Estado de la imagen al renderizar:', image);
   }, [image]);
@@ -129,7 +149,7 @@ const UserProfile = () => {
         </View>
       )}
 
-      <TouchableOpacity style={styles.deleteButton}>
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
     </View>
