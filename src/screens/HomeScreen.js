@@ -4,16 +4,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import SideMenu from '../components/SideMenu'; 
 
 const HomeScreen = ({ navigation }) => {
-  const categoriesScrollRef = useRef(); // Referencia para el scroll view del carrusel
+  const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false); // Estado para controlar la visibilidad del menú
-
-  const scrollLeft = () => {
-    categoriesScrollRef.current.scrollTo({ x: 0, animated: true });
-  };
-  const scrollRight = () => {
-    categoriesScrollRef.current.scrollToEnd({ animated: true });
-  };
-
   return (
     <View style={styles.container}>
       {/* Barra de navegación */}
@@ -21,7 +13,7 @@ const HomeScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
           <Icon name="menu" size={28} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { /* Código para buscar */ }}>
+        <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
           <Icon name="search" size={28} color="#333" />
         </TouchableOpacity>
       </View>
@@ -44,9 +36,6 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Carrusel de Categorías con Flechas */}
         <View style={styles.carouselContainer}>
-          <TouchableOpacity onPress={scrollLeft} style={styles.arrowButton}>
-            <Icon name="chevron-back" size={15} color="#333" />
-          </TouchableOpacity>
           <ScrollView
             ref={categoriesScrollRef}
             horizontal
@@ -54,7 +43,7 @@ const HomeScreen = ({ navigation }) => {
             style={styles.categoriesContainer}
           >
             {/* Botones de categorías */}
-            {['Veggie', 'Carnes', 'Bebidas', 'Panaderia', 'Postres', 'Sin TACC'].map((category, index) => (
+            {['Veggie', 'Carnes', 'Bebidas', 'Panadería', 'Postres', 'Sin TACC'].map((category, index) => (
               <TouchableOpacity
                 key={index}
                 style={[styles.btncategoria, { backgroundColor: ['#B22222', '#FFA500', '#FF4500', '#C86038', '#FF7700', '#FFA500'][index] }]}
@@ -64,9 +53,6 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-          <TouchableOpacity onPress={scrollRight} style={styles.arrowButton}>
-            <Icon name="chevron-forward" size={15} color="#333" />
-          </TouchableOpacity>
         </View>
 
         {/* Sección de Recomendados */}
@@ -156,11 +142,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 16,
     marginTop: 15,
-  },
-  arrowButton: {
-    padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   categoriesContainer: {
     flexDirection: 'row',

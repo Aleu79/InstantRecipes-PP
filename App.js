@@ -6,6 +6,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import UserProfile from './src/components/UserProfile';
 import { UserProvider } from './src/context/UserContext'; 
+import SearchScreen  from './src/screens/SearchScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ export default function App() {
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Sign Up" component={SignUpScreen} options={{ headerShown: false }} />
           <Stack.Screen name="UserProfile" component={UserProfile} />
+          <Stack.Screen name="SearchScreen" component={SearchScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

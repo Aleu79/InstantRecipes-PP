@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,9 @@ import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/
 import { UserContext } from '../context/UserContext';
 import zxcvbn from 'zxcvbn';
 import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
+import { CommonActions } from '@react-navigation/native';
+import { getAuth, fetchSignInMethodsForEmail } from 'firebase/auth';
+
 
 const db = getFirestore();
 
@@ -61,36 +64,50 @@ const SignUpScreen = ({ navigation }) => {
 
   const handleSignUp = async () => {
     if (!validateFields()) return;
-
+  
+    const auth = getAuth();
+  
     try {
+      // Verificar si el email ya está en uso
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      if (signInMethods.length > 0) {
+        Alert.alert('Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
+        return;
+      }
+  
       // Crear usuario en Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
       // Enviar correo de verificación
       await sendEmailVerification(user);
       Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
-
+  
       // Guardar en Firestore
       const userDoc = doc(collection(db, 'users'), email);
       await setDoc(userDoc, { username, phone, email });
-
+  
       // Verificar si el correo fue validado en segundo plano
       const intervalId = setInterval(async () => {
         await user.reload(); // Recarga el usuario para obtener el estado más reciente
         if (user.emailVerified) {
           clearInterval(intervalId); // Detenemos el chequeo
           setUser(user); // Guardar usuario en el contexto
-          Alert.alert('Cuenta verifica2da', 'Bienvenido a la aplicación');
-          navigation.navigate('Home'); 
+          Alert.alert('Cuenta verificada', 'Bienvenido a la aplicación');
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            })
+          );
         }
       }, 1000); // Chequear cada segundo si el correo fue verificado
     } catch (error) {
       // Control específico de errores
       switch (error.code) {
         case 'auth/email-already-in-use':
-          Alert.alert('Error', 'El correo ya está registrado.');
-          break;
+        Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión.');
+        break;
         case 'auth/invalid-email':
           Alert.alert('Error', 'Correo no válido.');
           break;
@@ -102,7 +119,7 @@ const SignUpScreen = ({ navigation }) => {
           break;
       }
     }
-  };
+  };  1
 
   return (
     <View style={styles.container}>
@@ -268,7 +285,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#000',
-    textAlign: 'center',
   },
   footerLink: {
     color: '#FF4500',

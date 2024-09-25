@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native'; // Asegúrate de importar CommonActions
 import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useState } from 'react';
@@ -6,19 +6,31 @@ import { auth } from '../../firebase/firebase-config';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 const { height } = Dimensions.get('window');
+
 const LoginScreen = () => {
-  const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  
+  const navigation = useNavigation(); // Hook de navegación
+  const [email, setEmail] = useState(''); // Estado para el email
+  const [password, setPassword] = useState(''); // Estado para la contraseña
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar la contraseña
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home'); 
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        })
+      );
     } catch (error) {
-      console.log('Código de error:', error.code); 
+      console.log('Error completo:', error); // Ver el error completo
+      console.log('Código de error:', error.code); // Imprimir el código de error para depuración
+
       switch (error.code) {
         case 'auth/wrong-password':
           Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
@@ -30,14 +42,20 @@ const LoginScreen = () => {
           Alert.alert('Error', 'Demasiados intentos fallidos. Inténtalo más tarde.');
           break;
         case 'auth/invalid-credential':
-          Alert.alert('Error', 'No se encontró una cuenta con este correo. Por favor, regístrate.');
+          Alert.alert('Error', 'Las credenciales son inválidas. Revisa el correo o la contraseña e intenta nuevamente.');
           break;
         default:
           Alert.alert('Error', 'Ocurrió un error inesperado. Por favor, inténtalo más tarde.');
       }
     }
   };
+
   const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Por favor, ingresa tu correo para restablecer la contraseña.');
+      return;
+    }
+
     try {
       await sendPasswordResetEmail(auth, email);
       Alert.alert('Éxito', 'Se ha enviado un correo electrónico para restablecer tu contraseña.');
@@ -51,6 +69,7 @@ const LoginScreen = () => {
       }
     }
   };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -98,7 +117,7 @@ const LoginScreen = () => {
               </Text>
             </Text>
             <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
-              <Text style={styles.forgotPasswordText}>Olvidaste tu contraseña?</Text>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           </View>
         </View>
