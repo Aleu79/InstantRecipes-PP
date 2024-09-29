@@ -14,11 +14,11 @@ const SearchScreen = ({ navigation }) => {
       </View>
 
       {/* Categorías */}
-      <View style={styles.categoriesContainer}>
+      <View style={styles.carouselContainer}>
         {['Veggie', 'Postres', 'Carnes', 'Bebidas', 'Panadería', 'Sin TACC'].map((category, index) => (
           <TouchableOpacity
             key={index}
-            style={[styles.btncategoria, { backgroundColor: ['#B22222', '#FF7700', '#FF4500', '#FFA500', '#C86038', '#FFA500'][index] }]}
+            style={[styles.btncategoria, { backgroundColor: ['#B22222', '#FFA500', '#FF4500', '#C86038', '#FF7700', '#FFA500'][index] }]}
             onPress={() => navigation.navigate(category)}
           >
             <Text style={styles.textcategoria}>{category}</Text>
@@ -48,20 +48,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 16,
   },
-  categoriesContainer: {
+  carouselContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap', // Permite que los botones se ajusten si no caben
+    justifyContent: 'flex-start', // Alinea los botones a la izquierda
     marginBottom: 20,
+    paddingHorizontal: 16,
+    marginTop: 15,
   },
   btncategoria: {
     borderRadius: 25,
     paddingVertical: 16,
     paddingHorizontal: 24,
-    marginBottom: 16,
-    width: '48%',
+    marginRight: 8,
+    marginBottom: 8, // Espacio entre filas
     justifyContent: 'center',
     alignItems: 'center',
+    width: 150,
+    height: 90,
   },
   textcategoria: {
     color: '#FFF',

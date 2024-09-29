@@ -18,8 +18,8 @@ export default function App() {
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Sign Up" component={SignUpScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="UserProfile" component={UserProfile} />
-          <Stack.Screen name="SearchScreen" component={SearchScreen} />
+          <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown:false}} />
+          <Stack.Screen name="SearchScreen" component={SearchScreen} options={{headerShown:false}} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
