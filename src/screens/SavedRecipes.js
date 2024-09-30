@@ -33,9 +33,9 @@ const SavedRecipes = () => {
 
   return (
     <View style={styles.container}>
-      {/* Chevron para volver atrás */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="chevron-back" size={30} color="#333" />
+      {/* Chevron para volver atrás con espaciado */}
+      <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+        <Icon name="chevron-back" size={26} color="#333" />
       </TouchableOpacity>
 
       {savedRecipes.length > 0 ? (
@@ -60,11 +60,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fafafa',
   },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    zIndex: 1,
+  backIcon: {
+    position: 'static',
+    top: 10,
+    left: 10,
+    marginBottom: 25,
+    marginTop: 6,
   },
   recipeCard: {
     flexDirection: 'row',
