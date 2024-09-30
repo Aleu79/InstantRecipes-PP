@@ -16,7 +16,6 @@ import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
 import { CommonActions } from '@react-navigation/native';
 import { getAuth, fetchSignInMethodsForEmail } from 'firebase/auth';
 
-
 const db = getFirestore();
 
 const SignUpScreen = ({ navigation }) => {
@@ -78,6 +77,7 @@ const SignUpScreen = ({ navigation }) => {
       // Crear usuario en Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      setUser({ email: user.email, username, phone }); // Agregar el username al objeto user
   
       // Enviar correo de verificación
       await sendEmailVerification(user);
@@ -92,7 +92,7 @@ const SignUpScreen = ({ navigation }) => {
         await user.reload(); // Recarga el usuario para obtener el estado más reciente
         if (user.emailVerified) {
           clearInterval(intervalId); // Detenemos el chequeo
-          setUser(user); // Guardar usuario en el contexto
+          setUser({ email: user.email, username, phone }); // Actualizar el objeto user con el username
           Alert.alert('Cuenta verificada', 'Bienvenido a la aplicación');
           navigation.dispatch(
             CommonActions.reset({
@@ -106,8 +106,8 @@ const SignUpScreen = ({ navigation }) => {
       // Control específico de errores
       switch (error.code) {
         case 'auth/email-already-in-use':
-        Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión.');
-        break;
+          Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión.');
+          break;
         case 'auth/invalid-email':
           Alert.alert('Error', 'Correo no válido.');
           break;
@@ -119,8 +119,7 @@ const SignUpScreen = ({ navigation }) => {
           break;
       }
     }
-  };  1
-
+  };
   return (
     <View style={styles.container}>
       <View style={styles.form}>

@@ -1,9 +1,11 @@
 import { useNavigation, CommonActions } from '@react-navigation/native'; // Asegúrate de importar CommonActions
 import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { auth } from '../../firebase/firebase-config';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { UserContext } from '../context/UserContext';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
 const { height } = Dimensions.get('window');
 
@@ -12,15 +14,21 @@ const LoginScreen = () => {
   const [email, setEmail] = useState(''); // Estado para el email
   const [password, setPassword] = useState(''); // Estado para la contraseña
   const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar la contraseña
+  const { setUser } = useContext(UserContext);
+  const db = getFirestore();
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
       return;
     }
-
+  
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const user = await signInWithEmailAndPassword(auth, email, password);
+      const userDoc = doc(db, 'users', user.user.email);
+      const userData = await getDoc(userDoc);
+      const data = userData.data();
+      setUser({ email: user.user.email, username: data.username, phone: data.phone });
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -30,7 +38,7 @@ const LoginScreen = () => {
     } catch (error) {
       console.log('Error completo:', error); // Ver el error completo
       console.log('Código de error:', error.code); // Imprimir el código de error para depuración
-
+  
       switch (error.code) {
         case 'auth/wrong-password':
           Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
