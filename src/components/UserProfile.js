@@ -14,10 +14,10 @@ const UserProfile = () => {
       {/* Íconos de editar y retroceder */}
       <View style={styles.iconsContainer}>
         <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-          <Icon name="chevron-back" size={24} color="#333" />
+          <Icon name="chevron-back" size={26} color="#333" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.editIcon} onPress={() => navigation.navigate('UserEdit')}>
-          <Icon name="pencil" size={24} color="#333" />
+          <Icon name="pencil" size={26} color="#333" />
         </TouchableOpacity>
       </View>
 
@@ -31,19 +31,16 @@ const UserProfile = () => {
           )}
         </TouchableOpacity>
         <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text>
-
-        {/* Nombre y datos del usuario */}
-        <Text style={styles.userContact}>{user ? user.phone : '(881) 307-6902'}</Text>
         <Text style={styles.userEmail}>{user ? user.email : 'emma.phillips@gmail.com'}</Text>
       </View>
 
       {/* Opciones del menú */}
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
           <Icon name="bookmark-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Guardados</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyRecipes')}>
           <Icon name="cafe-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Tus recetas</Text>
         </TouchableOpacity>
