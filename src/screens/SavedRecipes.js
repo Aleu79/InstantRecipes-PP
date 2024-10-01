@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
+import 'nativewind'; // Importar nativewind para el uso de clases
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
@@ -23,19 +24,18 @@ const SavedRecipes = () => {
   ];
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
-        <Text style={styles.recipeCategory}>{item.category}</Text>
+    <TouchableOpacity className="flex-row items-center mb-5 border border-[#ddd] rounded-lg p-3 bg-white" onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
+      <Image source={{ uri: item.image }} className="w-18 h-18 rounded-lg mr-4" />
+      <View className="flex-1">
+        <Text className="text-lg font-bold text-[#333]">{item.name}</Text>
+        <Text className="text-sm text-[#666]">{item.category}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      
-      <Header></Header>
+    <View className="flex-1 p-5 bg-[#fafafa]">
+      <Header />
 
       {savedRecipes.length > 0 ? (
         <FlatList
@@ -44,59 +44,13 @@ const SavedRecipes = () => {
           keyExtractor={(item) => item.id}
         />
       ) : (
-        <View style={styles.emptyContainer}>
+        <View className="flex-1 justify-center items-center">
           <Icon name="bookmark-outline" size={60} color="#aaa" />
-          <Text style={styles.emptyText}>No guardaste ninguna receta todavía</Text>
+          <Text className="mt-3 text-base text-[#666]">No guardaste ninguna receta todavía</Text>
         </View>
       )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fafafa',
-  },
-  recipeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: '#fff',
-  },
-  recipeImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 10,
-    marginRight: 15,
-  },
-  recipeInfo: {
-    flex: 1,
-  },
-  recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  recipeCategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-});
 
 export default SavedRecipes;

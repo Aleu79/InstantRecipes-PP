@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
 
 const MyRecipes = () => {
   const navigation = useNavigation();
-  
+
   const myRecipes = [
     {
       id: '1',
@@ -23,19 +23,21 @@ const MyRecipes = () => {
   ];
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
-        <Text style={styles.recipeCategory}>{item.category}</Text>
+    <TouchableOpacity 
+      className="flex-row items-center mb-5 border border-gray-300 rounded-lg p-2 bg-white" 
+      onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}
+    >
+      <Image source={{ uri: item.image }} className="w-16 h-16 rounded-lg mr-3" />
+      <View className="flex-1">
+        <Text className="text-lg font-bold text-gray-800">{item.name}</Text>
+        <Text className="text-sm text-gray-600">{item.category}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      
-      <Header></Header>
+    <View className="flex-1 p-5 bg-gray-50">
+      <Header />
 
       {myRecipes.length > 0 ? (
         <FlatList
@@ -44,15 +46,15 @@ const MyRecipes = () => {
           keyExtractor={(item) => item.id}
         />
       ) : (
-        <View style={styles.emptyContainer}>
+        <View className="flex-1 justify-center items-center">
           <Icon name="cafe-outline" size={60} color="#aaa" />
-          <Text style={styles.emptyText}>No tienes recetas creadas</Text>
+          <Text className="mt-2 text-lg text-gray-600">No tienes recetas creadas</Text>
         </View>
       )}
 
       {/* Botón flotante */}
       <TouchableOpacity 
-        style={styles.fab}
+        className="absolute bottom-5 right-5 bg-orange-600 w-[70px] h-[70px] rounded-full justify-center items-center shadow-md"
         onPress={() => navigation.navigate('CreateRecipe')}
       >
         <Icon name="add" size={30} color="#fff" />
@@ -60,67 +62,5 @@ const MyRecipes = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fafafa',
-  },
-  recipeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: '#fff',
-  },
-  recipeImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 10,
-    marginRight: 15,
-  },
-  recipeInfo: {
-    flex: 1,
-  },
-  recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  recipeCategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#f77f00',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3.84,
-  },
-});
 
 export default MyRecipes;

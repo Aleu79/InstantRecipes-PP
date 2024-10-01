@@ -1,5 +1,5 @@
 import { useNavigation, CommonActions } from '@react-navigation/native'; // Asegúrate de importar CommonActions
-import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
+import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useState, useContext } from 'react';
 import { auth } from '../../firebase/firebase-config';
@@ -22,7 +22,7 @@ const LoginScreen = () => {
       Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
       return;
     }
-  
+
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = doc(db, 'users', user.user.email);
@@ -38,7 +38,7 @@ const LoginScreen = () => {
     } catch (error) {
       console.log('Error completo:', error); // Ver el error completo
       console.log('Código de error:', error.code); // Imprimir el código de error para depuración
-  
+
       switch (error.code) {
         case 'auth/wrong-password':
           Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
@@ -80,28 +80,28 @@ const LoginScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
-        <View style={styles.container}>
-          <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
-          <View style={styles.overlay} />
-          <View style={styles.form}>
-            <Text style={styles.title}>Hola!</Text>
-            <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
+        <View className="flex-1 bg-[#fdfdfd]">
+          <Image source={require('../../assets/login.jpg')} className={`w-full h-[${height * 0.5}px]`} resizeMode="cover" />
+          <View className={`absolute inset-0 bg-[#F2F2F2] top-[${height * 0.4}px]`} />
+          <View className="flex-1 justify-start items-center px-5 py-10">
+            <Text className="text-[65px] font-bold text-black mb-2 self-start ml-[5%]">Hola!</Text>
+            <Text className="text-[20px] text-[#aaaaaa] mb-6 self-start ml-[5%]">Ingresa a tu cuenta</Text>
             <TextInput
-              style={styles.input}
+              className="w-[90%] h-[55px] border-gray-200 border-[1px] rounded-[40px] px-4 text-[17px] mb-4 bg-gray-100"
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               placeholderTextColor="#999"
             />
-            <View style={styles.passwordContainer}>
+            <View className="w-[90%] h-[55px] flex-row items-center border-gray-200 border-[1px] rounded-[40px] bg-gray-100 px-4 mb-4">
               <TextInput
-                style={styles.passwordInput}
+                className="flex-1 text-[17px]"
                 placeholder="Contraseña"
                 secureTextEntry={!showPassword}
                 value={password}
@@ -109,23 +109,23 @@ const LoginScreen = () => {
                 placeholderTextColor="#999"
               />
               <TouchableOpacity
-                style={styles.eyeIcon}
+                className="p-2"
                 onPress={() => setShowPassword(!showPassword)}
               >
                 <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Ingresar</Text>
+            <TouchableOpacity className="w-[80%] h-[55px] bg-[#FF4500] justify-center items-center rounded-[25px] my-4" onPress={handleLogin}>
+              <Text className="text-white text-[18px] font-bold">Ingresar</Text>
             </TouchableOpacity>
-            <Text style={styles.footerText}>
+            <Text className="text-[14px] text-black text-center mb-2">
               ¿No tienes una cuenta?{' '}
-              <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>
+              <Text className="text-[#FF4500] font-bold" onPress={() => navigation.navigate('Sign Up')}>
                 Regístrate
               </Text>
             </Text>
-            <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
-              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            <TouchableOpacity className="w-[80%] h-[30px] justify-center items-center mb-4" onPress={handleForgotPassword}>
+              <Text className="text-[14px] text-blue-800 text-center">¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -133,111 +133,5 @@ const LoginScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdfdfd',
-  },
-  backgroundImage: {
-    width: '100%',
-    height: height * 0.5,
-    resizeMode: 'cover',
-  },
-  forgotPasswordButton: {
-    width: '80%',
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#000',
-    textAlign: 'center',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#F2F2F2',
-    top: height * 0.4,
-  },
-  form: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 65,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
-    alignSelf: 'flex-start',
-    marginLeft: '5%',
-  },
-  subtitle: {
-    fontSize: 20,
-    color: '#aaaaaa',
-    marginBottom: 24,
-    alignSelf: 'flex-start',
-    marginLeft: '5%',
-  },
-  input: {
-    width: '90%',
-    height: 55,
-    borderColor: '#e6e6e6',
-    borderWidth: 1,
-    borderRadius: 40,
-    paddingHorizontal: 16,
-    fontSize: 17,
-    marginBottom: 16,
-    backgroundColor: '#fff',
-  },
-  passwordContainer: {
-    width: '90%',
-    height: 55,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#e6e6e6',
-    borderWidth: 1,
-    borderRadius: 40,
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    fontSize: 17,
-  },
-  eyeIcon: {
-    padding: 8,
-  },
-  button: {
-    width: '80%',
-    height: 55,
-    backgroundColor: '#FF4500',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 25,
-    marginVertical: 16,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#000',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  footerLink: {
-    color: '#FF4500',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-});
 
 export default LoginScreen;

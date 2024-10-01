@@ -10,6 +10,7 @@ import { UserProvider } from './src/context/UserContext';
 import SearchScreen  from './src/screens/SearchScreen';
 import SavedRecipes  from './src/screens/SavedRecipes';
 import MyRecipes  from './src/screens/MyRecipes';
+import Settings from './src/screens/Settings';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
           <Stack.Screen name="SavedRecipes" component={SavedRecipes} options={{headerShown:false}} />
           <Stack.Screen name="UserEdit" component={UserEdit} options={{headerShown:false}} />
           <Stack.Screen name="SearchScreen" component={SearchScreen} options={{headerShown:false}} />
+          <Stack.Screen name="Settings" component={Settings} options={{headerShown:false}} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

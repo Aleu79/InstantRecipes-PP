@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker'; // Importar ImagePicker
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Importar métodos de Firebase Storage
 import { storage } from '../../firebase/firebase-config'; // Asegúrate de que el path sea correcto
 import HeaderUserP from '../components/Headers/HeaderUserP';
+import 'nativewind'; // Importar nativewind para el uso de clases
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
@@ -55,91 +56,45 @@ const UserProfile = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-    
-      <HeaderUserP></HeaderUserP>
+    <ScrollView contentContainerStyle="flex-grow bg-[#fafafa] p-5">
+      <HeaderUserP />
 
-      <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={pickImage}> 
+      <View className="items-center mb-8">
+        <TouchableOpacity onPress={pickImage}>
           {image ? (
-            <Image source={{ uri: image }} style={styles.profileImage} />
+            <Image source={{ uri: image }} className="w-24 h-24 rounded-full mb-4" />
           ) : (
             <Icon name="person-circle-outline" size={100} color="#333" />
           )}
         </TouchableOpacity>
-        <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text>
-        <Text style={styles.userEmail}>{user ? user.email : 'emma.phillips@gmail.com'}</Text>
+        <Text className="text-2xl font-bold text-[#333] mb-2">
+          {user ? user.username : 'Invitado'}
+        </Text>
+        <Text className="text-sm text-[#666]">
+          {user ? user.email : 'emma.phillips@gmail.com'}
+        </Text>
       </View>
-      <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
+
+      <View className="border-t border-[#eaeaea] pt-5">
+        <TouchableOpacity className="flex-row items-center py-4 px-5 border-b border-[#eaeaea]" onPress={() => navigation.navigate('SavedRecipes')}>
           <Icon name="bookmark-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Guardados</Text>
+          <Text className="text-[18px] ml-4 text-[#333]">Guardados</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyRecipes')}>
+        <TouchableOpacity className="flex-row items-center py-4 px-5 border-b border-[#eaeaea]" onPress={() => navigation.navigate('MyRecipes')}>
           <Icon name="cafe-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Tus recetas</Text>
+          <Text className="text-[18px] ml-4 text-[#333]">Tus recetas</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity className="flex-row items-center py-4 px-5 border-b border-[#eaeaea]" onPress={() => navigation.navigate('Settings')}>
           <Icon name="settings-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Ajustes</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity style={styles.menuItem}>
+          <Text className="text-[18px] ml-4 text-[#333]">Ajustes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="flex-row items-center py-4 px-5">
           <Icon name="log-out-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Cerrar sesión</Text>
+          <Text className="text-[18px] ml-4 text-[#333]">Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#fafafa',
-    padding: 20,
-  },
-  profileContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  username: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#666',
-  },
-  menuContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#eaeaea',
-    paddingTop: 20,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eaeaea',
-  },
-  menuText: {
-    fontSize: 16,
-    marginLeft: 15,
-    color: '#333',
-  },
-  editIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-});
 
 export default UserProfile;
