@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker'; // Importar ImagePicker
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Importar métodos de Firebase Storage
 import { storage } from '../../firebase/firebase-config'; // Asegúrate de que el path sea correcto
+import HeaderUserP from '../components/Headers/HeaderUserP';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
@@ -55,14 +56,9 @@ const UserProfile = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.iconsContainer}>
-        <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-          <Icon name="chevron-back" size={26} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.editIcon} onPress={() => navigation.navigate('UserEdit')}>
-          <Icon name="pencil" size={26} color="#333" />
-        </TouchableOpacity>
-      </View>
+    
+      <HeaderUserP></HeaderUserP>
+
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={pickImage}> 
           {image ? (
@@ -102,13 +98,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
     padding: 20,
   },
-  iconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 50,
-    marginTop: 6,
-    position: 'static',
-  },
   profileContainer: {
     alignItems: 'center',
     marginBottom: 30,
@@ -145,11 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 15,
     color: '#333',
-  },
-  backIcon: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
   },
   editIcon: {
     position: 'absolute',

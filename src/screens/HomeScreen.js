@@ -1,23 +1,14 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
-import SideMenu from '../components/SideMenu'; 
+import HeaderHome from '../components/Headers/HeaderHome';
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
-  const [menuVisible, setMenuVisible] = useState(false); // Estado para controlar la visibilidad del menú
+ 
   return (
     <View style={styles.container}>
-      {/* Barra de navegación */}
-      <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Icon name="menu" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
-          <Icon name="search" size={28} color="#333" />
-        </TouchableOpacity>
-      </View>
-  
+      <HeaderHome></HeaderHome>
       <ScrollView>
         {/* Título de Ingredientes */}
         <Text style={styles.sectionTitle}>Ingredientes</Text>
@@ -75,8 +66,7 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.floatingButtonText}>+</Text>
       </TouchableOpacity>
 
-      {/* Menú Desplegable */}
-      <SideMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      
     </View>
   );
 };
@@ -86,12 +76,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
     paddingTop: 50,
-  },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 24,
@@ -106,14 +90,14 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingTop: 15,
     borderRadius: 16,
-    backgroundColor: '#E5E5E5',
+    backgroundColor: '#f1f1f1',
     marginHorizontal: 16,
     marginBottom: 20,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: '#fafafa',
     borderRadius: 16,
     paddingVertical: 8,
     paddingHorizontal: 12,

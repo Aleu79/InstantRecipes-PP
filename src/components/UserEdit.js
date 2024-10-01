@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { updatePassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from './Headers/Header';
 
 const UserEdit = () => {
   const { user } = useContext(UserContext);  
@@ -58,11 +59,7 @@ const UserEdit = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
-          <Icon name="chevron-back" size={26} color="#333" />
-        </TouchableOpacity>
-      </View>
+      <Header></Header>
 
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
@@ -122,15 +119,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#fafafa', 
     padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    marginTop: '5%',
-  },
-  backIcon: {
-    marginRight: 10,
   },
   titulocontainer: {
     flexDirection: 'row',

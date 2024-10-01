@@ -58,6 +58,7 @@ const SideMenu = ({ visible, onClose }) => {
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <View style={styles.menuContainer}>
@@ -70,21 +71,21 @@ const SideMenu = ({ visible, onClose }) => {
           </View>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handleNavigation('UserProfile')} // Redirige a la pantalla de perfil
+            onPress={() => handleNavigation('UserProfile')}
           >
             <Icon name="person-outline" size={20} color="#333" />
             <Text style={styles.menuText}>Perfil</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handleNavigation('MyRecipes')} // Redirige a la pantalla de mis recetas
+            onPress={() => handleNavigation('MyRecipes')} 
           >
             <Icon name="book-outline" size={20} color="#333" />
             <Text style={styles.menuText}>Mis recetas</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handleNavigation('SavedItems')} // Redirige a la pantalla de guardados
+            onPress={() => handleNavigation('SavedRecipes')}
           >
             <Icon name="bookmark-outline" size={20} color="#333" />
             <Text style={styles.menuText}>Guardados</Text>

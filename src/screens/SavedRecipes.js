@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import Header from '../components/Headers/Header';
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
@@ -33,10 +34,8 @@ const SavedRecipes = () => {
 
   return (
     <View style={styles.container}>
-      {/* Chevron para volver atrás con espaciado */}
-      <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-        <Icon name="chevron-back" size={26} color="#333" />
-      </TouchableOpacity>
+      
+      <Header></Header>
 
       {savedRecipes.length > 0 ? (
         <FlatList
@@ -59,13 +58,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#fafafa',
-  },
-  backIcon: {
-    position: 'static',
-    top: 10,
-    left: 10,
-    marginBottom: 25,
-    marginTop: 6,
   },
   recipeCard: {
     flexDirection: 'row',
