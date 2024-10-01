@@ -1,20 +1,37 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native'; 
 
 const Header = () =>  {
-  const navigation = useNavigation(); 
 
+  const navigation = useNavigation(); 
+ 
   return (
-    <View className="flex-1 bg-[#F2F2F2] pt-[5%] px-[5%]">
-      <View className="static mt-[5%] mb-[5%]">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="chevron-back" size={30} color="#333" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <>
+        <View style={styles.iconsContainer}>
+            <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+            <Icon name="chevron-back" size={30} color="#333" />
+            </TouchableOpacity>
+        </View>
+    </>
   );
 };
+
+const styles = StyleSheet.create({
+container: {
+    flex: 1,
+    backgroundColor: '#F2F2F2',
+    paddingTop: 50,
+    paddingHorizontal: 16,
+},
+backIcon: {
+    position: 'static',
+    top: 10,
+    left: 10,
+    marginBottom: '5%',
+    marginTop: '5%',
+},
+});
 
 export default Header;

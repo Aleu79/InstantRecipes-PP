@@ -1,41 +1,61 @@
-import React from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
-import 'nativewind'; // Importar nativewind para el uso de clases
+import { doc, getDoc } from 'firebase/firestore'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../../firebase/firebase-config';  
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
+  const [savedRecipes, setSavedRecipes] = useState([]);
 
-  const savedRecipes = [
-    {
-      id: '1',
-      name: 'Galletas de sésamo',
-      category: 'Panadería',
-      image: 'https://example.com/galletas.jpg',
-    },
-    {
-      id: '2',
-      name: 'Snacks de sésamo',
-      category: 'Panadería',
-      image: 'https://example.com/snacks.jpg',
-    },
-  ];
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        // Obtiene el correo electrónico del usuario actual
+        const userEmail = await AsyncStorage.getItem('userEmail');
+
+        if (!userEmail) {
+          throw new Error("No se encontró el correo electrónico del usuario");
+        }
+
+        // Obtiene la referencia al documento del usuario
+        const userRef = doc(db, 'users', userEmail);
+        const userDoc = await getDoc(userRef);
+
+        // Establece las recetas en el estado
+        if (userDoc.exists()) {
+          const misRecetas = userDoc.data().misRecetas || [];
+          setSavedRecipes(misRecetas);
+        } else {
+          setSavedRecipes([]);
+        }
+      } catch (error) {
+        console.error('Error al obtener las recetas guardadas:', error);
+        Alert.alert('Error', 'Hubo un problema al cargar las recetas guardadas.');
+      }
+    };
+
+    fetchRecipes();
+  }, []);
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity className="flex-row items-center mb-5 border border-[#ddd] rounded-lg p-3 bg-white" onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
-      <Image source={{ uri: item.image }} className="w-18 h-18 rounded-lg mr-4" />
-      <View className="flex-1">
-        <Text className="text-lg font-bold text-[#333]">{item.name}</Text>
-        <Text className="text-sm text-[#666]">{item.category}</Text>
+    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
+      <Image source={{ uri: item.image }} style={styles.recipeImage} />
+      <View style={styles.recipeInfo}>
+        <Text style={styles.recipeName}>{item.name}</Text>
+        <Text style={styles.recipeCategory}>Calorías: {item.calories}</Text>
+        <Text style={styles.recipeCategory}>Ingredientes: {item.ingredients}</Text>
+        <Text style={styles.recipeCategory}>Etiquetas de salud: {item.healthLabels}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View className="flex-1 p-5 bg-[#fafafa]">
-      <Header />
+    <View style={styles.container}>
+      <Header></Header>
 
       {savedRecipes.length > 0 ? (
         <FlatList
@@ -44,13 +64,59 @@ const SavedRecipes = () => {
           keyExtractor={(item) => item.id}
         />
       ) : (
-        <View className="flex-1 justify-center items-center">
+        <View style={styles.emptyContainer}>
           <Icon name="bookmark-outline" size={60} color="#aaa" />
-          <Text className="mt-3 text-base text-[#666]">No guardaste ninguna receta todavía</Text>
+          <Text style={styles.emptyText}>No guardaste ninguna receta todavía</Text>
         </View>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fafafa',
+  },
+  recipeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  recipeImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 10,
+    marginRight: 15,
+  },
+  recipeInfo: {
+    flex: 1,
+  },
+  recipeName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  recipeCategory: {
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+});
 
 export default SavedRecipes;

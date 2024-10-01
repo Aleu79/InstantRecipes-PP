@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native'; 
 import { UserContext } from '../context/UserContext';
@@ -60,40 +60,76 @@ const SideMenu = ({ visible, onClose }) => {
       onRequestClose={onClose}
       presentationStyle="overFullScreen"
     >
-      <View className="flex-1 bg-black/50">
-        <View className="bg-[#F2F2F2] w-[70%] h-full p-5">
-          <TouchableOpacity className="self-end" onPress={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Icon name="close" size={24} color="#333" />
           </TouchableOpacity>
-          <View className="flex-row items-center mb-5">
+          <View style={styles.userContainer}>
             <Icon name="person-circle-outline" size={50} color="#333" />
-            <Text className="ml-3 text-lg text-[#333]">{username}</Text>
+            <Text style={styles.username}>{username}</Text>
           </View>
           <TouchableOpacity
-            className="flex-row items-center py-4"
+            style={styles.menuItem}
             onPress={() => handleNavigation('UserProfile')}
           >
             <Icon name="person-outline" size={20} color="#333" />
-            <Text className="ml-3 text-base text-[#333]">Perfil</Text>
+            <Text style={styles.menuText}>Perfil</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-row items-center py-4"
-            onPress={() => handleNavigation('MyRecipes')}
+            style={styles.menuItem}
+            onPress={() => handleNavigation('MyRecipes')} 
           >
             <Icon name="book-outline" size={20} color="#333" />
-            <Text className="ml-3 text-base text-[#333]">Mis recetas</Text>
+            <Text style={styles.menuText}>Mis recetas</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-row items-center py-4"
+            style={styles.menuItem}
             onPress={() => handleNavigation('SavedRecipes')}
           >
             <Icon name="bookmark-outline" size={20} color="#333" />
-            <Text className="ml-3 text-base text-[#333]">Guardados</Text>
+            <Text style={styles.menuText}>Guardados</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    backgroundColor: '#F2F2F2',
+    width: '70%',
+    height: '100%',
+    padding: 20,
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+  },
+  userContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  username: {
+    marginLeft: 10,
+    fontSize: 18,
+    color: '#333',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+  },
+  menuText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+});
 
 export default SideMenu;

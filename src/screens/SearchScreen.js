@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { ScrollView, View, TextInput, TouchableOpacity, Image, Text } from 'react-native';
+import { ScrollView, View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 import Header from '../components/Headers/Header';
@@ -19,47 +19,112 @@ const SearchScreen = ({ navigation }) => {
   ];
 
   return (
-    <View className="flex-1 bg-[#fafafa] pt-12 px-4">
+    <View style={styles.container}>
       <Header />
-      <View className="mb-5">
+      <View style={styles.navbar}>
         <View>
-          <Text className="text-[#888] text-sm">
-            Hola, <Text className="font-bold">{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
+          <Text style={styles.greetingText}>
+            Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
-          <Text className="text-[#FF4500] text-2xl font-bold">Busca tus recetas favoritas!</Text>
+          <Text style={styles.searchPrompt}>Busca tus recetas favoritas!</Text>
         </View>
       </View>
       <View>
-        <TextInput
-          placeholder="Buscar"
-          className="bg-[#f1f1f1] rounded-full text-lg p-4 h-12 pl-8"
-        />
+          <TextInput
+            placeholder="Buscar"
+            style={styles.searchInput}
+          />
       </View>
 
       {/* Categorías */}
-      <View className="flex-row flex-wrap mb-5 px-4 mt-3 w-full">
+      <View style={styles.carouselContainer}>
         <ScrollView
           ref={categoriesScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="flex-row"
+          style={styles.categoriesContainer}
         >
           {/* Botones de categorías */}
           {categoryImages.map((item, index) => (
-            <View key={index} className="items-center mr-3 mb-3">
+            <View key={index} style={styles.categoryContainer}>
               <TouchableOpacity
-                className="w-20 h-20 rounded-full justify-center items-center bg-[#FFA500]"
+                style={styles.btncategoria}
                 onPress={() => navigation.navigate(item.category)}
               >
-                <Image source={{ uri: item.url }} className="w-full h-full rounded-full" resizeMode="cover" />
+                <Image source={{ uri: item.url }} style={styles.categoryImage} />
               </TouchableOpacity>
-              <Text className="mt-1 text-sm text-[#333] text-center">{item.category}</Text>
+              <Text style={styles.categoryText}>{item.category}</Text>
             </View>
           ))}
         </ScrollView>
       </View>
+
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+    paddingTop: 50,
+    paddingHorizontal: 16,
+  },
+  navbar: {
+    alignItems: 'left',
+    marginBottom: 20,
+  },
+  greetingText: {
+    fontSize: 14, // Tamaño más pequeño para el saludo
+    color: '#888', // Color gris
+  },
+  searchPrompt: {
+    fontSize: 24, // Tamaño más grande para la búsqueda
+    fontWeight: 'bold', // Negrita
+    color: '#FF4500',
+  },
+  searchInput: {
+    backgroundColor: '#f1f1f1',
+    borderRadius: 30,
+    fontSize: 16,
+    padding: 15,
+    height: 50,
+    paddingLeft: 30,
+  },
+  carouselContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    marginTop: 15,
+    width: '100%',
+  },
+  categoryContainer: {
+    alignItems: 'center', // Alinear los textos e imágenes al centro
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  btncategoria: {
+    width: 80, // Tamaño del botón redondo
+    height: 80,
+    borderRadius: 40, // Completamente redondo
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFA500',
+  },
+  categoryImage: {
+    width: '100%', // Hacer que la imagen cubra todo el botón
+    height: '100%',
+    borderRadius: 40, // Mantener el redondeado de la imagen dentro del botón
+    resizeMode: 'cover', // Asegurarse que la imagen cubra todo el área
+  },
+  categoryText: {
+    marginTop: 5,
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
+  },
+});
 
 export default SearchScreen;

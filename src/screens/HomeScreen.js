@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import HeaderHome from '../components/Headers/HeaderHome';
 
@@ -7,69 +7,205 @@ const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
  
   return (
-    <View className="flex-1 bg-gray-100 pt-12">
-      <HeaderHome />
+    <View style={styles.container}>
+      <HeaderHome></HeaderHome>
       <ScrollView>
         {/* Título de Ingredientes */}
-        <Text className="text-2xl font-bold mt-2 mx-4">Ingredientes</Text>
-        <View className="flex-row flex-wrap p-2 pt-4 bg-gray-200 mx-4 mb-5 rounded-2xl">
+        <Text style={styles.sectionTitle}>Ingredientes</Text>
+        <View style={styles.containeringredientes}>
           {/* Chips de Ingredientes con Iconos de Cerrar */}
           {['Harina', 'Papas', 'Manteca', 'Salmón'].map((ingredient, index) => (
-            <View key={index} className="flex-row items-center bg-gray-100 rounded-xl py-2 px-3 mr-2 mb-2">
-              <Text className="text-gray-900 mr-1">{ingredient}</Text>
-              <TouchableOpacity className="justify-center items-center ml-1">
+            <View key={index} style={styles.chip}>
+              <Text style={styles.chipText}>{ingredient}</Text>
+              <TouchableOpacity style={styles.closeIcon}>
                 <Icon name="close" size={14} color="#333" />
               </TouchableOpacity>
             </View>
           ))}
-          <View className="bg-white rounded-xl py-2 px-3 mb-2">
-            <Text className="text-gray-900">+</Text>
-          </View>
+          <View style={styles.addChip}><Text style={styles.chipText}>+</Text></View>
         </View>
 
         {/* Carrusel de Categorías con Flechas */}
-        <View className="flex-row items-center mb-5 mx-4 mt-4">
+        <View style={styles.carouselContainer}>
           <ScrollView
             ref={categoriesScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.categoriesContainer}
           >
             {/* Botones de categorías */}
             {['Veggie', 'Carnes', 'Bebidas', 'Panadería', 'Postres', 'Sin TACC'].map((category, index) => (
-              <TouchableOpacity
-                key={index}
-                className={`rounded-2xl py-4 px-6 mr-2 justify-center items-center w-36 h-24 ${
-                  ['bg-red-600', 'bg-orange-400', 'bg-red-500', 'bg-orange-700', 'bg-orange-600', 'bg-orange-400'][index]
-                }`}
-                onPress={() => navigation.navigate(category)}
-              >
-                <Text className="text-white font-bold text-lg">{category}</Text>
-              </TouchableOpacity>
-            ))}
+  <TouchableOpacity
+    key={index}
+    style={[styles.btncategoria, { backgroundColor: ['#B22222', '#FFA500', '#FF4500', '#C86038', '#FF7700', '#FFA500'][index] }]}
+    onPress={() => navigation.navigate('CategoryRecipesScreen', { category })} // Pasa la categoría al navegar
+  >
+    <Text style={styles.textcategoria}>{category}</Text>
+  </TouchableOpacity>
+))}
+
           </ScrollView>
         </View>
 
         {/* Sección de Recomendados */}
-        <Text className="text-2xl font-bold mt-2 mx-4">Recomendados</Text>
-        <View className="flex-col items-center mb-5 mx-4">
-          <TouchableOpacity className="w-full mb-2" onPress={() => navigation.navigate('RecipeView')}>
-            <Image className="w-full h-40 rounded-2xl" source={{ uri: 'https://via.placeholder.com/150' }} />
-            <Text className="absolute top-2 left-2 text-white font-bold text-xl px-1 py-0.5">Nombre</Text>
+        <Text style={styles.sectionTitle}>Recomendados</Text>
+        <View style={styles.recommendedContainer}>
+          <TouchableOpacity style={styles.imageContainer} onPress={() => navigation.navigate('RecipeView')}>
+            <Image style={styles.imgrecipes} source={{ uri: 'https://via.placeholder.com/150' }} />
+            <Text style={styles.imageLabel}>Nombre</Text>
           </TouchableOpacity>
         </View>
 
         {/* Botón "Ver más" */}
-        <TouchableOpacity className="bg-white py-3 rounded-2xl items-center my-2 mx-4">
-          <Text className="text-black text-lg">Ver más</Text>
+        <TouchableOpacity style={styles.moreButton}>
+          <Text style={styles.moreButtonText}>Ver más</Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Botón Flotante */}
-      <TouchableOpacity className="absolute bottom-5 right-5 bg-orange-400 rounded-full w-14 h-14 justify-center items-center shadow-md">
-        <Text className="text-white text-3xl">+</Text>
+      <TouchableOpacity style={styles.floatingButton}>
+        <Text style={styles.floatingButtonText}>+</Text>
       </TouchableOpacity>
+
+      
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fafafa',
+    paddingTop: 50,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 8,
+    marginHorizontal: 16,
+    marginTop: 10,
+  },
+  containeringredientes: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 10,
+    paddingTop: 15,
+    borderRadius: 16,
+    backgroundColor: '#f1f1f1',
+    marginHorizontal: 16,
+    marginBottom: 20,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fafafa',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  addChip: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  chipText: {
+    color: '#333',
+    marginRight: 4,
+  },
+  closeIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+  },
+  carouselContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    marginTop: 15,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    marginTop: 15,
+  },
+  btncategoria: {
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 150,
+    height: 90,
+  },
+  textcategoria: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  recommendedContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  imageContainer: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  imgrecipes: {
+    width: '100%',
+    height: 150,
+    borderRadius: 20,
+  },
+  imageLabel: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  moreButton: {
+    backgroundColor: '#FFF',
+    padding: 12,
+    borderRadius: 24,
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 16,
+  },
+  moreButtonText: {
+    color: '#000',
+    fontSize: 16,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#FFA500',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  floatingButtonText: {
+    color: '#FFF',
+    fontSize: 30,
+  },
+});
 
 export default HomeScreen;
