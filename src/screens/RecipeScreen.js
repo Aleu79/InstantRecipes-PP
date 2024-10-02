@@ -32,7 +32,6 @@ const RecipeScreen = ({ route }) => {
 
           {/* Información adicional de la receta */}
           <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>Calorías: {Math.round(recipe.calories)} kcal</Text>
             <Text style={styles.infoText}>Tiempo de Preparación: {recipe.preparationMinutes || 'N/A'} minutos</Text>
             <Text style={styles.infoText}>Porciones: {recipe.servings}</Text>
             <Text style={styles.infoText}>Gluten Free: {recipe.glutenFree ? "Sí" : "No"}</Text>
@@ -61,7 +60,9 @@ const RecipeScreen = ({ route }) => {
             <View style={styles.ingredientsContainer}>
               {recipe.ingredients.length > 0 ? (
                 recipe.ingredients.map((ingredient, index) => (
-                  <Text key={index} style={styles.ingredientItem}>• {ingredient}</Text>
+                  <Text key={index} style={styles.ingredientItem}>
+                    • {ingredient.amount} {ingredient.unit} {ingredient.originalName}
+                  </Text>
                 ))
               ) : (
                 <Text>No hay ingredientes disponibles.</Text>
