@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
 
 const RecipeScreen = ({ route }) => {
-  const { recipe } = route.params;
+  const { recipe } = route.params; // Asegúrate de que estás pasando la receta completa
   const [activeTab, setActiveTab] = useState('ingredients'); // Estado para gestionar la pestaña activa
 
   const saveRecipe = async () => {
-    Alert.alert('Receta guardada', `La receta "${recipe.title}" ha sido guardada con éxito.`);
+    Alert.alert('Receta guardada', `La receta "${recipe.name}" ha sido guardada con éxito.`);
   };
+
+  if (!recipe) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Cargando receta...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -20,12 +28,12 @@ const RecipeScreen = ({ route }) => {
           <FontAwesome name="bookmark-o" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.detailsContainer}>
-          <Text style={styles.recipeName}>{recipe.title}</Text>
+          <Text style={styles.recipeName}>{recipe.name}</Text>
 
           {/* Información adicional de la receta */}
           <View style={styles.infoContainer}>
-            {/* <Text style={styles.infoText}>Calorías: {Math.round(recipe.calories)} kcal</Text> */}
-            <Text style={styles.infoText}>Tiempo de Preparación: {recipe.readyInMinutes} minutos</Text>
+            <Text style={styles.infoText}>Calorías: {Math.round(recipe.calories)} kcal</Text>
+            <Text style={styles.infoText}>Tiempo de Preparación: {recipe.preparationMinutes || 'N/A'} minutos</Text>
             <Text style={styles.infoText}>Porciones: {recipe.servings}</Text>
             <Text style={styles.infoText}>Gluten Free: {recipe.glutenFree ? "Sí" : "No"}</Text>
             <Text style={styles.infoText}>Vegano: {recipe.vegan ? "Sí" : "No"}</Text>
@@ -48,24 +56,20 @@ const RecipeScreen = ({ route }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Contenido según la pestaña activa */}
+          {/* Mostrar ingredientes o instrucciones según la pestaña activa */}
           {activeTab === 'ingredients' ? (
             <View style={styles.ingredientsContainer}>
-              {recipe.ingredients && recipe.ingredients.length > 0 ? (
+              {recipe.ingredients.length > 0 ? (
                 recipe.ingredients.map((ingredient, index) => (
-                  <Text key={index} style={styles.ingredientItem}> • {ingredient.name} ({ingredient.amount} {ingredient.unit})</Text>
+                  <Text key={index} style={styles.ingredientItem}>• {ingredient}</Text>
                 ))
               ) : (
-                <Text style={styles.ingredientItem}>No hay ingredientes disponibles.</Text>
+                <Text>No hay ingredientes disponibles.</Text>
               )}
             </View>
           ) : (
             <View style={styles.preparationContainer}>
-              {recipe.instructions ? (
-                <Text style={styles.preparationText}>{recipe.instructions}</Text>
-              ) : (
-                <Text style={styles.preparationText}>No se han proporcionado instrucciones de preparación.</Text>
-              )}
+              <Text style={styles.preparationText}>{recipe.instructions || 'No hay instrucciones disponibles.'}</Text>
             </View>
           )}
         </View>
@@ -77,80 +81,76 @@ const RecipeScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
     padding: 20,
+    backgroundColor: '#fff',
   },
   recipeImage: {
     width: '100%',
-    height: 250,
+    height: 300,
     borderRadius: 20,
   },
+  bookmarkButton: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
+    top: 10,
+    right: 10,
+    padding: 5,
+  },
   detailsContainer: {
-    marginTop: 15,
+    marginTop: 20,
   },
   recipeName: {
     fontSize: 24,
-    marginVertical: 10,
-    textAlign: 'left',
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   infoContainer: {
     marginBottom: 20,
   },
   infoText: {
     fontSize: 16,
-    marginBottom: 5,
-    color: '#666',
-  },
-  bookmarkButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 15,
-    padding: 5,
   },
   tabsContainer: {
     flexDirection: 'row',
-    borderRadius: 20,
-    backgroundColor: '#E7E7E7',
-    overflow: 'hidden', // Asegura que los bordes redondeados se mantengan
-    marginVertical: 10,
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
   tabButton: {
+    padding: 10,
     flex: 1,
-    padding: 20,
     alignItems: 'center',
   },
   activeTab: {
-    backgroundColor: '#e9e9e9', // Color de fondo para la pestaña activa
-    borderBottomWidth: 4,
-    borderColor: '#007bff', // Color del borde inferior de la pestaña activa
+    borderBottomWidth: 2,
+    borderBottomColor: '#000',
   },
   inactiveTab: {
-    backgroundColor: '#fff', // Color de fondo para las pestañas inactivas
-  },
-  activeTabText: {
-    color: '#007bff', // Color del texto en la pestaña activa
-    fontWeight: 'bold',
+    borderBottomWidth: 0,
   },
   tabText: {
-    fontSize: 16,
-    color: '#666', // Color del texto en las pestañas inactivas
+    fontSize: 18,
+  },
+  activeTabText: {
+    fontWeight: 'bold',
   },
   ingredientsContainer: {
-    paddingLeft: 10,
+    marginTop: 20,
   },
   ingredientItem: {
     fontSize: 16,
-    marginBottom: 5,
   },
   preparationContainer: {
-    paddingLeft: 10,
+    marginTop: 20,
   },
   preparationText: {
     fontSize: 16,
-    marginBottom: 20,
-    color: '#007bff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

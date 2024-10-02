@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Alert, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { db } from '../../firebase/firebase-config'; 
@@ -13,38 +13,37 @@ const CategoryRecipesScreen = ({ route }) => {
   const navigation = useNavigation();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [savedRecipes, setSavedRecipes] = useState({});
+  const [savedRecipes, setSavedRecipes] = useState(new Set());
+  const [error, setError] = useState('');
+
+
 
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
         const apiKey = '69694db3792e4c4387992d79c64eb073'; // Reemplaza con tu clave de API de Spoonacular
-        const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true`;
+        const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
         const response = await axios.get(url);
-        
-        // Asegúrate de que 'results' existe antes de intentar mapearlo
-        const recipesData = response.data.results ? response.data.results.map(recipe => ({
+        console.log(url);
+        console.log(response);
+        const recipesData = response.data.results?.map(recipe => ({
           id: recipe.id,
           name: recipe.title,
           image: recipe.image,
-          instructions: recipe.instructions, // Asegúrate de que este campo existe en la respuesta
-          ingredients: recipe.extendedIngredients ? recipe.extendedIngredients.map(ingredient => ingredient.originalString) : [],
+          instructions: recipe.analyzedInstructions.length > 0 
+            ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') // Extrae los pasos
+            : 'No hay instrucciones disponibles', // Maneja el caso sin pasos
+          ingredients: recipe.extendedIngredients?.map(ingredient => ingredient.originalString),
           glutenFree: recipe.glutenFree,
           vegan: recipe.vegan,
           vegetarian: recipe.vegetarian,
           ketogenic: recipe.ketogenic,
-          // calories: recipe.nutrition.nutrients.find(nutrient => nutrient.name === 'Calories')?.amount,
           preparationMinutes: recipe.preparationMinutes,
           cookingMinutes: recipe.cookingMinutes,
           servings: recipe.servings,
-        })) : [];
-
+        })) || [];
+  
         setRecipes(recipesData);
-        const initialSavedState = {};
-        recipesData.forEach(recipe => {
-          initialSavedState[recipe.id] = false;
-        });
-        setSavedRecipes(initialSavedState);
       } catch (error) {
         handleError(error);
       } finally {
@@ -53,21 +52,18 @@ const CategoryRecipesScreen = ({ route }) => {
     };
     fetchRecipes();
   }, [category]);
+  
 
   const handleError = (error) => {
     console.error('Error al obtener recetas:', error.message);
     if (error.response) {
-      if (error.response.status === 404) {
-        Alert.alert('Error', 'Recurso no encontrado.');
-      } else if (error.response.status >= 500) {
-        Alert.alert('Error', 'Error en el servidor.');
-      }
-    } else if (error.request) {
-      Alert.alert('Error', 'No se recibió respuesta del servidor.');
+      setError('Error al obtener recetas. Por favor intenta de nuevo.');
+    } else {
+      setError('No se recibió respuesta del servidor.');
     }
   };
 
-  const saveRecipe = async (recipe) => {
+  const saveRecipe = useCallback(async (recipe) => {
     try {
       let userEmail = await AsyncStorage.getItem('userEmail');
       if (!userEmail) {
@@ -84,8 +80,7 @@ const CategoryRecipesScreen = ({ route }) => {
         glutenFree: recipe.glutenFree,
         vegan: recipe.vegan,
         vegetarian: recipe.vegetarian,
-        calories: recipe.calories,
-        prepTime: recipe.prepTime,
+        prepTime: recipe.preparationMinutes, // Cambié aquí para que coincida
         servings: recipe.servings,
       };
 
@@ -101,14 +96,14 @@ const CategoryRecipesScreen = ({ route }) => {
       }
 
       Alert.alert('Receta guardada con éxito!');
-      setSavedRecipes((prevState) => ({ ...prevState, [recipe.id]: true }));
+      setSavedRecipes(prev => new Set(prev).add(recipe.id));
     } catch (error) {
       Alert.alert('Error', 'No se pudo guardar la receta.');
     }
-  };
+  }, []);
 
   const toggleSaveRecipe = (recipe) => {
-    if (savedRecipes[recipe.id]) {
+    if (savedRecipes.has(recipe.id)) {
       Alert.alert('Error', 'La receta ya está guardada.');
     } else {
       saveRecipe(recipe);
@@ -127,29 +122,33 @@ const CategoryRecipesScreen = ({ route }) => {
     <View style={styles.container}>
       <Header />
       <Text style={styles.title}>Recetas {category}</Text>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {recipes.length > 0 ? (
-          recipes.map((recipe) => (
-            <TouchableOpacity 
-              key={recipe.id} 
-              onPress={() => navigation.navigate('RecipeScreen', { recipe })} // Envía la receta completa
-              style={styles.recipeContainer}
-            >
-              <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-              <TouchableOpacity style={styles.bookmarkButton} onPress={() => toggleSaveRecipe(recipe)}>
-                <FontAwesome 
-                  name={savedRecipes[recipe.id] ? "bookmark" : "bookmark-o"} 
-                  size={24} 
-                  color="#fff" 
-                />
+      {error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          {recipes.length > 0 ? (
+            recipes.map((recipe) => (
+              <TouchableOpacity 
+                key={recipe.id} 
+                onPress={() => navigation.navigate('RecipeScreen', { recipe })} 
+                style={styles.recipeContainer}
+              >
+                <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
+                <TouchableOpacity style={styles.bookmarkButton} onPress={() => toggleSaveRecipe(recipe)}>
+                  <FontAwesome 
+                    name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"} 
+                    size={24} 
+                    color="#fff" 
+                  />
+                </TouchableOpacity>
+                <Text style={styles.recipeName}>{recipe.name}</Text>
               </TouchableOpacity>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text>No hay recetas disponibles para esta categoría.</Text>
-        )}
-      </ScrollView>
+            ))
+          ) : (
+            <Text>No hay recetas disponibles para esta categoría.</Text>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -195,6 +194,11 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     padding: 5,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginVertical: 20,
   },
 });
 
