@@ -16,6 +16,7 @@
     "@react-navigation/drawer": "^6.7.2",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
+    "@vitalets/google-translate-api": "^9.2.0",
     "axios": "^1.7.7",
     "expo": "^51.0.36",
     "expo-image-picker": "~15.0.7",
