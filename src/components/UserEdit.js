@@ -7,6 +7,7 @@ import { UserContext } from '../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Header from './Headers/Header';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import BottomNavBar from './BottomNavbar';
 
 const UserEdit = () => {
 
@@ -176,6 +177,7 @@ const UserEdit = () => {
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
+      <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
 };

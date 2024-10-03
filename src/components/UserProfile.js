@@ -9,6 +9,7 @@ import { storage } from '../../firebase/firebase-config';
 import HeaderUserP from '../components/Headers/HeaderUserP';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/firebase-config';
+import BottomNavBar from './BottomNavbar';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
@@ -100,6 +101,7 @@ const UserProfile = () => {
           <Text style={styles.menuText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
+      <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
 };

@@ -6,6 +6,7 @@ import Header from '../components/Headers/Header';
 import { doc, getDoc } from 'firebase/firestore'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../../firebase/firebase-config';  
+import BottomNavBar from '../components/BottomNavbar';
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
@@ -54,7 +55,8 @@ const SavedRecipes = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <>
+      <View style={styles.container}>
       <Header></Header>
 
       {savedRecipes.length > 0 ? (
@@ -70,6 +72,8 @@ const SavedRecipes = () => {
         </View>
       )}
     </View>
+    <BottomNavBar/>
+    </>
   );
 };
 

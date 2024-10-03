@@ -20,9 +20,6 @@ const Header = () =>  {
                     <Icon name="person-circle-outline" size={50} color="#333" />
                 )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('SearchScreen')}>
-            <Icon name="search" size={26} color="#333" />
-            </TouchableOpacity>
         </View>
       <SideMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </>

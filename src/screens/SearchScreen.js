@@ -2,6 +2,7 @@ import React, { useContext, useRef, useState, useEffect } from 'react';
 import { ScrollView, View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import Header from '../components/Headers/Header';
+import BottomNavBar from '../components/BottomNavbar';
 
 const SearchScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef();
@@ -98,6 +99,7 @@ const SearchScreen = ({ navigation }) => {
           ))}
         </ScrollView>
       </View>
+      <BottomNavBar navigation={navigation} />
     </View>
   );
 };
