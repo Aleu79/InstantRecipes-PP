@@ -25,9 +25,9 @@
       },
       "package": "com.aleu79.InstantRecipes",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "camera",
+        "read_external_storage",
+        "write_external_storage"
       ]
     },
     "web": {
