@@ -1,15 +1,15 @@
 import React, { useContext, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
-import { storage } from '../../firebase/firebase-config'; 
-import HeaderUserP from '../components/Headers/HeaderUserP';
+import { storage } from '../../../firebase/firebase-config'; 
+import HeaderUserP from '../Headers/HeaderUserP';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase/firebase-config';
-import BottomNavBar from './BottomNavbar';
+import { auth } from '../../../firebase/firebase-config';
+import BottomNavBar from '../BottomNavbar';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);

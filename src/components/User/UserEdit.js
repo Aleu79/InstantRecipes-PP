@@ -1,13 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
-import { auth } from '../../firebase/firebase-config';
+import { auth } from '../../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
 import { updatePassword, updateProfile } from 'firebase/auth';
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Header from './Headers/Header';
+import Header from '../Headers/Header';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import BottomNavBar from './BottomNavbar';
+import BottomNavBar from '../BottomNavbar';
 
 const UserEdit = () => {
 

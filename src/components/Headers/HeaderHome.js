@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Image, View, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import SideMenu from '../SideMenu'; 
 import { useNavigation } from '@react-navigation/native'; 
 
 const Header = () =>  {
 
   const navigation = useNavigation(); 
-  const [menuVisible, setMenuVisible] = useState(false);
   const [image, setImage] = useState(null);
 
   return (
     <>
         <View style={styles.navbar}>
-            <TouchableOpacity onPress={() => setMenuVisible(true)}>
+            <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
                 {image ? (
                     <Image source={{ uri: image }} style={styles.profileImage} />
                 ) : (
@@ -21,7 +19,6 @@ const Header = () =>  {
                 )}
             </TouchableOpacity>
         </View>
-      <SideMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </>
   );
 };
@@ -43,9 +40,9 @@ backIcon: {
 navbar: {
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between',
   paddingHorizontal: 16,
   paddingBottom: 8,
+  marginTop: '10%',
 },
 });
 

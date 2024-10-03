@@ -1,12 +1,10 @@
-import React, { useContext, useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ScrollView, View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
-import { UserContext } from '../context/UserContext';
 import Header from '../components/Headers/Header';
 import BottomNavBar from '../components/BottomNavbar';
 
 const SearchScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef();
-  const { user } = useContext(UserContext);
   const [categoryImages, setCategoryImages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState([]);
@@ -46,9 +44,6 @@ const SearchScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header />
       <View style={styles.navbar}>
-        <Text style={styles.greetingText}>
-          Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
-        </Text>
         <Text style={styles.searchPrompt}>Busca tus recetas favoritas!</Text>
       </View>
 
@@ -114,14 +109,6 @@ const styles = StyleSheet.create({
   navbar: {
     alignItems: 'flex-start',
     marginBottom: 20,
-  },
-  greetingText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  username: {
-    fontWeight: 'bold',
-    color: '#000',
   },
   searchPrompt: {
     fontSize: 24,

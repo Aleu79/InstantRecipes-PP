@@ -1,34 +1,36 @@
-import React, { useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import HeaderHome from '../components/Headers/HeaderHome';
+import { UserContext } from '../context/UserContext';
 import BottomNavBar from '../components/BottomNavbar';
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false);
+  const { user } = useContext(UserContext);
+  const [image, setImage] = useState(null);
 
   const toggleMenu = () => setMenuVisible(!menuVisible);
 
   return (
     <View style={styles.container}>
-      <HeaderHome />
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        {/* Título de Ingredientes */}
-        <Text style={styles.sectionTitle}>Ingredientes</Text>
-        <View style={styles.ingredientsContainer}>
-          {/* Chips de Ingredientes con Iconos de Cerrar */}
-          {['Harina', 'Papas', 'Manteca', 'Salmón'].map((ingredient, index) => (
-            <View key={index} style={styles.chip}>
-              <Text style={styles.chipText}>{ingredient}</Text>
-              <TouchableOpacity style={styles.closeIcon}>
-                <Icon name="close" size={14} color="#333" />
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TouchableOpacity style={styles.addChip}>
-            <Text style={styles.chipText}>+</Text>
-          </TouchableOpacity>
+        {/* Bienvenida */}
+        <View style={styles.bienvenida}>
+          <Text style={styles.greetingText}>
+            Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
+          </Text>
+          <View>
+            <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
+                {image ? (
+                    <Image source={{ uri: image }} style={styles.profileImage} />
+                ) : (
+                    <Icon name="person" size={40} color="#333" />
+                )}
+            </TouchableOpacity>
+          </View>
+          {/* <HeaderHome /> */}
         </View>
 
         {/* Carrusel de Categorías */}
@@ -103,6 +105,24 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 100,
   },
+  bienvenida: {
+    flexDirection: 'row',
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginVertical: 20,
+  },
+  greetingText: {
+    fontSize: 30, 
+    fontWeight: 'bold',
+    color: '#000',
+    flex: 1, 
+    fontFamily: 'lucida grande',
+  },
+  username: {
+    fontWeight: 'bold',
+    color: '#FFA500',
+  },
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -117,34 +137,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f1f1',
     marginHorizontal: 16,
     marginBottom: 20,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  addChip: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chipText: {
-    color: '#333',
-    marginRight: 4,
-  },
-  closeIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 4,
   },
   categoriesContainer: {
     paddingHorizontal: 16,
@@ -222,10 +214,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  floatingButtonText: {
-    color: '#FFF',
-    fontSize: 30,
-  },
   menuContainer: {
     position: 'absolute',
     bottom: 160, 
@@ -244,12 +232,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'center',
+    justifyContent: 'center',
   },
   menuItemText: {
     fontSize: 16,
   },
-  menuicon : {
+  menuicon: {
     marginRight: 8,
   },
 });
