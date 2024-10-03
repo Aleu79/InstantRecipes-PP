@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { auth } from '../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
@@ -6,40 +6,107 @@ import { updatePassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Header from './Headers/Header';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 
 const UserEdit = () => {
+
   const { user } = useContext(UserContext);  
+
   const [username, setUsername] = useState('');
+
   const [password, setPassword] = useState('');
+
   const [confirmPassword, setConfirmPassword] = useState('');
+
   const navigation = useNavigation();
 
-  const handleSaveChanges = async () => {
-    const user = auth.currentUser;
+  const db = getFirestore();
 
-    if (password !== confirmPassword) {
+
+  useEffect(() => {
+
+    const handleUpdateProfile = async () => {
+
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+
+        setUsername(currentUser.displayName || ''); 
+
+      }
+
+    };
+
+    handleUpdateProfile();
+
+  }, [user]);
+
+
+  useEffect(() => {
+
+    const handleUpdateUsername = async () => {
+
+      const userRef = doc(db, 'users', user.email);
+
+      const userDoc = await getDoc(userRef);
+
+      const userData = userDoc.data();
+
+      if (userData) {
+
+        setUsername(userData.username);
+
+      }
+
+    };
+
+    handleUpdateUsername();
+
+  }, [user]);
+
+  const handleSaveChanges = async () => {
+    const currentUser = auth.currentUser;
+
+    if (password && password !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
 
     try {
       if (username) {
-        await updateProfile(user, { displayName: username });
+        const userRef = doc(db, 'users', currentUser.email);
+        await updateDoc(userRef, { username });
+        await updateProfile(currentUser, { displayName: username });
+        await currentUser.reload();
         Alert.alert('Éxito', 'Nombre de usuario actualizado');
       }
 
       if (password) {
-        await updatePassword(user, password);
+        await updatePassword(currentUser, password);
         Alert.alert('Éxito', 'Contraseña actualizada');
       }
 
+      // Navegar a UserProfile
       navigation.navigate('UserProfile');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
-      Alert.alert('Error', error.message);
+
+      // Mensajes de error más amigables
+      let errorMessage;
+      switch (error.code) {
+        case 'auth/weak-password':
+          errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+          break;
+        case 'auth/requires-recent-login':
+          errorMessage = 'Debes iniciar sesión nuevamente para realizar este cambio.';
+          break;
+        default:
+          errorMessage = error.message;
+      }
+
+      Alert.alert('Error', errorMessage);
     }
   };
-
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
 
@@ -106,7 +173,6 @@ const UserEdit = () => {
           <Text style={styles.saveButtonText}>Guardar cambios</Text>
         </TouchableOpacity>
       </View>
-
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>

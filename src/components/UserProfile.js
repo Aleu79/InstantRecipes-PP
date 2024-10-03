@@ -3,10 +3,12 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } fr
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker'; // Importar ImagePicker
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Importar métodos de Firebase Storage
-import { storage } from '../../firebase/firebase-config'; // Asegúrate de que el path sea correcto
+import * as ImagePicker from 'expo-image-picker'; 
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
+import { storage } from '../../firebase/firebase-config'; 
 import HeaderUserP from '../components/Headers/HeaderUserP';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebase/firebase-config';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
@@ -40,19 +42,29 @@ const UserProfile = () => {
       const blob = await response.blob();
 
       const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
-      const imageRef = ref(storage, `profileImages/${filename}`); // Asegúrate de que la carpeta sea correcta
+      const imageRef = ref(storage, `profileImages/${filename}`); 
 
       try {
         await uploadBytes(imageRef, blob);
         const url = await getDownloadURL(imageRef);
         console.log('URL de la imagen subida:', url);
-        setImage(url); // Actualiza el estado con la URL de la imagen subida
+        setImage(url); 
       } catch (error) {
         console.error('Error al subir la imagen:', error);
-        Alert.alert('Error', 'No se pudo subir la imagen.'); // Mostrar un mensaje de error
+        Alert.alert('Error', 'No se pudo subir la imagen.'); 
       }
     }
   };
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      Alert.alert('Error', 'No se pudo cerrar la sesión.');
+    }
+  };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -83,7 +95,7 @@ const UserProfile = () => {
           <Icon name="settings-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Ajustes</Text>
         </TouchableOpacity> */}
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Icon name="log-out-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Cerrar sesión</Text>
         </TouchableOpacity>
