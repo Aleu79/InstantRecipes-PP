@@ -17,41 +17,41 @@ const CategoryRecipesScreen = ({ route }) => {
   const [error, setError] = useState('');
 
   const fetchRecipes = async () => {
-    try {
-      const apiKey = '69694db3792e4c4387992d79c64eb073'; // Reemplaza con tu clave de API de Spoonacular
-      const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
-      const response = await axios.get(url);
-      console.log(url);
-      console.log(response);
-      const recipesData = response.data.results?.map(recipe => ({
-        id: recipe.id,
-        name: recipe.title,
-        image: recipe.image,
-        instructions: recipe.analyzedInstructions.length > 0 
-          ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') // Extrae los pasos
-          : 'No hay instrucciones disponibles', // Maneja el caso sin pasos
-        ingredients: recipe.extendedIngredients?.map(ingredient => ({
-          originalName: ingredient.originalName, // Nombre original
-          name: ingredient.name, // Nombre limpio
-          amount: ingredient.amount, // Cantidad
-          unit: ingredient.unit // Unidad
-        })) || [],
-        glutenFree: recipe.glutenFree,
-        vegan: recipe.vegan,
-        vegetarian: recipe.vegetarian,
-        ketogenic: recipe.ketogenic,
-        preparationMinutes: recipe.preparationMinutes,
-        cookingMinutes: recipe.cookingMinutes,
-        servings: recipe.servings,
-      })) || [];
-      
-      setRecipes(recipesData);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const apiKey = '69694db3792e4c4387992d79c64eb073'; // Reemplaza con tu clave de API de Spoonacular
+    const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+    const response = await axios.get(url);
+    const recipesData = response.data.results?.map(recipe => ({
+      id: recipe.id,
+      name: recipe.title,
+      image: recipe.image,
+      instructions: recipe.analyzedInstructions.length > 0 
+        ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') 
+        : 'No hay instrucciones disponibles',
+      ingredients: recipe.extendedIngredients?.map(ingredient => ({
+        originalName: ingredient.originalName,
+        name: ingredient.name,
+        amount: ingredient.amount,
+        unit: ingredient.unit,
+        image: ingredient.image, // Asegúrate de que esta línea esté presente
+      })) || [],
+      glutenFree: recipe.glutenFree,
+      vegan: recipe.vegan,
+      vegetarian: recipe.vegetarian,
+      ketogenic: recipe.ketogenic,
+      preparationMinutes: recipe.readyInMinutes,
+      cookingMinutes: recipe.readyInMinutes,
+      servings: recipe.servings,
+    })) || [];
+    
+    setRecipes(recipesData);
+  } catch (error) {
+    handleError(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchRecipes(); // Llama a fetchRecipes al montar el componente o cambiar la categoría

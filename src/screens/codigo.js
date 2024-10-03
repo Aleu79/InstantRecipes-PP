@@ -113,6 +113,21 @@ container: {
     justifyContent: 'space-between',
     paddingHorizontal: 10,
   },
+  socialButtons: {
+    flexDirection: 'row',
+  },
+  heartButton: {
+    marginRight: 10,
+  },
+  whatsappButton: {
+    marginRight: 10,
+  },
+  saveButton: {},
+  likesCount: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 5,
+  },
   contentContainer: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 40,
@@ -131,6 +146,16 @@ container: {
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  authorImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  createdBy: {
+    fontSize: 16,
+    color: '#888',
   },
   tabsContainer: {
     flexDirection: 'row',
