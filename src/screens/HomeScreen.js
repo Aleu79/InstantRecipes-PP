@@ -63,7 +63,7 @@ const HomeScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Botón Flotante */}
-      <TouchableOpacity style={styles.floatingButton}>
+      <TouchableOpacity style={styles.floatingButton} onPress={() => navigation.navigate('CreateRecipeScreen')}>
         <Text style={styles.floatingButtonText}>+</Text>
       </TouchableOpacity>
 

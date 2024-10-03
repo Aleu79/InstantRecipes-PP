@@ -12,6 +12,7 @@ import SavedRecipes  from './src/screens/SavedRecipes';
 import MyRecipes  from './src/screens/MyRecipes';
 import CategoryRecipesScreen from './src/screens/CategoryRecipesScreen';
 import RecipeScreen from './src/screens/RecipeScreen';
+import CreateRecipeScreen from './src/screens/CreateRecipeScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +31,7 @@ export default function App() {
           <Stack.Screen name="SearchScreen" component={SearchScreen} options={{headerShown:false}} />
           <Stack.Screen name="RecipeScreen" component={RecipeScreen} options={{headerShown:false}}/>
           <Stack.Screen name="CategoryRecipesScreen" component={CategoryRecipesScreen}  options={{headerShown:false}}  />
+          <Stack.Screen name="CreateRecipeScreen" component={CreateRecipeScreen}  options={{headerShown:false}}  />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
