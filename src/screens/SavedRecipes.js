@@ -55,10 +55,9 @@ const SavedRecipes = () => {
   );
 
   return (
-    <>
-      <View style={styles.container}>
-      <Header></Header>
-
+    <View style={styles.container}>
+      <Header />
+      
       {savedRecipes.length > 0 ? (
         <FlatList
           data={savedRecipes}
@@ -71,9 +70,10 @@ const SavedRecipes = () => {
           <Text style={styles.emptyText}>No guardaste ninguna receta todavía</Text>
         </View>
       )}
+
+      {/* Asegúrate de pasar la navegación al BottomNavBar */}
+      <BottomNavBar navigation={navigation} />
     </View>
-    <BottomNavBar/>
-    </>
   );
 };
 
