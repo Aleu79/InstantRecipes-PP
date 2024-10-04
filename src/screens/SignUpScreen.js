@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
@@ -120,6 +121,7 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
   return (
+    <ScrollView >
     <View style={styles.container}>
       <View style={styles.form}>
         <Text style={styles.title}>Bienvenido!</Text>
@@ -201,6 +203,7 @@ const SignUpScreen = ({ navigation }) => {
         <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>Ingresá</Text>
       </Text>
     </View>
+      </ScrollView>
   );
 };
 
