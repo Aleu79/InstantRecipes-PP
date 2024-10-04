@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
     flex: 1, 
-    fontFamily: 'lucida grande',
   },
   username: {
     fontWeight: 'bold',

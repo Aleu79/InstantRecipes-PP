@@ -21,6 +21,7 @@ const CategoryRecipesScreen = ({ route }) => {
     const apiKey = '69694db3792e4c4387992d79c64eb073'; // Reemplaza con tu clave de API de Spoonacular
     const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
     const response = await axios.get(url);
+    console.log(response);
     const recipesData = response.data.results?.map(recipe => ({
       id: recipe.id,
       name: recipe.title,
@@ -38,9 +39,7 @@ const CategoryRecipesScreen = ({ route }) => {
       glutenFree: recipe.glutenFree,
       vegan: recipe.vegan,
       vegetarian: recipe.vegetarian,
-      ketogenic: recipe.ketogenic,
       preparationMinutes: recipe.readyInMinutes,
-      cookingMinutes: recipe.readyInMinutes,
       servings: recipe.servings,
     })) || [];
     
@@ -144,6 +143,7 @@ const CategoryRecipesScreen = ({ route }) => {
                     color="#fff" 
                   />
                 </TouchableOpacity>
+                <Text style={styles.detalles}>{recipe.preparationMinutes}min • {recipe.servings} porciones</Text>
                 <Text style={styles.recipeName}>{recipe.name}</Text>
               </TouchableOpacity>
             ))
@@ -184,11 +184,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     borderRadius: 20,
+    resizeMode: 'cover',
+  },
+  detalles: {
+    color: '#adadad',
   },
   recipeName: {
     textAlign: 'left',
     color: '#000',
-    fontSize: 14,
+    fontSize: 16,
   },
   bookmarkButton: {
     position: 'absolute',

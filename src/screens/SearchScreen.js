@@ -9,34 +9,20 @@ const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState([]);
 
-  // Cargar imágenes de las categorías dinámicamente desde la API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('https://api.example.com/categories'); // Reemplaza con la URL de tu API real
-        const data = await response.json();
-        setCategoryImages(data); // Suponiendo que la API devuelva un array de objetos con `url` y `category`
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
 
-    fetchCategories();
-  }, []);
-
-  // Manejar la búsqueda de recetas cuando el usuario introduce texto
   const handleSearch = async (query) => {
     setSearchQuery(query);
-    if (query.length > 2) { // Inicia la búsqueda cuando hay al menos 3 caracteres
+    if (query.length > 2) { 
       try {
-        const response = await fetch(`https://api.example.com/recipes/search?q=${query}`); // Reemplaza con tu endpoint de búsqueda
+        const apiKey = '69694db3792e4c4387992d79c64eb073'; 
+        const response = await fetch(`https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey=${apiKey}`);
         const data = await response.json();
-        setRecipes(data); // Maneja los resultados de la búsqueda
+        setRecipes(data.results); 
       } catch (error) {
         console.error('Error fetching recipes:', error);
       }
     } else {
-      setRecipes([]); // Limpia los resultados si la búsqueda es menor a 3 caracteres
+      setRecipes([]);
     }
   };
 
@@ -60,13 +46,17 @@ const SearchScreen = ({ navigation }) => {
       {/* Resultados de búsqueda */}
       {searchQuery.length > 2 && recipes.length > 0 && (
         <ScrollView style={styles.resultsContainer}>
-          {recipes.map((recipe, index) => (
+          {recipes.map((recipe) => (
             <TouchableOpacity
-              key={index}
+              key={recipe.id}
               onPress={() => navigation.navigate('RecipeDetail', { recipeId: recipe.id })}
               style={styles.recipeItem}
             >
-              <Text style={styles.recipeName}>{recipe.name}</Text>
+              <Image 
+                source={{ uri: recipe.image }} 
+                style={styles.recipeImage} 
+              />
+              <Text style={styles.recipeName}>{recipe.title}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -131,6 +121,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderBottomColor: '#EEE',
     borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recipeImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
   },
   recipeName: {
     fontSize: 18,

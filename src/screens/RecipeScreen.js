@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import Header from '../components/Headers/Header';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; 
 
 const RecipeScreen = ({ route }) => {
   const { recipe } = route.params;
   const [activeTab, setActiveTab] = useState('ingredients');
+  const [scrollY] = useState(new Animated.Value(0));
+  const navigation = useNavigation(); 
+
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };  
 
   const saveRecipe = async () => {
     Alert.alert('Receta guardada', `La receta "${recipe.name}" ha sido guardada con éxito.`);
@@ -21,23 +27,83 @@ const RecipeScreen = ({ route }) => {
 
   const preparationSteps = recipe.instructions ? recipe.instructions.split('. ') : [];
 
+  const imageOpacity = scrollY.interpolate({
+    inputRange: [0, 300], 
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const imageTranslateY = scrollY.interpolate({
+    inputRange: [0, 300],
+    outputRange: [0, -150],
+    extrapolate: 'clamp',
+  });
+
   return (
     <>
-      {/* Header sobre la imagen */}
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-        <View style={styles.headerContainer}>
-          <Header />
-          <TouchableOpacity style={styles.bookmarkButton} onPress={saveRecipe}>
-            <FontAwesome name="bookmark-o" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      {/* Header fijo */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={30} color="#fff"/>
+            </TouchableOpacity>
+        <TouchableOpacity style={styles.bookmarkButton} onPress={saveRecipe}>
+          <FontAwesome name="bookmark-o" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container}>
+      {/* Contenido scrollable, incluyendo imagen */}
+      <Animated.ScrollView 
+        style={styles.container}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16} 
+      >
+        {/* Imagen animada que se mueve con el scroll */}
+        <Animated.View style={[styles.imageContainer, { opacity: imageOpacity, transform: [{ translateY: imageTranslateY }] }]}>
+          <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
+        </Animated.View>
+
         <View style={styles.contentContainer}>
           {/* Nombre de la receta y detalles del autor */}
           <Text style={styles.recipeName}>{recipe.name}</Text>
+
+          {/* Tiempo de preparación y porciones */}
+          <View style={styles.DetallesReceta}>
+            <View style={styles.infoContenedor}>
+              <Ionicons name="time-outline" size={24} color="#888" />
+              <Text style={styles.infoTexto}>{recipe.preparationMinutes}min</Text>
+            </View>
+            <View style={styles.infoContenedor}>
+              <Ionicons name="people-outline" size={24} color="#888" />
+              <Text style={styles.infoTexto}>{recipe.servings} porciones</Text>
+            </View>
+          </View>
+
+          {/* Iconos de especificaciones */}
+          <View style={styles.DietasContainer}>
+            {recipe.vegan && (
+              <View style={styles.dietasDetalles}>
+                <MaterialCommunityIcons name="leaf" size={24} color="green" />
+                <Text style={styles.dietasTexto}>Vegano</Text>
+              </View>
+            )}
+            {recipe.glutenFree && (
+              <View style={styles.dietasDetalles}>
+                <MaterialCommunityIcons name="bread-slice" size={24} color="orange" />
+                <Text style={styles.dietasTexto}>Sin Gluten</Text>
+              </View>
+            )}
+            {recipe.vegetarian && (
+              <View style={styles.dietasDetalles}>
+                <MaterialCommunityIcons name="food-apple" size={24} color="red" />
+                <Text style={styles.dietasTexto}>Vegetariano</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.separador}></View>
 
           {/* Tabs para cambiar entre Ingredientes y Preparación */}
           <View style={styles.tabsContainer}>
@@ -62,7 +128,10 @@ const RecipeScreen = ({ route }) => {
                 recipe.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientWrapper}>
                     <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}` }} style={styles.ingredientImage} />
-                    <Text style={styles.ingredientName}>• {ingredient.originalName} ({ingredient.amount} {ingredient.unit})</Text>
+                    <View>
+                      <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.originalName)}</Text>
+                      <Text style={styles.ingredientAmount}>{ingredient.amount} {ingredient.unit}</Text>
+                    </View>
                   </View>
                 ))
               ) : (
@@ -84,25 +153,25 @@ const RecipeScreen = ({ route }) => {
             </View>
           )}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-container: {
+  container: {
     flex: 1,
     backgroundColor: '#fff',
   },
   imageContainer: {
-    position: 'relative',
+    height: 400,
+    overflow: 'hidden',
   },
   recipeImage: {
     width: '100%',
-    height: 400,
-    borderTopLeftRadius: 40,  // Redondear la parte superior izquierda
-    borderTopRightRadius: 40, // Redondear la parte superior derecha
-    overflow: 'hidden', // Asegúrate de que la imagen no sobresalga del contenedor
+    height: '100%',
+    borderTopLeftRadius: 40,  
+    borderTopRightRadius: 40, 
   },
   headerContainer: {
     position: 'absolute',
@@ -112,6 +181,13 @@ container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 10,
+    zIndex: 10,
+    borderRadius: 25,
+    padding: 10, 
+  },
+  header: {
+    color: '#fff',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   contentContainer: {
     backgroundColor: '#fff',
@@ -123,14 +199,49 @@ container: {
   recipeName: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
+    marginBottom: 15,
+    marginTop: 25,
+    textAlign: 'left',
   },
-  authorDetails: {
+  DetallesReceta: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'space-evenly',
     marginBottom: 20,
+    marginTop: 20,
+  },
+  infoContenedor: {
+    alignItems: 'center',
+  },
+  infoTexto: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 5,
+  },
+  DietasContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  dietasDetalles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    borderRadius: 20,
+    padding: 10,
+    backgroundColor: '#f2f2f2',
+  },
+  dietasTexto: {
+    fontSize: 14,
+    color: '#888',
+    marginLeft: 5,
+  },
+  separador: {
+    height: 2,
+    backgroundColor: '#f5f5f5', 
+    width: '90%',
+    alignSelf: 'center',
+    marginVertical: 20, 
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -142,25 +253,24 @@ container: {
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 25,
   },
   activeTab: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    backgroundColor: '#e0e0e0',
   },
   inactiveTab: {
     backgroundColor: 'transparent',
   },
   tabText: {
     fontSize: 16,
-    color: '#888',
+    fontWeight: '500',
   },
   activeTabText: {
-    color: '#000',
     fontWeight: 'bold',
+    color: '#000',
   },
   ingredientsContainer: {
     marginTop: 10,
@@ -168,31 +278,56 @@ container: {
   ingredientWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   ingredientImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 5,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     marginRight: 10,
+    resizeMode: 'contain',
   },
   ingredientName: {
     fontSize: 16,
+  },
+  ingredientAmount: {
+    fontSize: 14,
+    color: '#666',
   },
   preparationContainer: {
     marginTop: 10,
   },
   stepWrapper: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: 20,
   },
   stepNumber: {
     fontWeight: 'bold',
-    marginRight: 10,
+    marginRight: 14,
+    backgroundColor: '#dfdfdf',
+    padding: 10,
+    borderRadius: 50,
+    minWidth: 40, 
+    minHeight: 40,
+    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   stepText: {
     fontSize: 16,
+    textAlign: 'left',
+    maxWidth: '85%', 
+  },
+  bookmarkButton: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 50,
+  },
+  backIcon:{
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 50,
   },
 });
 
