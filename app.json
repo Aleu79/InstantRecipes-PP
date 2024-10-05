@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/LogoApp.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.aleu79.InstantRecipes",

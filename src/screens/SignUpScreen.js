@@ -246,18 +246,41 @@ const SignUpScreen = ({ navigation }) => {
         </Text>
   
         <Modal animationType="slide" transparent={true} visible={modalVisible}>
-        <View style={styles.modalBackground}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Términos y Condiciones</Text>
-            <Text style={styles.modalText}>¿Aceptas los términos y condiciones?</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.button} onPress={handleAcceptTerms}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+              <ScrollView style={styles.scrollContainer}>
+                <Text style={styles.modalText}>
+                <Text style={{ fontWeight: 'bold' }}>Última actualización: 4 de octubre de 2024</Text>{'\n'}
+
+                  Al utilizar la aplicación de recetas InstantRecipes (en adelante, "la Aplicación"), aceptas cumplir con estos Términos y Condiciones. Si no estás de acuerdo con estos términos, por favor, no utilices la Aplicación.
+
+                  <Text style={{ fontWeight: 'bold' }}>1.</Text> Aceptación de Términos
+                  Al acceder y utilizar la Aplicación, aceptas que has leído, entendido y aceptado estar obligado por estos Términos y Condiciones. Estos términos pueden ser actualizados periódicamente, y se te notificará sobre cualquier cambio mediante la publicación de los nuevos términos en esta página.
+
+                  <Text style={{ fontWeight: 'bold' }}>2.</Text> Uso de la API de Spoonacular
+                  La Aplicación utiliza la API de Spoonacular para proporcionar recetas, información nutricional y otros datos relacionados con la cocina. Al utilizar nuestra Aplicación, también aceptas cumplir con los Términos de Servicio de Spoonacular, que puedes encontrar en su sitio web.
+
+                  <Text style={{ fontWeight: 'bold' }}>3.</Text> Propiedad Intelectual
+                  Todo el contenido de la Aplicación, incluyendo pero no limitándose a texto, imágenes, gráficos, logotipos, y software, es propiedad de InstantRecipes o de sus proveedores de contenido y está protegido por leyes de derechos de autor y otras leyes de propiedad intelectual. Queda prohibida la reproducción, distribución o modificación sin el permiso expreso del propietario.
+
+                  <Text style={{ fontWeight: 'bold' }}>4.</Text> Limitación de Responsabilidad
+                  La Aplicación se proporciona "tal cual" y "según disponibilidad". No garantizamos que la Aplicación esté libre de errores o interrupciones, ni que cumplirá con tus expectativas. No seremos responsables de ninguna pérdida o daño derivado del uso de la Aplicación o de la información contenida en ella.
+
+                  <Text style={{ fontWeight: 'bold' }}>5.</Text> Modificaciones
+                  Nos reservamos el derecho de modificar o interrumpir la Aplicación en cualquier momento, sin previo aviso. También podemos actualizar estos Términos y Condiciones en cualquier momento. Tu uso continuado de la Aplicación después de la publicación de cambios constituye tu aceptación de dichos cambios.
+
+                  <Text style={{ fontWeight: 'bold' }}>6.</Text> Ley Aplicable
+                  Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes del país en el que operamos, sin tener en cuenta sus principios de conflicto de leyes.
+                </Text>
+              </ScrollView>
+
+              <TouchableOpacity style={styles.acceptButton} onPress={handleAcceptTerms}>
                 <Text style={styles.buttonText}>Aceptar</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
       </View>
     </ScrollView>
   );
@@ -346,33 +369,36 @@ const styles = StyleSheet.create({
     color: '#FF4500',
     fontWeight: 'bold',
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
     elevation: 5,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 10,
   },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
+  scrollContainer: {
+    maxHeight: 400,
   },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
+  acceptButton: {
+    backgroundColor: '#FF4500',
+    borderRadius: 25,
+    width: '90%',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 30,
   },
 });
 
