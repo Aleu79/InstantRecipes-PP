@@ -1,9 +1,9 @@
 import React, { useContext, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
-import HeaderHome from '../components/Headers/HeaderHome';
 import { UserContext } from '../context/UserContext';
 import BottomNavBar from '../components/BottomNavbar';
+import Header from '../components/Headers/Header';
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
@@ -15,6 +15,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Header>salir</Header>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         {/* Bienvenida */}
         <View style={styles.bienvenida}>

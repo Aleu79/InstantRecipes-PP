@@ -8,23 +8,17 @@ import {
   Alert,
   ScrollView,
   Modal,
-  Button,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  getAuth,
+  fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
 import zxcvbn from 'zxcvbn';
-import {
-  getFirestore,
-  setDoc,
-  doc,
-  collection,
-} from 'firebase/firestore';
-import { CommonActions } from '@react-navigation/native';
-import { getAuth, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
 
 const db = getFirestore();
 
@@ -38,10 +32,12 @@ const SignUpScreen = ({ navigation }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { setUser } = useContext(UserContext);
   const [modalVisible, setModalVisible] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const passwordStrength = password ? zxcvbn(password).score : -1;
 
   const getPasswordStrengthLabel = () => {
+    console.log('Verificando fortaleza de contraseña:', passwordStrength);
     switch (passwordStrength) {
       case 0:
         return { label: 'Muy débil', color: 'red' };
@@ -59,6 +55,7 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   const validateFields = () => {
+    console.log('Validando campos:', { email, phone, username, password, confirmPassword });
     if (!email || !phone || !username || !password || !confirmPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return false;
@@ -71,74 +68,96 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
       return false;
     }
+    console.log('Campos validados correctamente');
     return true;
   };
 
-  const handleSignUp = async () => {
-    if (!validateFields()) return;
+  const handleVerifyEmail = async () => {
+    console.log('Manejando verificación de correo...');
+    if (!validateFields()) {
+      console.log('Validación fallida');
+      return;
+    }
 
     const auth = getAuth();
+    console.log('Firebase auth inicializado');
 
     try {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      console.log('Métodos de inicio de sesión obtenidos para el correo:', signInMethods);
+
       if (signInMethods.length > 0) {
         Alert.alert('Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
         return;
       }
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      setUser({ email: user.email, username, phone });
-
-      await sendEmailVerification(user);
-      Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
-
-      const userDoc = doc(collection(db, 'users'), email);
-      await setDoc(userDoc, { username, phone, email });
-
+      console.log('Mostrando modal para aceptar términos');
       setModalVisible(true);
     } catch (error) {
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión.');
-          break;
-        case 'auth/invalid-email':
-          Alert.alert('Error', 'Correo no válido.');
-          break;
-        case 'auth/weak-password':
-          Alert.alert('Error', 'Contraseña débil.');
-          break;
-        default:
-          Alert.alert('Error', error.message);
-          break;
-      }
+      console.log('Error durante la verificación de correo:', error.message);
+      Alert.alert('Error', error.message);
     }
   };
+  const handleSignUp = async () => {
+    console.log('Iniciando proceso de registro...');
+    if (!termsAccepted) {
+      console.log('Términos no aceptados');
+      Alert.alert('Error', 'Debes aceptar los términos y condiciones para registrarte.');
+      return;
+    }
+    const auth = getAuth();
+    console.log('Firebase auth inicializado para el registro');
+    try {
+      // Crear usuario y enviar verificación de correo
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('Usuario creado:', user);
+  
+      await sendEmailVerification(user);
+      console.log('Correo de verificación enviado');
+      Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
+  
+      // Guardar información del usuario en Firestore
+      const userDoc = doc(collection(db, 'users'), email);
+      await setDoc(userDoc, { username, phone, email });
+      console.log('Datos del usuario guardados en Firestore:', { username, phone, email });
+  
+      // Actualizar el estado global del usuario
+      setUser({ email: user.email, username, phone });
+      console.log('Estado del usuario actualizado:', { email: user.email, username, phone });
+  
+      // Verificar si el email está confirmado
+      await auth.currentUser.reload();  // Actualiza la información del usuario
+  
+      if (auth.currentUser.emailVerified) {
+        console.log('El correo ha sido verificado');
+        Alert.alert('Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
+        navigation.navigate('Home');
+      } else {
+        console.log('El correo no ha sido verificado');
+        Alert.alert('Verificación pendiente', 'Por favor, verifica tu correo electrónico antes de continuar.');
+        navigation.navigate('Login'); 
+      }
+  
+    } catch (error) {
+      console.log('Error durante el registro:', error.message);
+      Alert.alert('Error', error.message);
+    }
+  };
+  
 
   const handleAcceptTerms = () => {
-    setModalVisible(false);
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      })
-    );
+    console.log('Términos aceptados');
+    setTermsAccepted(true);
+    setModalVisible(false); // Cierra el modal
+    handleSignUp(); // Llama al proceso de registro
   };
-
-  const handleRejectTerms = () => {
-    setModalVisible(false);
-    Alert.alert(
-      'No puedes ingresar',
-      'No pudiste ingresar porque no aceptaste los términos y condiciones.'
-    );
-  };
-
   return (
     <ScrollView>
       <View style={styles.container}>
         <View style={styles.form}>
           <Text style={styles.title}>Bienvenido!</Text>
           <Text style={styles.subtitle}>Registra tu cuenta</Text>
+  
           <Text style={styles.label}>Número de celular</Text>
           <TextInput
             style={styles.input}
@@ -148,6 +167,7 @@ const SignUpScreen = ({ navigation }) => {
             keyboardType="phone-pad"
             placeholderTextColor="#666"
           />
+  
           <Text style={styles.label}>Usuario</Text>
           <TextInput
             style={styles.input}
@@ -156,6 +176,7 @@ const SignUpScreen = ({ navigation }) => {
             onChangeText={setUsername}
             placeholderTextColor="#666"
           />
+  
           <Text style={styles.label}>E-mail</Text>
           <TextInput
             style={styles.input}
@@ -165,6 +186,7 @@ const SignUpScreen = ({ navigation }) => {
             keyboardType="email-address"
             placeholderTextColor="#666"
           />
+  
           <Text style={styles.label}>Contraseña</Text>
           <View style={styles.passwordContainer}>
             <TextInput
@@ -188,6 +210,7 @@ const SignUpScreen = ({ navigation }) => {
               {getPasswordStrengthLabel().label}
             </Text>
           )}
+  
           <Text style={styles.label}>Repetir contraseña</Text>
           <View style={styles.passwordContainer}>
             <TextInput
@@ -207,42 +230,42 @@ const SignUpScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+  
+        <TouchableOpacity style={styles.button} onPress={handleVerifyEmail}>
           <Text style={styles.buttonText}>Registrar</Text>
         </TouchableOpacity>
-
+  
         <Text style={styles.footerText}>
           ¿Ya tienes una cuenta?{' '}
-          <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>Ingresá</Text>
-        </Text>
-      </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Términos y Condiciones</Text>
-          <Text style={styles.modalText}>
-            Aquí van los términos y condiciones que el usuario debe aceptar para registrarse...
+          <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
+            Ingresá
           </Text>
-          <View style={styles.modalButtons}>
-            <Button title="Aceptar" onPress={handleAcceptTerms} />
-            <Button title="No Aceptar" onPress={handleRejectTerms} color="#FF0000" />
+        </Text>
+  
+        <Modal animationType="slide" transparent={true} visible={modalVisible}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+            <Text style={styles.modalText}>¿Aceptas los términos y condiciones?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.button} onPress={handleAcceptTerms}>
+                <Text style={styles.buttonText}>Aceptar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
+      </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 16,  
     backgroundColor: '#F2F2F2',
   },
   form: {
@@ -257,6 +280,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignSelf: 'flex-start',
     marginLeft: 20,
+    marginTop: 100,
   },
   subtitle: {
     fontSize: 20,
