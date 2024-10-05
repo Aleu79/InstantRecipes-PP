@@ -3,7 +3,6 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'rea
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
 import BottomNavBar from '../components/BottomNavbar';
-import Header from '../components/Headers/Header';
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
@@ -29,7 +28,6 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header>salir</Header>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
 
         <View style={styles.bienvenida}>

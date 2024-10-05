@@ -78,14 +78,14 @@ const SignUpScreen = ({ navigation }) => {
       console.log('Validación fallida');
       return;
     }
-
+  
     const auth = getAuth();
     console.log('Firebase auth inicializado');
-
+  
     try {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       console.log('Métodos de inicio de sesión obtenidos para el correo:', signInMethods);
-
+  
       if (signInMethods.length > 0) {
         Alert.alert('Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
         return;
@@ -97,8 +97,10 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert('Error', error.message);
     }
   };
+  
   const handleSignUp = async () => {
     console.log('Iniciando proceso de registro...');
+    
     if (!termsAccepted) {
       console.log('Términos no aceptados');
       Alert.alert('Error', 'Debes aceptar los términos y condiciones para registrarte.');
@@ -143,17 +145,23 @@ const SignUpScreen = ({ navigation }) => {
   
     } catch (error) {
       console.log('Error durante el registro:', error.message);
-      Alert.alert('Error', error.message);
+      
+      // Manejo del error de correo ya en uso
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión o usa otro correo.');
+      } else {
+        Alert.alert('Error', error.message); // Maneja otros errores
+      }
     }
   };
   
-
   const handleAcceptTerms = () => {
     console.log('Términos aceptados');
     setTermsAccepted(true);
     setModalVisible(false); // Cierra el modal
     handleSignUp(); // Llama al proceso de registro
   };
+  
   return (
     <ScrollView>
       <View style={styles.container}>
