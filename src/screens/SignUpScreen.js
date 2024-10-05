@@ -104,8 +104,10 @@ const SignUpScreen = ({ navigation }) => {
       Alert.alert('Error', 'Debes aceptar los términos y condiciones para registrarte.');
       return;
     }
+  
     const auth = getAuth();
     console.log('Firebase auth inicializado para el registro');
+    
     try {
       // Crear usuario y enviar verificación de correo
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -115,7 +117,7 @@ const SignUpScreen = ({ navigation }) => {
       await sendEmailVerification(user);
       console.log('Correo de verificación enviado');
       Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
-  
+      
       // Guardar información del usuario en Firestore
       const userDoc = doc(collection(db, 'users'), email);
       await setDoc(userDoc, { username, phone, email });
@@ -126,17 +128,18 @@ const SignUpScreen = ({ navigation }) => {
       console.log('Estado del usuario actualizado:', { email: user.email, username, phone });
   
       // Verificar si el email está confirmado
-      await auth.currentUser.reload();  // Actualiza la información del usuario
+      const checkVerificationInterval = setInterval(async () => {
+        await auth.currentUser.reload();  // Actualiza la información del usuario
   
-      if (auth.currentUser.emailVerified) {
-        console.log('El correo ha sido verificado');
-        Alert.alert('Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
-        navigation.navigate('Home');
-      } else {
-        console.log('El correo no ha sido verificado');
-        Alert.alert('Verificación pendiente', 'Por favor, verifica tu correo electrónico antes de continuar.');
-        navigation.navigate('Login'); 
-      }
+        if (auth.currentUser.emailVerified) {
+          console.log('El correo ha sido verificado');
+          Alert.alert('Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
+          clearInterval(checkVerificationInterval);
+          navigation.navigate('Home');
+        } else {
+          console.log('El correo no ha sido verificado');
+        }
+      }, 1000);
   
     } catch (error) {
       console.log('Error durante el registro:', error.message);
