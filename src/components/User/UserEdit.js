@@ -87,12 +87,11 @@ const UserEdit = () => {
         Alert.alert('Éxito', 'Contraseña actualizada');
       }
 
-      // Navegar a UserProfile
       navigation.navigate('UserProfile');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
 
-      // Mensajes de error más amigables
+
       let errorMessage;
       switch (error.code) {
         case 'auth/weak-password':
@@ -127,7 +126,7 @@ const UserEdit = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Header></Header>
+      <Header/>
 
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
@@ -190,12 +189,12 @@ const styles = StyleSheet.create({
   },
   titulocontainer: {
     flexDirection: 'row',
-    alignItems: 'center', // Para centrar verticalmente la imagen y el texto
-    justifyContent: 'space-between', // Para separar el texto y la imagen
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
     marginBottom: 20,
   },
   textContainer: {
-    flex: 1, // El texto ocupa el espacio restante
+    flex: 1, 
   },
   title: {
     fontSize: 30,
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   imgprofile: {
-    marginLeft: 20, // Espacio entre el texto y la imagen
+    marginLeft: 20, 
   },
   profileImage: {
     width: 100,

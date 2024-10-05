@@ -1,14 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { ScrollView, View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
-import Header from '../components/Headers/Header';
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 
 const SearchScreen = ({ navigation }) => {
-  const categoriesScrollRef = useRef();
-  const [categoryImages, setCategoryImages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState([]);
   const [recipes, setRecipes] = useState([]);
-
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -28,13 +25,10 @@ const SearchScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header />
-      <View style={styles.navbar}>
-        <Text style={styles.searchPrompt}>Busca tus recetas favoritas!</Text>
-      </View>
-
-      {/* Campo de búsqueda */}
-      <View>
+      <View style={styles.searchBar}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="black" />
+        </TouchableOpacity>
         <TextInput
           placeholder="Buscar"
           style={styles.searchInput}
@@ -43,13 +37,12 @@ const SearchScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Resultados de búsqueda */}
       {searchQuery.length > 2 && recipes.length > 0 && (
-        <ScrollView style={styles.resultsContainer}>
+        <View style={styles.resultsContainer}>
           {recipes.map((recipe) => (
             <TouchableOpacity
               key={recipe.id}
-              onPress={() => navigation.navigate('RecipeDetail', { recipeId: recipe.id })}
+              onPress={() => navigation.navigate('RecipeScreen', { recipe })}
               style={styles.recipeItem}
             >
               <Image 
@@ -59,31 +52,9 @@ const SearchScreen = ({ navigation }) => {
               <Text style={styles.recipeName}>{recipe.title}</Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       )}
 
-      {/* Categorías */}
-      <View style={styles.carouselContainer}>
-        <ScrollView
-          ref={categoriesScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoriesContainer}
-        >
-          {/* Botones de categorías */}
-          {categoryImages.map((item, index) => (
-            <View key={index} style={styles.categoryContainer}>
-              <TouchableOpacity
-                style={styles.btnCategoria}
-                onPress={() => navigation.navigate('CategoryRecipes', { category: item.category })}
-              >
-                <Image source={{ uri: item.url }} style={styles.categoryImage} />
-              </TouchableOpacity>
-              <Text style={styles.categoryText}>{item.category}</Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
       <BottomNavBar navigation={navigation} />
     </View>
   );
@@ -96,16 +67,16 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 16,
   },
-  navbar: {
-    alignItems: 'flex-start',
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  searchPrompt: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FF4500',
+  backButton: {
+    marginRight: 10,
   },
   searchInput: {
+    flex: 1,
     backgroundColor: '#f1f1f1',
     borderRadius: 30,
     fontSize: 16,
@@ -115,6 +86,7 @@ const styles = StyleSheet.create({
   },
   resultsContainer: {
     marginVertical: 10,
+    maxHeight: 150,
   },
   recipeItem: {
     padding: 10,
@@ -133,40 +105,6 @@ const styles = StyleSheet.create({
   recipeName: {
     fontSize: 18,
     color: '#333',
-  },
-  carouselContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    marginBottom: 20,
-    paddingHorizontal: 16,
-    marginTop: 15,
-    width: '100%',
-  },
-  categoryContainer: {
-    alignItems: 'center',
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  btnCategoria: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFA500',
-  },
-  categoryImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
-    resizeMode: 'cover',
-  },
-  categoryText: {
-    marginTop: 5,
-    fontSize: 14,
-    color: '#333',
-    textAlign: 'center',
   },
 });
 

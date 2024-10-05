@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
 
 const RecipeScreen = ({ route }) => {
   const { recipe } = route.params;
   const [activeTab, setActiveTab] = useState('ingredients');
   const [scrollY] = useState(new Animated.Value(0));
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  };  
+  };
 
   const saveRecipe = async () => {
-    Alert.alert('Receta guardada', `La receta "${recipe.name}" ha sido guardada con éxito.`);
+    Alert.alert('Receta Guardada', `La receta "${recipe.name}" ha sido guardada con éxito.`);
   };
 
   if (!recipe) {
@@ -28,7 +28,7 @@ const RecipeScreen = ({ route }) => {
   const preparationSteps = recipe.instructions ? recipe.instructions.split('. ') : [];
 
   const imageOpacity = scrollY.interpolate({
-    inputRange: [0, 300], 
+    inputRange: [0, 300],
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
@@ -44,68 +44,62 @@ const RecipeScreen = ({ route }) => {
       {/* Header fijo */}
       <View style={styles.headerContainer}>
         <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={30} color="#fff"/>
-            </TouchableOpacity>
+          <Ionicons name="chevron-back" size={30} color="#fff" />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.bookmarkButton} onPress={saveRecipe}>
           <FontAwesome name="bookmark-o" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Contenido scrollable, incluyendo imagen */}
-      <Animated.ScrollView 
+      <Animated.ScrollView
         style={styles.container}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
         )}
-        scrollEventThrottle={16} 
+        scrollEventThrottle={16}
       >
-        {/* Imagen animada que se mueve con el scroll */}
         <Animated.View style={[styles.imageContainer, { opacity: imageOpacity, transform: [{ translateY: imageTranslateY }] }]}>
           <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
         </Animated.View>
 
         <View style={styles.contentContainer}>
-          {/* Nombre de la receta y detalles del autor */}
           <Text style={styles.recipeName}>{recipe.name}</Text>
 
-          {/* Tiempo de preparación y porciones */}
-          <View style={styles.DetallesReceta}>
-            <View style={styles.infoContenedor}>
+          <View style={styles.recipeDetails}>
+            <View style={styles.infoContainer}>
               <Ionicons name="time-outline" size={24} color="#888" />
-              <Text style={styles.infoTexto}>{recipe.preparationMinutes}min</Text>
+              <Text style={styles.infoText}>{recipe.preparationMinutes} min</Text>
             </View>
-            <View style={styles.infoContenedor}>
+            <View style={styles.infoContainer}>
               <Ionicons name="people-outline" size={24} color="#888" />
-              <Text style={styles.infoTexto}>{recipe.servings} porciones</Text>
+              <Text style={styles.infoText}>{recipe.servings} porciones</Text>
             </View>
           </View>
 
-          {/* Iconos de especificaciones */}
-          <View style={styles.DietasContainer}>
+          <View style={styles.dietContainer}>
             {recipe.vegan && (
-              <View style={styles.dietasDetalles}>
+              <View style={styles.dietDetail}>
                 <MaterialCommunityIcons name="leaf" size={24} color="green" />
-                <Text style={styles.dietasTexto}>Vegano</Text>
+                <Text style={styles.dietText}>Vegano</Text>
               </View>
             )}
             {recipe.glutenFree && (
-              <View style={styles.dietasDetalles}>
+              <View style={styles.dietDetail}>
                 <MaterialCommunityIcons name="bread-slice" size={24} color="orange" />
-                <Text style={styles.dietasTexto}>Sin Gluten</Text>
+                <Text style={styles.dietText}>Sin Gluten</Text>
               </View>
             )}
             {recipe.vegetarian && (
-              <View style={styles.dietasDetalles}>
+              <View style={styles.dietDetail}>
                 <MaterialCommunityIcons name="food-apple" size={24} color="red" />
-                <Text style={styles.dietasTexto}>Vegetariano</Text>
+                <Text style={styles.dietText}>Vegetariano</Text>
               </View>
             )}
           </View>
 
-          <View style={styles.separador}></View>
+          <View style={styles.separator}></View>
 
-          {/* Tabs para cambiar entre Ingredientes y Preparación */}
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === 'ingredients' ? styles.activeTab : styles.inactiveTab]}
@@ -121,10 +115,9 @@ const RecipeScreen = ({ route }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Mostrar ingredientes o pasos de preparación según la tab activa */}
           {activeTab === 'ingredients' ? (
             <View style={styles.ingredientsContainer}>
-              {recipe.ingredients.length > 0 ? (
+              {recipe.ingredients.lenght > 0 ? (
                 recipe.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientWrapper}>
                     <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}` }} style={styles.ingredientImage} />
@@ -170,8 +163,8 @@ const styles = StyleSheet.create({
   recipeImage: {
     width: '100%',
     height: '100%',
-    borderTopLeftRadius: 40,  
-    borderTopRightRadius: 40, 
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
   },
   headerContainer: {
     position: 'absolute',
@@ -183,11 +176,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     zIndex: 10,
     borderRadius: 25,
-    padding: 10, 
-  },
-  header: {
-    color: '#fff',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
   },
   contentContainer: {
     backgroundColor: '#fff',
@@ -203,27 +192,27 @@ const styles = StyleSheet.create({
     marginTop: 25,
     textAlign: 'left',
   },
-  DetallesReceta: {
+  recipeDetails: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 20,
     marginTop: 20,
   },
-  infoContenedor: {
+  infoContainer: {
     alignItems: 'center',
   },
-  infoTexto: {
+  infoText: {
     fontSize: 14,
     color: '#888',
     marginTop: 5,
   },
-  DietasContainer: {
+  dietContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
     marginTop: 10,
   },
-  dietasDetalles: {
+  dietDetail: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 10,
@@ -231,17 +220,17 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#f2f2f2',
   },
-  dietasTexto: {
+  dietText: {
     fontSize: 14,
     color: '#888',
     marginLeft: 5,
   },
-  separador: {
+  separator: {
     height: 2,
-    backgroundColor: '#f5f5f5', 
+    backgroundColor: '#f5f5f5',
     width: '90%',
     alignSelf: 'center',
-    marginVertical: 20, 
+    marginVertical: 20,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -283,16 +272,15 @@ const styles = StyleSheet.create({
   ingredientImage: {
     width: 50,
     height: 50,
-    borderRadius: 25,
     marginRight: 10,
-    resizeMode: 'contain',
   },
   ingredientName: {
     fontSize: 16,
+    fontWeight: 'bold',
   },
   ingredientAmount: {
     fontSize: 14,
-    color: '#666',
+    color: '#888',
   },
   preparationContainer: {
     marginTop: 10,
@@ -300,35 +288,30 @@ const styles = StyleSheet.create({
   stepWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   stepNumber: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 14,
-    backgroundColor: '#dfdfdf',
-    padding: 10,
-    borderRadius: 50,
-    minWidth: 40, 
-    minHeight: 40,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginRight: 10,
+    color: '#333',
   },
   stepText: {
     fontSize: 16,
-    textAlign: 'left',
-    maxWidth: '85%', 
+    color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    padding: 10,
   },
   bookmarkButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 10,
-    borderRadius: 50,
-  },
-  backIcon:{
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 10,
-    borderRadius: 50,
   },
 });
 
 export default RecipeScreen;
+

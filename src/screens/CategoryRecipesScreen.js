@@ -18,7 +18,7 @@ const CategoryRecipesScreen = ({ route }) => {
 
   const fetchRecipes = async () => {
   try {
-    const apiKey = '69694db3792e4c4387992d79c64eb073'; // Reemplaza con tu clave de API de Spoonacular
+    const apiKey = '69694db3792e4c4387992d79c64eb073'; 
     const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
     const response = await axios.get(url);
     console.log(response);
@@ -51,9 +51,8 @@ const CategoryRecipesScreen = ({ route }) => {
   }
 };
 
-
   useEffect(() => {
-    fetchRecipes(); // Llama a fetchRecipes al montar el componente o cambiar la categoría
+    fetchRecipes(); 
   }, [category]);
 
   const handleError = (error) => {
@@ -82,7 +81,7 @@ const CategoryRecipesScreen = ({ route }) => {
         glutenFree: recipe.glutenFree,
         vegan: recipe.vegan,
         vegetarian: recipe.vegetarian,
-        prepTime: recipe.preparationMinutes, // Cambié aquí para que coincida
+        prepTime: recipe.preparationMinutes, 
         servings: recipe.servings,
       };
 

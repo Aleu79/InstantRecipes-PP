@@ -17,7 +17,6 @@ const UserProfile = () => {
   const [image, setImage] = useState(null);
 
   const pickImage = async () => {
-    // Solicitar permisos para la galería
     const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (mediaLibraryStatus !== 'granted') {
       console.log('Permiso de galería no concedido:', mediaLibraryStatus);
@@ -38,7 +37,6 @@ const UserProfile = () => {
       const selectedImage = result.assets[0];
       console.log('URI de la imagen seleccionada:', selectedImage.uri);
 
-      // Subir la imagen a Firebase Storage
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
 

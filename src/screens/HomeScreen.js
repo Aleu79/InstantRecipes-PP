@@ -11,30 +11,42 @@ const HomeScreen = ({ navigation }) => {
   const { user } = useContext(UserContext);
   const [image, setImage] = useState(null);
 
+  const categoryImages = {
+    Veggie: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
+    Carnes: 'https://i.pinimg.com/564x/fb/fd/a2/fbfda2193d781e9e357860bbea548fa2.jpg',
+    Panadería: 'https://i.pinimg.com/564x/9a/69/c3/9a69c3409690f1a9a10578a48d84ac6c.jpg',
+    Postres: 'https://i.pinimg.com/564x/da/8e/f3/da8ef39729c591cb116894bf412f583a.jpg',
+    'Sin Tacc': 'https://i.pinimg.com/564x/6a/d3/3d/6ad33d29ebcbfe87b8fd7a1d4086749b.jpg',
+  };
+
+  const foodCarouselImages = [
+    'https://i.pinimg.com/564x/4e/0f/8d/4e0f8d6bcf238b2eb1df0bc2a45ff2cd.jpg',
+    'https://i.pinimg.com/564x/80/0c/70/800c70a8cb78cbe0bb0b6f8a0ae017b3.jpg',
+    'https://i.pinimg.com/564x/c7/3b/2b/c73b2b7b2a7a6b7b4b72b3a6aa663b7e.jpg',
+  ];
+
   const toggleMenu = () => setMenuVisible(!menuVisible);
 
   return (
     <View style={styles.container}>
       <Header>salir</Header>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        {/* Bienvenida */}
+
         <View style={styles.bienvenida}>
           <Text style={styles.greetingText}>
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
-          <View>
-            <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-                {image ? (
-                    <Image source={{ uri: image }} style={styles.profileImage} />
-                ) : (
-                    <Icon name="person" size={40} color="#333" />
-                )}
-            </TouchableOpacity>
-          </View>
-          {/* <HeaderHome /> */}
+          <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
+            {image ? (
+              <Image source={{ uri: image }} style={styles.profileImage} />
+            ) : (
+              <Icon name="person" size={40} color="#333" />
+            )}
+          </TouchableOpacity>
         </View>
 
-        {/* Carrusel de Categorías */}
+        
+
         <Text style={styles.sectionTitle}>Categorías</Text>
         <ScrollView
           ref={categoriesScrollRef}
@@ -42,43 +54,23 @@ const HomeScreen = ({ navigation }) => {
           showsHorizontalScrollIndicator={false}
           style={styles.categoriesContainer}
         >
-          {/* Botones de categorías */}
-          {['Veggie', 'Carnes', 'Bebidas', 'Panadería', 'Postres', 'Sin TACC'].map((category, index) => (
+          {Object.keys(categoryImages).map((category, index) => (
             <TouchableOpacity
               key={index}
-              style={[styles.categoryButton, { backgroundColor: ['#B22222', '#FFA500', '#FF4500', '#C86038', '#FF7700', '#FFA500'][index] }]}
+              style={styles.categoryButton}
               onPress={() => navigation.navigate('CategoryRecipesScreen', { category })}
             >
+              <Image source={{ uri: categoryImages[category] }} style={styles.categoryImage} />
               <Text style={styles.categoryButtonText}>{category}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* Sección de Recomendados */}
-        <Text style={styles.sectionTitle}>Recomendados</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.recommendedContainer}>
-            {[1, 2, 3].map((_, index) => (
-              <TouchableOpacity key={index} style={styles.imageContainer} onPress={() => navigation.navigate('RecipeView')}>
-                <Image style={styles.imgRecipes} source={{ uri: 'https://via.placeholder.com/150' }} />
-                <Text style={styles.imageLabel}>Nombre {index + 1}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-
-        {/* Botón "Ver más" */}
-        <TouchableOpacity style={styles.moreButton}>
-          <Text style={styles.moreButtonText}>Ver más</Text>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Botón Flotante */}
       <TouchableOpacity style={styles.floatingButton} onPress={toggleMenu}>
         <Icon name="add" size={30} color="#fff"/>
       </TouchableOpacity>
 
-      {/* Menú Emergente */}
       {menuVisible && (
         <View style={styles.menuContainer}>
           <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); navigation.navigate('CreateRecipeScreen'); }}>
@@ -106,6 +98,15 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 100,
   },
+  carouselContainer: {
+    marginBottom: 20,
+  },
+  carouselImage: {
+    width: 300,
+    height: 150,
+    borderRadius: 10,
+    marginRight: 10,
+  },
   bienvenida: {
     flexDirection: 'row',
     alignItems: 'center', 
@@ -129,74 +130,31 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     marginHorizontal: 16,
   },
-  ingredientsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 10,
-    borderRadius: 16,
-    backgroundColor: '#f1f1f1',
-    marginHorizontal: 16,
-    marginBottom: 20,
-  },
   categoriesContainer: {
     paddingHorizontal: 16,
     marginBottom: 20,
   },
   categoryButton: {
-    borderRadius: 25,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: 75,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 150,
-    height: 90,
+    width: 110,
+    height: 110,
+  },
+  categoryImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 8,
   },
   categoryButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  recommendedContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    paddingHorizontal: 16,
-  },
-  imageContainer: {
-    width: 150,
-    height: 150,
-    borderRadius: 20,
-    marginRight: 10,
-    position: 'relative',
-  },
-  imgRecipes: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 20,
-  },
-  imageLabel: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  moreButton: {
-    backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: 24,
-    alignItems: 'center',
-    marginVertical: 10,
-    marginHorizontal: 16,
-  },
-  moreButtonText: {
     color: '#000',
+    fontWeight: 'bold',
     fontSize: 16,
+    maxWidth: '100%',
   },
   floatingButton: {
     position: 'absolute',

@@ -7,7 +7,7 @@ import { storage } from '../../firebase/firebase-config';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/firebase-config'; // Ensure you import db from your firebase-config
+import { db } from '../../firebase/firebase-config'; 
 
 const CreateRecipeScreen = () => {
   const [activeTab, setActiveTab] = useState('ingredients');
@@ -22,7 +22,7 @@ const CreateRecipeScreen = () => {
   const [prepTime, setPrepTime] = useState('');
   const [categories, setCategories] = useState([]); 
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [loading, setLoading] = useState(true); // State to manage loading status
+  const [loading, setLoading] = useState(true); 
 
   const fetchCategories = async () => {
     try {

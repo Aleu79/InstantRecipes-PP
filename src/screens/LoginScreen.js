@@ -1,4 +1,4 @@
-import { useNavigation, CommonActions } from '@react-navigation/native'; // Asegúrate de importar CommonActions
+import { useNavigation, CommonActions } from '@react-navigation/native'; 
 import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useState, useContext } from 'react';
@@ -11,10 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { height } = Dimensions.get('window');
 
 const LoginScreen = () => {
-  const navigation = useNavigation(); // Hook de navegación
-  const [email, setEmail] = useState(''); // Estado para el email
-  const [password, setPassword] = useState(''); // Estado para la contraseña
-  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar la contraseña
+  const navigation = useNavigation(); 
+  const [email, setEmail] = useState(''); 
+  const [password, setPassword] = useState(''); 
+  const [showPassword, setShowPassword] = useState(false); 
   const { setUser } = useContext(UserContext);
   const db = getFirestore();
 
@@ -26,7 +26,7 @@ const LoginScreen = () => {
   
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
-      await AsyncStorage.setItem('userEmail', user.user.email); // Guarda el correo electrónico en AsyncStorage
+      await AsyncStorage.setItem('userEmail', user.user.email); 
       const userDoc = doc(db, 'users', user.user.email);
       const userData = await getDoc(userDoc);
       const data = userData.data();
@@ -38,8 +38,8 @@ const LoginScreen = () => {
         })
       );
     } catch (error) {
-      console.log('Error completo:', error); // Ver el error completo
-      console.log('Código de error:', error.code); // Imprimir el código de error para depuración
+      console.log('Error completo:', error); 
+      console.log('Código de error:', error.code); 
     
       switch (error.code) {
         case 'auth/wrong-password':
@@ -90,7 +90,7 @@ const LoginScreen = () => {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
         <View style={styles.container}>
           <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
-          <View style={styles.overlay} />
+          <View style={styles.ondulatedBackground} /> 
           <View style={styles.form}>
             <Text style={styles.title}>Hola!</Text>
             <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
@@ -146,6 +146,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: height * 0.5,
     resizeMode: 'cover',
+  },
+
+  ondulatedBackground: {
+    position: 'absolute',
+    top: height * 0.45, 
+    left: 0,
+    right: 0,
+    height: 100, 
+    backgroundColor: '#fdfdfd', 
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
   },
   forgotPasswordButton: {
     width: '80%',
