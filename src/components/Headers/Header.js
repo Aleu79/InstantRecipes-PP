@@ -11,7 +11,7 @@ const Header = () =>  {
     <>
         <View style={styles.iconsContainer}>
             <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-            <Icon name="chevron-back" size={30} color="#333" />
+            <Icon name="chevron-back" size={30} />
             </TouchableOpacity>
         </View>
     </>
