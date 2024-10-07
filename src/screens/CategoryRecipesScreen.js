@@ -17,39 +17,39 @@ const CategoryRecipesScreen = ({ route }) => {
   const [error, setError] = useState('');
 
   const fetchRecipes = async () => {
-  try {
-    const apiKey = '69694db3792e4c4387992d79c64eb073'; 
-    const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
-    const response = await axios.get(url);
-    console.log(response);
-    const recipesData = response.data.results?.map(recipe => ({
-      id: recipe.id,
-      name: recipe.title,
-      image: recipe.image,
-      instructions: recipe.analyzedInstructions.length > 0 
-        ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') 
-        : 'No hay instrucciones disponibles',
-      ingredients: recipe.extendedIngredients?.map(ingredient => ({
-        originalName: ingredient.originalName,
-        name: ingredient.name,
-        amount: ingredient.amount,
-        unit: ingredient.unit,
-        image: ingredient.image, // Asegúrate de que esta línea esté presente
-      })) || [],
-      glutenFree: recipe.glutenFree,
-      vegan: recipe.vegan,
-      vegetarian: recipe.vegetarian,
-      preparationMinutes: recipe.readyInMinutes,
-      servings: recipe.servings,
-    })) || [];
-    
-    setRecipes(recipesData);
-  } catch (error) {
-    handleError(error);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const apiKey = '69694db3792e4c4387992d79c64eb073'; 
+      const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+      const response = await axios.get(url);
+      console.log(response);
+      const recipesData = response.data.results?.map(recipe => ({
+        id: recipe.id,
+        name: recipe.title,
+        image: recipe.image,
+        instructions: recipe.analyzedInstructions.length > 0 
+          ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') 
+          : 'No hay instrucciones disponibles',
+        ingredients: recipe.extendedIngredients?.map(ingredient => ({
+          originalName: ingredient.originalName,
+          name: ingredient.name,
+          amount: ingredient.amount,
+          unit: ingredient.unit,
+          image: ingredient.image, 
+        })) || [],
+        glutenFree: recipe.glutenFree,
+        vegan: recipe.vegan,
+        vegetarian: recipe.vegetarian,
+        preparationMinutes: recipe.readyInMinutes,
+        servings: recipe.servings,
+      })) || [];
+      
+      setRecipes(recipesData);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchRecipes(); 
@@ -92,12 +92,19 @@ const CategoryRecipesScreen = ({ route }) => {
         await setDoc(userDoc, { misRecetas: [recipeData] });
       } else {
         const misRecetas = userDocData.data().misRecetas || [];
+
+        const recipeExists = misRecetas.some((rec) => rec.id === recipe.id);
+        if (recipeExists) {
+          Alert.alert('La receta ya está guardada.');
+          return;
+        }
+
         misRecetas.push(recipeData);
         await updateDoc(userDoc, { misRecetas });
       }
 
       Alert.alert('Receta guardada con éxito!');
-      setSavedRecipes(prev => new Set(prev).add(recipe.id));
+      setSavedRecipes((prev) => new Set(prev).add(recipe.id));
     } catch (error) {
       Alert.alert('Error', 'No se pudo guardar la receta.');
     }
@@ -154,7 +161,6 @@ const CategoryRecipesScreen = ({ route }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

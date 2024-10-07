@@ -42,14 +42,22 @@ const SavedRecipes = () => {
     fetchRecipes();
   }, []);
 
+  const renderIngredients = (ingredients) => {
+    return ingredients.map((ingredient, index) => (
+      <Text key={index} style={styles.recipeCategory}>
+        {ingredient.amount} {ingredient.unit} {ingredient.name}
+      </Text>
+    ));
+  };
+
   const renderRecipe = ({ item }) => (
     <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
       <Image source={{ uri: item.image }} style={styles.recipeImage} />
       <View style={styles.recipeInfo}>
         <Text style={styles.recipeName}>{item.name}</Text>
-        <Text style={styles.recipeCategory}>Calorías: {item.calories}</Text>
-        <Text style={styles.recipeCategory}>Ingredientes: {item.ingredients}</Text>
-        <Text style={styles.recipeCategory}>Etiquetas de salud: {item.healthLabels}</Text>
+        <Text style={styles.recipeCategory}>Porciones: {item.servings}</Text>
+        <Text style={styles.recipeCategory}>Ingredientes:</Text>
+        {renderIngredients(item.ingredients)} 
       </View>
     </TouchableOpacity>
   );
@@ -71,7 +79,6 @@ const SavedRecipes = () => {
         </View>
       )}
 
-      {/* Asegúrate de pasar la navegación al BottomNavBar */}
       <BottomNavBar navigation={navigation} />
     </View>
   );
