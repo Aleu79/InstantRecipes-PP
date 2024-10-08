@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     fontSize: 17,
-  },
+  },  
   eyeIcon: {
     padding: 8,
   },

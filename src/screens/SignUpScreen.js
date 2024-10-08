@@ -8,6 +8,10 @@ import {
   Alert,
   ScrollView,
   Modal,
+  KeyboardAvoidingView,
+  Image,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {
@@ -21,6 +25,8 @@ import zxcvbn from 'zxcvbn';
 import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
 
 const db = getFirestore();
+
+const { height } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -163,82 +169,80 @@ const SignUpScreen = ({ navigation }) => {
   };
   
   return (
-    <ScrollView>
+
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
       <View style={styles.container}>
-        <View style={styles.form}>
-          <Text style={styles.title}>Bienvenido!</Text>
-          <Text style={styles.subtitle}>Registra tu cuenta</Text>
-  
-          <Text style={styles.label}>Número de celular</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Número de celular"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            placeholderTextColor="#666"
-          />
-  
-          <Text style={styles.label}>Usuario</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Usuario"
-            value={username}
-            onChangeText={setUsername}
-            placeholderTextColor="#666"
-          />
-  
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            placeholderTextColor="#666"
-          />
-  
-          <Text style={styles.label}>Contraseña</Text>
-          <View style={styles.passwordContainer}>
+      <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
+        <View style={styles.ondulatedBackground}>
+          <View style={styles.form}>
+            <Text style={styles.title}>Bienvenido!</Text>
+            <Text style={styles.subtitle}>Registra tu cuenta</Text>
+            <Text style={styles.label}>Usuario</Text>
             <TextInput
-              style={styles.passwordInput}
-              placeholder="Contraseña"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
+              style={styles.input}
+              placeholder="Usuario"
+              value={username}
+              onChangeText={setUsername}
               placeholderTextColor="#666"
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Icon
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={24}
-                color="#666"
-              />
-            </TouchableOpacity>
-          </View>
-          {password !== '' && (
-            <Text style={{ color: getPasswordStrengthLabel().color, marginLeft: 20 }}>
-              {getPasswordStrengthLabel().label}
-            </Text>
-          )}
-  
-          <Text style={styles.label}>Repetir contraseña</Text>
-          <View style={styles.passwordContainer}>
+    
+            <Text style={styles.label}>E-mail</Text>
             <TextInput
-              style={styles.passwordInput}
-              placeholder="Repetir contraseña"
-              secureTextEntry={!showConfirmPassword}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              style={styles.input}
+              placeholder="E-mail"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
               placeholderTextColor="#666"
             />
-            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              <Icon
-                name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={24}
-                color="#666"
+    
+            <Text style={styles.label}>Contraseña</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Contraseña"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                placeholderTextColor="#666"
               />
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Icon
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={24}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+            {password !== '' && (
+              <Text style={{ color: getPasswordStrengthLabel().color, marginLeft: 20 }}>
+                {getPasswordStrengthLabel().label}
+              </Text>
+            )}
+    
+            <Text style={styles.label}>Repetir contraseña</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Repetir contraseña"
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholderTextColor="#666"
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <Icon
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={24}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
   
@@ -291,6 +295,7 @@ const SignUpScreen = ({ navigation }) => {
         </Modal>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -299,10 +304,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,  
     backgroundColor: '#F2F2F2',
   },
-  form: {
+  backgroundImage: {
+    width: '100%',
+    height: '40%',
+    resizeMode: 'cover',
+    position: 'absolute',
+    top: 0, 
+  },
+  ondulatedBackground: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fdfdfd', 
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    },
+    form: {
     width: '100%',
     alignItems: 'center',
     marginBottom: 16,
