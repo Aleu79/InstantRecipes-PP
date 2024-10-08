@@ -167,41 +167,38 @@ const SignUpScreen = ({ navigation }) => {
     setModalVisible(false); // Cierra el modal
     handleSignUp(); // Llama al proceso de registro
   };
-  
-  return (
 
+  return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
-      <View style={styles.container}>
-      <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
-        <View style={styles.ondulatedBackground}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
+        <View style={styles.container}>
+          <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
+          <View style={styles.ondulatedBackground} /> 
           <View style={styles.form}>
-            <Text style={styles.title}>Bienvenido!</Text>
-            <Text style={styles.subtitle}>Registra tu cuenta</Text>
-            <Text style={styles.label}>Usuario</Text>
+            <Text style={styles.title}>¡Bienvenido!</Text>
+            <Text style={styles.subtitle}>Crea tu cuenta</Text>
+            
             <TextInput
               style={styles.input}
               placeholder="Usuario"
               value={username}
               onChangeText={setUsername}
-              placeholderTextColor="#666"
+              placeholderTextColor="#999"
             />
-    
-            <Text style={styles.label}>E-mail</Text>
+
             <TextInput
               style={styles.input}
-              placeholder="E-mail"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
-              placeholderTextColor="#666"
+              placeholderTextColor="#999"
             />
-    
-            <Text style={styles.label}>Contraseña</Text>
+
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
@@ -209,55 +206,52 @@ const SignUpScreen = ({ navigation }) => {
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
-                placeholderTextColor="#666"
+                placeholderTextColor="#999"
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Icon
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={24}
-                  color="#666"
-                />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
-            {password !== '' && (
-              <Text style={{ color: getPasswordStrengthLabel().color, marginLeft: 20 }}>
-                {getPasswordStrengthLabel().label}
-              </Text>
-            )}
-    
-            <Text style={styles.label}>Repetir contraseña</Text>
+
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
-                placeholder="Repetir contraseña"
-                secureTextEntry={!showConfirmPassword}
+                placeholder="Confirmar contraseña"
+                secureTextEntry={!showPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholderTextColor="#666"
+                placeholderTextColor="#999"
               />
-              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                <Icon
-                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={24}
-                  color="#666"
-                />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+              <Text style={styles.buttonText}>Registrar</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.footerText}>
+              ¿Ya tienes una cuenta?{' '}
+              <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
+                Inicia sesión
+              </Text>
+            </Text>
+
+
+            <TouchableOpacity style={styles.termsContainer} onPress={() => setModalVisible(true)}>
+              <Icon name="document-text-outline" size={20} color="#FF4500" />
+              <Text style={styles.termsText}>Términos y condiciones de uso</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-  
-        <TouchableOpacity style={styles.button} onPress={handleVerifyEmail}>
-          <Text style={styles.buttonText}>Registrar</Text>
-        </TouchableOpacity>
-  
-        <Text style={styles.footerText}>
-          ¿Ya tienes una cuenta?{' '}
-          <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
-            Ingresá
-          </Text>
-        </Text>
-  
-        <Modal animationType="slide" transparent={true} visible={modalVisible}>
+
+          <Modal animationType="slide" transparent={true} visible={modalVisible}>
           <View style={styles.modalBackground}>
             <View style={styles.modalView}>
               <Text style={styles.modalTitle}>Términos y Condiciones</Text>
@@ -293,104 +287,112 @@ const SignUpScreen = ({ navigation }) => {
             </View>
           </View>
         </Modal>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F2F2F2',
+    backgroundColor: '#fdfdfd',
   },
   backgroundImage: {
     width: '100%',
-    height: '40%',
+    height: height * 0.5,
     resizeMode: 'cover',
-    position: 'absolute',
-    top: 0, 
   },
   ondulatedBackground: {
     position: 'absolute',
+    top: height * 0.45,
     left: 0,
     right: 0,
-    backgroundColor: '#fdfdfd', 
+    height: 100,
+    backgroundColor: '#fdfdfd',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
-    },
-    form: {
-    width: '100%',
+  },
+  form: {
+    flex: 1,
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: 'bold',
     color: '#000',
     marginBottom: 8,
     alignSelf: 'flex-start',
-    marginLeft: 20,
-    marginTop: 100,
+    marginLeft: '5%',
   },
   subtitle: {
     fontSize: 20,
     color: '#aaaaaa',
     marginBottom: 24,
     alignSelf: 'flex-start',
-    marginLeft: 20,
-  },
-  label: {
-    fontSize: 16,
-    color: '#000',
-    alignSelf: 'flex-start',
-    marginLeft: 20,
-    marginBottom: 5,
+    marginLeft: '5%',
   },
   input: {
     width: '90%',
-    height: 50,
+    height: 55,
     borderColor: '#e6e6e6',
     borderWidth: 1,
-    borderRadius: 25,
+    borderRadius: 40,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 17,
     marginBottom: 16,
     backgroundColor: '#fff',
   },
   passwordContainer: {
+    width: '90%',
+    height: 55,
     flexDirection: 'row',
     alignItems: 'center',
-    width: '90%',
-    height: 50,
     borderColor: '#e6e6e6',
     borderWidth: 1,
-    borderRadius: 25,
-    paddingHorizontal: 16,
+    borderRadius: 40,
     backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   passwordInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 17,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: '10%',
+    marginTop: '10%',
+  },
+  termsText: {
+    color: '#FF4500',
+    marginLeft: 8,
+    fontSize: 14,
   },
   button: {
+    width: '80%',
+    height: 55,
     backgroundColor: '#FF4500',
-    borderRadius: 25,
-    width: '90%',
-    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    borderRadius: 25,
+    marginVertical: 16,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   footerText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#000',
+    textAlign: 'center',
   },
   footerLink: {
     color: '#FF4500',
