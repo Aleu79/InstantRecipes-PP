@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Alert, To
 import axios from 'axios';
 import { db } from '../../firebase/firebase-config'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +21,6 @@ const CategoryRecipesScreen = ({ route }) => {
       const apiKey = '69694db3792e4c4387992d79c64eb073'; 
       const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
       const response = await axios.get(url);
-      console.log(response);
       const recipesData = response.data.results?.map(recipe => ({
         id: recipe.id,
         name: recipe.title,
@@ -53,7 +52,16 @@ const CategoryRecipesScreen = ({ route }) => {
 
   useEffect(() => {
     fetchRecipes(); 
+    loadSavedRecipes(); // Cargar recetas guardadas al montar el componente
   }, [category]);
+
+  const loadSavedRecipes = async () => {
+    const savedRecipesString = await AsyncStorage.getItem('savedRecipes');
+    if (savedRecipesString) {
+      const savedRecipeIds = JSON.parse(savedRecipesString);
+      setSavedRecipes(new Set(savedRecipeIds)); // Actualizar el estado con los IDs guardados
+    }
+  };
 
   const handleError = (error) => {
     console.error('Error al obtener recetas:', error.message);
@@ -64,7 +72,7 @@ const CategoryRecipesScreen = ({ route }) => {
     }
   };
 
-  const saveRecipe = useCallback(async (recipe) => {
+  const handleRecipeSaveToggle = useCallback(async (recipe) => {
     try {
       let userEmail = await AsyncStorage.getItem('userEmail');
       if (!userEmail) {
@@ -72,51 +80,56 @@ const CategoryRecipesScreen = ({ route }) => {
         return;
       }
 
-      const recipeData = {
-        id: recipe.id,
-        name: recipe.name,
-        image: recipe.image,
-        instructions: recipe.instructions,
-        ingredients: recipe.ingredients,
-        glutenFree: recipe.glutenFree,
-        vegan: recipe.vegan,
-        vegetarian: recipe.vegetarian,
-        prepTime: recipe.preparationMinutes, 
-        servings: recipe.servings,
-      };
-
       const userDoc = doc(db, 'users', userEmail);
       const userDocData = await getDoc(userDoc);
 
       if (!userDocData.exists()) {
-        await setDoc(userDoc, { misRecetas: [recipeData] });
-      } else {
-        const misRecetas = userDocData.data().misRecetas || [];
+        Alert.alert('Error', 'No hay recetas guardadas para este usuario.');
+        return;
+      }
 
-        const recipeExists = misRecetas.some((rec) => rec.id === recipe.id);
-        if (recipeExists) {
-          Alert.alert('La receta ya está guardada.');
-          return;
-        }
+      const misRecetas = userDocData.data().misRecetas || [];
+      const recipeIndex = misRecetas.findIndex((rec) => rec.id === recipe.id);
+
+      if (recipeIndex !== -1) {
+        // Si la receta ya está guardada, eliminarla
+        misRecetas.splice(recipeIndex, 1); // Eliminar la receta del array
+        await updateDoc(userDoc, { misRecetas });
+        Alert.alert('Receta eliminada con éxito!');
+        setSavedRecipes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(recipe.id); // Eliminar la receta del set de recetas guardadas
+          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet])); // Guardar el nuevo estado en AsyncStorage
+          return newSet;
+        });
+      } else {
+        // Si la receta no está guardada, guardarla
+        const recipeData = {
+          id: recipe.id,
+          name: recipe.name,
+          image: recipe.image,
+          instructions: recipe.instructions,
+          ingredients: recipe.ingredients,
+          glutenFree: recipe.glutenFree,
+          vegan: recipe.vegan,
+          vegetarian: recipe.vegetarian,
+          prepTime: recipe.preparationMinutes, 
+          servings: recipe.servings,
+        };
 
         misRecetas.push(recipeData);
         await updateDoc(userDoc, { misRecetas });
+        Alert.alert('Receta guardada con éxito!');
+        setSavedRecipes((prev) => {
+          const newSet = new Set(prev).add(recipe.id); // Añadir receta al set de recetas guardadas
+          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet])); // Guardar el nuevo estado en AsyncStorage
+          return newSet;
+        });
       }
-
-      Alert.alert('Receta guardada con éxito!');
-      setSavedRecipes((prev) => new Set(prev).add(recipe.id));
     } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar la receta.');
+      Alert.alert('Error', 'No se pudo guardar o eliminar la receta.');
     }
   }, []);
-
-  const toggleSaveRecipe = (recipe) => {
-    if (savedRecipes.has(recipe.id)) {
-      Alert.alert('Error', 'La receta ya está guardada.');
-    } else {
-      saveRecipe(recipe);
-    }
-  };
 
   if (loading) {
     return (
@@ -142,7 +155,7 @@ const CategoryRecipesScreen = ({ route }) => {
                 style={styles.recipeContainer}
               >
                 <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-                <TouchableOpacity style={styles.bookmarkButton} onPress={() => toggleSaveRecipe(recipe)}>
+                <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleRecipeSaveToggle(recipe)}>
                   <FontAwesome 
                     name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"} 
                     size={24} 
@@ -161,6 +174,7 @@ const CategoryRecipesScreen = ({ route }) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

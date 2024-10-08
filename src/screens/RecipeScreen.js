@@ -1,20 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../../firebase/firebase-config'; 
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const RecipeScreen = ({ route }) => {
   const { recipe } = route.params;
   const [activeTab, setActiveTab] = useState('ingredients');
   const [scrollY] = useState(new Animated.Value(0));
+  const [savedRecipes, setSavedRecipes] = useState(new Set());
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      let userEmail = await AsyncStorage.getItem('userEmail');
+      if (!userEmail) return;
+
+      const userDoc = doc(db, 'users', userEmail);
+      const userDocData = await getDoc(userDoc);
+
+      if (userDocData.exists()) {
+        const misRecetas = userDocData.data().misRecetas || [];
+        const isSaved = misRecetas.some((rec) => rec.id === recipe.id);
+        setSavedRecipes((prev) => new Set(prev).add(isSaved ? recipe.id : null));
+      }
+    };
+
+    checkSavedStatus();
+  }, [recipe]);
+
+  const handleRecipeSaveToggle = async () => {
+    try {
+      let userEmail = await AsyncStorage.getItem('userEmail');
+      if (!userEmail) {
+        Alert.alert('Error', 'No se pudo obtener el correo del usuario.');
+        return;
+      }
+
+      const userDoc = doc(db, 'users', userEmail);
+      const userDocData = await getDoc(userDoc);
+
+      if (!userDocData.exists()) {
+        Alert.alert('Error', 'No hay recetas guardadas para este usuario.');
+        return;
+      }
+
+      const misRecetas = userDocData.data().misRecetas || [];
+      const recipeIndex = misRecetas.findIndex((rec) => rec.id === recipe.id);
+
+      if (recipeIndex !== -1) {
+        // Si la receta ya está guardada, eliminarla
+        misRecetas.splice(recipeIndex, 1);
+        await updateDoc(userDoc, { misRecetas });
+        Alert.alert('Receta eliminada con éxito!');
+        setSavedRecipes((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(recipe.id);
+          return newSet;
+        });
+      } else {
+        // Si la receta no está guardada, guardarla
+        const recipeData = {
+          id: recipe.id,
+          name: recipe.name,
+          image: recipe.image,
+          instructions: recipe.instructions,
+          ingredients: recipe.ingredients,
+          glutenFree: recipe.glutenFree,
+          vegan: recipe.vegan,
+          vegetarian: recipe.vegetarian,
+          prepTime: recipe.preparationMinutes,
+          servings: recipe.servings,
+        };
+
+        misRecetas.push(recipeData);
+        await updateDoc(userDoc, { misRecetas });
+        Alert.alert('Receta guardada con éxito!');
+        setSavedRecipes((prev) => new Set(prev).add(recipe.id));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo guardar o eliminar la receta.');
+    }
+  };
 
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const saveRecipe = async () => {
-    Alert.alert('Receta Guardada', `La receta "${recipe.name}" ha sido guardada con éxito.`);
   };
 
   if (!recipe) {
@@ -38,7 +110,6 @@ const RecipeScreen = ({ route }) => {
     outputRange: [0, -150],
     extrapolate: 'clamp',
   });
-
   return (
     <>
       {/* Header fijo */}
@@ -46,8 +117,8 @@ const RecipeScreen = ({ route }) => {
         <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={30} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.bookmarkButton} onPress={saveRecipe}>
-          <FontAwesome name="bookmark-o" size={24} color="#fff" />
+        <TouchableOpacity style={styles.bookmarkButton} onPress={handleRecipeSaveToggle}>
+          <FontAwesome name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"} size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -117,7 +188,7 @@ const RecipeScreen = ({ route }) => {
 
           {activeTab === 'ingredients' ? (
             <View style={styles.ingredientsContainer}>
-              {recipe.ingredients.lenght > 0 ? (
+              {recipe.ingredients.length > 0 ? (
                 recipe.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientWrapper}>
                     <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}` }} style={styles.ingredientImage} />
@@ -135,10 +206,7 @@ const RecipeScreen = ({ route }) => {
             <View style={styles.preparationContainer}>
               {preparationSteps.length > 0 ? (
                 preparationSteps.map((step, index) => (
-                  <View key={index} style={styles.stepWrapper}>
-                    <Text style={styles.stepNumber}>{index + 1}</Text>
-                    <Text style={styles.stepText}>{step}</Text>
-                  </View>
+                  <Text key={index} style={styles.preparationStep}>{step}</Text>
                 ))
               ) : (
                 <Text>No hay instrucciones disponibles.</Text>
