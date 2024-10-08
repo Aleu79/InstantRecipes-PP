@@ -1,32 +1,54 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
+import { collection, getDoc, doc } from 'firebase/firestore'; 
+import { auth, db } from '../../firebase/firebase-config';
 
 const MyRecipes = () => {
   const navigation = useNavigation();
-  
-  const myRecipes = [
-    {
-      id: '1',
-      name: 'Ensalada César',
-      category: 'Ensaladas',
-      image: 'https://example.com/ensalada.jpg',
-    },
-    {
-      id: '2',
-      name: 'Sopa de tomate',
-      category: 'Sopas',
-      image: 'https://example.com/sopa.jpg',
-    },
-  ];
+  const [myRecipes, setMyRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      const user = auth.currentUser;
+
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.email);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData && userData.recipesCreate) {
+              setMyRecipes(userData.recipesCreate);
+            }
+          } else {
+            Alert.alert('Error', 'No se encontraron datos para este usuario.');
+          }
+        } catch (error) {
+          console.error('Error al obtener recetas:', error);
+          Alert.alert('Error', 'No se pudieron cargar las recetas. Inténtalo de nuevo más tarde.');
+        }
+      } else {
+        Alert.alert('Error', 'Debes estar autenticado para ver tus recetas.');
+      }
+      setLoading(false);
+    };
+
+    fetchRecipes();
+  }, []);
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
+    <TouchableOpacity
+      style={styles.recipeCard}
+      onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}
+    >
+      <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
       <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
+        <Text style={styles.recipeName}>{item.recipeName}</Text>
         <Text style={styles.recipeCategory}>{item.category}</Text>
       </View>
     </TouchableOpacity>
@@ -34,14 +56,15 @@ const MyRecipes = () => {
 
   return (
     <View style={styles.container}>
-      
-      <Header></Header>
+      <Header />
 
-      {myRecipes.length > 0 ? (
+      {loading ? (
+        <Text>Cargando recetas...</Text>
+      ) : myRecipes.length > 0 ? (
         <FlatList
           data={myRecipes}
           renderItem={renderRecipe}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id} 
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -50,10 +73,9 @@ const MyRecipes = () => {
         </View>
       )}
 
-      {/* Botón flotante */}
       <TouchableOpacity 
         style={styles.fab}
-        onPress={() => navigation.navigate('CreateRecipe')}
+        onPress={() => navigation.navigate('CreateRecipeScreen')}
       >
         <Icon name="add" size={30} color="#fff" />
       </TouchableOpacity>

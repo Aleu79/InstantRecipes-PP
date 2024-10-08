@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../../context/UserContext';
@@ -6,15 +6,34 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 import { storage } from '../../../firebase/firebase-config'; 
+import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import HeaderUserP from '../Headers/HeaderUserP';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../../firebase/firebase-config';
+import { auth, db } from '../../../firebase/firebase-config'; 
 import BottomNavBar from '../BottomNavbar';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
+
+  useEffect(() => {
+    const fetchUserImage = async () => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.email);
+        const docSnap = await getDoc(userDocRef);
+        
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          if (userData.myuserfoto) {
+            setImage(userData.myuserfoto);
+          }
+        }
+      }
+    };
+
+    fetchUserImage();
+  }, [user]);
 
   const pickImage = async () => {
     const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -48,12 +67,20 @@ const UserProfile = () => {
         const url = await getDownloadURL(imageRef);
         console.log('URL de la imagen subida:', url);
         setImage(url); 
+        if (user) {
+          const userDocRef = doc(db, 'users', user.email); 
+          await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
+          Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
+        } else {
+          Alert.alert('Error', 'Usuario no autenticado.');
+        }
       } catch (error) {
         console.error('Error al subir la imagen:', error);
         Alert.alert('Error', 'No se pudo subir la imagen.'); 
       }
     }
   };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -64,12 +91,9 @@ const UserProfile = () => {
     }
   };
   
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
-    
-      <HeaderUserP></HeaderUserP>
-
+      <HeaderUserP />
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={pickImage}> 
           {image ? (
@@ -90,10 +114,6 @@ const UserProfile = () => {
           <Icon name="cafe-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Tus recetas</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.menuItem}>
-          <Icon name="settings-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Ajustes</Text>
-        </TouchableOpacity> */}
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
           <Icon name="log-out-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Cerrar sesión</Text>
@@ -146,11 +166,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 15,
     color: '#333',
-  },
-  editIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
   },
 });
 

@@ -51,7 +51,7 @@ const SavedRecipes = () => {
   };
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeDetail', { recipeId: item.id })}>
+    <TouchableOpacity style={styles.recipeCard} onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}>
       <Image source={{ uri: item.image }} style={styles.recipeImage} />
       <View style={styles.recipeInfo}>
         <Text style={styles.recipeName}>{item.name}</Text>

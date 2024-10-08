@@ -6,8 +6,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../firebase/firebase-config';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase-config'; 
+import { auth } from '../../firebase/firebase-config'; 
 
 const CreateRecipeScreen = () => {
   const [activeTab, setActiveTab] = useState('ingredients');
@@ -24,16 +25,17 @@ const CreateRecipeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true); 
 
+  // Fetch categories from Firestore
   const fetchCategories = async () => {
     try {
       const categoriesCollection = collection(db, 'categories'); 
       const snapshot = await getDocs(categoriesCollection);
       const fetchedCategories = snapshot.docs.map(doc => doc.data().name);
       setCategories(fetchedCategories);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching categories:', error);
       Alert.alert('Error', 'No se pudieron cargar las categorías. Inténtalo de nuevo más tarde.');
+    } finally {
       setLoading(false);
     }
   };
@@ -42,6 +44,7 @@ const CreateRecipeScreen = () => {
     fetchCategories();
   }, []);
 
+  // Request media library permissions
   const requestPermissions = async () => {
     const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (mediaLibraryStatus !== 'granted') {
@@ -51,40 +54,53 @@ const CreateRecipeScreen = () => {
     return true;
   };
 
-  // Function to pick an image
+  // Pick an image from the gallery
   const pickImage = async () => {
     const hasPermission = await requestPermissions();
-    if (!hasPermission) return;
-
+    if (!hasPermission) {
+      Alert.alert('Permisos denegados', 'No tienes permisos para acceder a la galería de imágenes.');
+      return;
+    }
+  
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
-
-    if (result.assets && result.assets.length > 0) {
-      const selectedImage = result.assets[0];
-      const response = await fetch(selectedImage.uri);
-      const blob = await response.blob();
-
-      const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
-      const imageRef = ref(storage, `recipeImages/${filename}`); 
-
-      try {
-        await uploadBytes(imageRef, blob);
-        const url = await getDownloadURL(imageRef);
-        setRecipeImage(url); 
-      } catch (error) {
-        console.error('Error al subir la imagen:', error);
-        Alert.alert('Error', 'No se pudo subir la imagen.'); 
-      }
+  
+    if (result.canceled) {
+      Alert.alert('Selección de imagen cancelada', 'No se seleccionó ninguna imagen.');
+      return;
+    }
+  
+    const selectedImage = result.assets[0];
+    const response = await fetch(selectedImage.uri);
+    const blob = await response.blob();
+  
+    const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
+    const imageRef = ref(storage, `recipeImages/${filename}`);
+  
+    try {
+      await uploadBytes(imageRef, blob);
+      const url = await getDownloadURL(imageRef);
+      setRecipeImage(url);
+    } catch (error) {
+      console.error('Error al subir la imagen:', error);
+      Alert.alert('Error', 'No se pudo subir la imagen.');
     }
   };
+  
 
+  // Save the recipe and the image URL to Firestore
   const saveRecipe = async () => {
-    Alert.alert(`Receta "${recipeName}" guardada con éxito.`);
-    console.log({
+    const user = auth.currentUser; // Obtener el usuario autenticado
+    if (!user) {
+      Alert.alert('Error', 'Debes estar autenticado para guardar una receta.');
+      return;
+    }
+
+    const recipeData = {
       recipeName,
       recipeImage,
       ingredients,
@@ -95,8 +111,20 @@ const CreateRecipeScreen = () => {
       prepTime,
       servings,
       category: selectedCategory,
-    });
-    
+    };
+
+    try {
+      // Update the user's document in the 'users' collection
+      const userDocRef = doc(db, 'users', user.email);
+      await updateDoc(userDocRef, {
+        recipesCreate: [...(user.recipesCreate || []), recipeData],
+      });
+
+      Alert.alert(`Receta "${recipeName}" guardada con éxito.`);
+    } catch (error) {
+      console.error('Error al guardar la receta:', error);
+      Alert.alert('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');
+    }
   };
 
   const handleAddIngredient = () => {
@@ -152,7 +180,7 @@ const CreateRecipeScreen = () => {
             onChangeText={setRecipeName}
           />
 
-<View>
+          <View>
             <View style={styles.row}>
               <View style={styles.iconInputWrapper}>
                 <Icon name="people-outline" size={24} color="#333" />
@@ -190,7 +218,6 @@ const CreateRecipeScreen = () => {
             </View>
           </View>
 
-
           <View style={styles.separator} />
 
           <View style={styles.tabsContainer}>
@@ -225,12 +252,12 @@ const CreateRecipeScreen = () => {
                     onChangeText={(text) => handleIngredientChange(text, index)}
                   />
                   <TouchableOpacity onPress={() => handleRemoveIngredient(index)}>
-                    <Icon name="trash-outline" size={24} color="red" />
+                    <Icon name="trash-outline" size={24} color="#FF0000" />
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity onPress={handleAddIngredient} style={styles.addButton}>
-                <Text style={styles.addButtonText}>+ Añadir ingrediente</Text>
+              <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
+                <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -238,7 +265,7 @@ const CreateRecipeScreen = () => {
           {activeTab === 'preparation' && (
             <View style={styles.preparationContainer}>
               {preparation.map((step, index) => (
-                <View key={index} style={styles.ingredientRow}>
+                <View key={index} style={styles.preparationRow}>
                   <TextInput
                     style={styles.textArea}
                     placeholder={`Paso ${index + 1}`}
@@ -246,56 +273,52 @@ const CreateRecipeScreen = () => {
                     onChangeText={(text) => handleStepChange(text, index)}
                   />
                   <TouchableOpacity onPress={() => handleRemoveStep(index)}>
-                    <Icon name="trash-outline" size={24} color="red" />
+                    <Icon name="trash-outline" size={24} color="#FF0000" />
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity onPress={handleAddStep} style={styles.addButton}>
-                <Text style={styles.addButtonText}>+ Añadir paso</Text>
+              <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
+                <Text style={styles.addButtonText}>Agregar Paso</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {activeTab === 'diettype' && (
             <View style={styles.dietTypeContainer}>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerLabel}>Tipo de dieta:</Text>
-                <Picker
-                  selectedValue={dietType}
-                  onValueChange={(itemValue) => setDietType(itemValue)}
-                >
-                  <Picker.Item label="Vegana" value="vegan" />
-                  <Picker.Item label="Vegetariana" value="vegetarian" />
-                  <Picker.Item label="Sin gluten" value="glutenFree" />
-                </Picker>
-              </View>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerLabel}>¿Sin gluten?</Text>
-                <Picker
-                  selectedValue={glutenFree}
-                  onValueChange={(itemValue) => setGlutenFree(itemValue)}
-                >
-                  <Picker.Item label="Sí" value="yes" />
-                  <Picker.Item label="No" value="no" />
-                </Picker>
-              </View>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerLabel}>¿Vegetariano?</Text>
-                <Picker
-                  selectedValue={vegetarian}
-                  onValueChange={(itemValue) => setVegetarian(itemValue)}
-                >
-                  <Picker.Item label="Sí" value="yes" />
-                  <Picker.Item label="No" value="no" />
-                </Picker>
-              </View>
+              <Text style={styles.label}>¿Es vegana?</Text>
+              <Picker
+                selectedValue={dietType}
+                style={styles.picker}
+                onValueChange={(itemValue) => setDietType(itemValue)}
+              >
+                <Picker.Item label="Sí" value="vegan" />
+                <Picker.Item label="No" value="no vegan" />
+              </Picker>
+              <Text style={styles.label}>¿Es libre de gluten?</Text>
+              <Picker
+                selectedValue={glutenFree}
+                style={styles.picker}
+                onValueChange={(itemValue) => setGlutenFree(itemValue)}
+              >
+                <Picker.Item label="Sí" value="yes" />
+                <Picker.Item label="No" value="no" />
+              </Picker>
+              <Text style={styles.label}>¿Es vegetariana?</Text>
+              <Picker
+                selectedValue={vegetarian}
+                style={styles.picker}
+                onValueChange={(itemValue) => setVegetarian(itemValue)}
+              >
+                <Picker.Item label="Sí" value="yes" />
+                <Picker.Item label="No" value="no" />
+              </Picker>
             </View>
           )}
-        </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
-          <Text style={styles.saveButtonText}>Guardar receta</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
+            <Text style={styles.saveButtonText}>Guardar Receta</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </>
   );

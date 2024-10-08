@@ -6,64 +6,36 @@ import { updatePassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
 import BottomNavBar from '../BottomNavbar';
 
 const UserEdit = () => {
-
   const { user } = useContext(UserContext);  
-
   const [username, setUsername] = useState('');
-
   const [password, setPassword] = useState('');
-
   const [confirmPassword, setConfirmPassword] = useState('');
-
+  const [profileImage, setProfileImage] = useState(null); 
   const navigation = useNavigation();
-
   const db = getFirestore();
 
-
   useEffect(() => {
-
     const handleUpdateProfile = async () => {
-
       const currentUser = auth.currentUser;
 
       if (currentUser) {
-
         setUsername(currentUser.displayName || ''); 
+        const userRef = doc(db, 'users', currentUser.email);
+        const userDoc = await getDoc(userRef);
 
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setProfileImage(userData.myuserfoto || null); 
+        }
       }
-
     };
 
     handleUpdateProfile();
-
-  }, [user]);
-
-
-  useEffect(() => {
-
-    const handleUpdateUsername = async () => {
-
-      const userRef = doc(db, 'users', user.email);
-
-      const userDoc = await getDoc(userRef);
-
-      const userData = userDoc.data();
-
-      if (userData) {
-
-        setUsername(userData.username);
-
-      }
-
-    };
-
-    handleUpdateUsername();
-
-  }, [user]);
+  }, []);
 
   const handleSaveChanges = async () => {
     const currentUser = auth.currentUser;
@@ -78,7 +50,6 @@ const UserEdit = () => {
         const userRef = doc(db, 'users', currentUser.email);
         await updateDoc(userRef, { username });
         await updateProfile(currentUser, { displayName: username });
-        await currentUser.reload();
         Alert.alert('Éxito', 'Nombre de usuario actualizado');
       }
 
@@ -90,9 +61,8 @@ const UserEdit = () => {
       navigation.navigate('UserProfile');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
-
-
       let errorMessage;
+
       switch (error.code) {
         case 'auth/weak-password':
           errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
@@ -107,6 +77,7 @@ const UserEdit = () => {
       Alert.alert('Error', errorMessage);
     }
   };
+
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
 
@@ -135,8 +106,8 @@ const UserEdit = () => {
           </Text>
         </View>
         <View style={styles.imgprofile}>
-          {user?.photoURL ? (
-            <Image source={{ uri: user.photoURL }} style={styles.profileImage} />
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.profileImage} />
           ) : (
             <Icon name="person-circle-outline" size={80} color="#333" />
           )}
@@ -173,9 +144,11 @@ const UserEdit = () => {
           <Text style={styles.saveButtonText}>Guardar cambios</Text>
         </TouchableOpacity>
       </View>
+
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
+      
       <BottomNavBar navigation={navigation} />
     </ScrollView>
   );

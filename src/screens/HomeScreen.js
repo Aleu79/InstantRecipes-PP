@@ -1,14 +1,44 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useRef, useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
+import { auth } from '../../firebase/firebase-config';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import BottomNavBar from '../components/BottomNavbar';
 
 const HomeScreen = ({ navigation }) => {
   const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false);
   const { user } = useContext(UserContext);
-  const [image, setImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null); 
+  const db = getFirestore();
+
+  useEffect(() => {
+    const handleUpdateProfile = async () => {
+      const currentUser = auth.currentUser;
+      console.log('Usuario autenticado actual:', currentUser);  // Verifica qué usuario está autenticado
+
+      if (currentUser) {
+        try {
+          const userRef = doc(db, 'users', currentUser.email);
+          const userDoc = await getDoc(userRef);
+          console.log('Documento del usuario:', userDoc.data());  // Verifica los datos del documento
+          console.log('Profile image URL:', profileImage);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log('Datos del usuario recuperados:', userData);  // Muestra los datos que se recuperan
+            setProfileImage(userData.myuserfoto || null); // Recuperar la imagen de perfil
+          } else {
+            console.log('No se encontraron datos para este usuario.');
+          }
+        } catch (error) {
+          console.error('Error al obtener el documento del usuario:', error);  // Muestra si ocurre algún error
+        }
+      }
+    };
+
+    handleUpdateProfile();
+  }, []);
 
   const categoryImages = {
     Veggie: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
@@ -18,32 +48,26 @@ const HomeScreen = ({ navigation }) => {
     'Sin Tacc': 'https://i.pinimg.com/564x/6a/d3/3d/6ad33d29ebcbfe87b8fd7a1d4086749b.jpg',
   };
 
-  const foodCarouselImages = [
-    'https://i.pinimg.com/564x/4e/0f/8d/4e0f8d6bcf238b2eb1df0bc2a45ff2cd.jpg',
-    'https://i.pinimg.com/564x/80/0c/70/800c70a8cb78cbe0bb0b6f8a0ae017b3.jpg',
-    'https://i.pinimg.com/564x/c7/3b/2b/c73b2b7b2a7a6b7b4b72b3a6aa663b7e.jpg',
-  ];
-
-  const toggleMenu = () => setMenuVisible(!menuVisible);
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+    console.log('Menú desplegable visible:', menuVisible);  // Muestra el estado del menú
+  };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-
         <View style={styles.bienvenida}>
           <Text style={styles.greetingText}>
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
           <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-            {image ? (
-              <Image source={{ uri: image }} style={styles.profileImage} />
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
             ) : (
               <Icon name="person" size={40} color="#333" />
             )}
           </TouchableOpacity>
         </View>
-
-        
 
         <Text style={styles.sectionTitle}>Categorías</Text>
         <ScrollView
@@ -56,7 +80,10 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity
               key={index}
               style={styles.categoryButton}
-              onPress={() => navigation.navigate('CategoryRecipesScreen', { category })}
+              onPress={() => {
+                console.log('Categoría seleccionada:', category);  // Muestra qué categoría se selecciona
+                navigation.navigate('CategoryRecipesScreen', { category });
+              }}
             >
               <Image source={{ uri: categoryImages[category] }} style={styles.categoryImage} />
               <Text style={styles.categoryButtonText}>{category}</Text>
@@ -71,11 +98,19 @@ const HomeScreen = ({ navigation }) => {
 
       {menuVisible && (
         <View style={styles.menuContainer}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); navigation.navigate('CreateRecipeScreen'); }}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { 
+            setMenuVisible(false); 
+            console.log('Navegando a crear receta');
+            navigation.navigate('CreateRecipeScreen'); 
+          }}>
             <Icon name="book-outline" size={24} color="#333" style={styles.menuicon}/>
             <Text style={styles.menuItemText}>Crear Receta</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); navigation.navigate('MyRecipes'); }}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { 
+            setMenuVisible(false); 
+            console.log('Navegando a mis recetas');
+            navigation.navigate('MyRecipes'); 
+          }}>
             <Icon name="cafe-outline" size={24} color="#333" style={styles.menuicon}/>
             <Text style={styles.menuItemText}>Mis Recetas</Text>
           </TouchableOpacity>
@@ -136,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     paddingVertical: 8,
     paddingHorizontal: 8,
-    marginRight: 8,
+    marginRight: -20, 
     justifyContent: 'center',
     alignItems: 'center',
     width: 110,
@@ -196,6 +231,12 @@ const styles = StyleSheet.create({
   menuicon: {
     marginRight: 8,
   },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
 });
+
 
 export default HomeScreen;
