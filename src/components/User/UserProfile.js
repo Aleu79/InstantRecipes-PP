@@ -1,31 +1,32 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert, Modal, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker'; 
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
-import { storage } from '../../../firebase/firebase-config'; 
-import { doc, getDoc, setDoc } from 'firebase/firestore'; 
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../../firebase/firebase-config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import HeaderUserP from '../Headers/HeaderUserP';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '../../../firebase/firebase-config'; 
+import { auth, db } from '../../../firebase/firebase-config';
 import BottomNavBar from '../BottomNavbar';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Estado para el indicador de carga
   const [uploadTime, setUploadTime] = useState(0);
   const [uploadLimitReached, setUploadLimitReached] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false); 
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserImage = async () => {
       if (user) {
         const userDocRef = doc(db, 'users', user.email);
         const docSnap = await getDoc(userDocRef);
-        
+
         if (docSnap.exists()) {
           const userData = docSnap.data();
           if (userData.myuserfoto) {
@@ -33,6 +34,7 @@ const UserProfile = () => {
           }
         }
       }
+      setIsLoading(false); // Dejar de cargar una vez que la imagen ha sido traída
     };
 
     fetchUserImage();
@@ -42,7 +44,7 @@ const UserProfile = () => {
     const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
     const uploadsRef = doc(db, 'uploads', userEmailSafe);
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth(); 
+    const currentMonth = currentDate.getMonth();
 
     const docSnap = await getDoc(uploadsRef);
 
@@ -54,7 +56,7 @@ const UserProfile = () => {
           uploadCount: 1,
           lastUploadMonth: currentMonth,
         });
-        return true; 
+        return true;
       }
 
       if (data.uploadCount < 3) {
@@ -62,18 +64,18 @@ const UserProfile = () => {
           uploadCount: data.uploadCount + 1,
           lastUploadMonth: currentMonth,
         });
-        return true; 
+        return true;
       } else {
         Alert.alert('Límite alcanzado', 'Solo puedes subir hasta 3 archivos por mes.');
         setUploadLimitReached(true);
-        return false; 
+        return false;
       }
     } else {
       await setDoc(uploadsRef, {
         uploadCount: 1,
         lastUploadMonth: currentMonth,
       });
-      return true; 
+      return true;
     }
   };
 
@@ -99,25 +101,25 @@ const UserProfile = () => {
       console.log('URI de la imagen seleccionada:', selectedImage.uri);
 
       const allowed = await checkUploadLimit();
-      if (!allowed) return; 
+      if (!allowed) return;
 
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
 
-      const filename = 'profile_picture.jpg'; 
+      const filename = 'profile_picture.jpg';
       const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
       const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
 
       try {
         const startTime = Date.now();
         const uploadTask = uploadBytes(imageRef, blob);
-        
+
         uploadTask.on(
           'state_changed',
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log(`Progreso de subida: ${progress}%`);
-            const elapsedTime = (Date.now() - startTime) / 1000; 
+            const elapsedTime = (Date.now() - startTime) / 1000;
             const totalTime = (snapshot.totalBytes / snapshot.bytesTransferred) * elapsedTime;
             setUploadTime(Math.max(0, totalTime - elapsedTime));
           },
@@ -128,12 +130,12 @@ const UserProfile = () => {
           async () => {
             const url = await getDownloadURL(imageRef);
             console.log('URL de la imagen subida:', url);
-            setImage(url); 
+            setImage(url);
             if (user) {
-              const userDocRef = doc(db, 'users', user.email); 
+              const userDocRef = doc(db, 'users', user.email);
               await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
               Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
-              setUploadTime(0); 
+              setUploadTime(0);
             } else {
               Alert.alert('Error', 'Usuario no autenticado.');
             }
@@ -162,8 +164,10 @@ const UserProfile = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <HeaderUserP />
       <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={() => setModalVisible(true)}> 
-          {image ? (
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          {isLoading ? ( // Mostrar el indicador de carga si isLoading es verdadero
+            <ActivityIndicator size="large" color="#333" />
+          ) : image ? (
             <Image source={{ uri: image }} style={styles.profileImage} />
           ) : (
             <Icon name="person-circle-outline" size={100} color="#333" />
@@ -225,7 +229,7 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 100,
     height: 100,
-    borderRadius: 50, 
+    borderRadius: 50,
     borderColor: '#ccc',
     borderWidth: 1,
   },

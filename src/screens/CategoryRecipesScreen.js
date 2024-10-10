@@ -11,18 +11,25 @@ import { useNavigation } from '@react-navigation/native';
 const CategoryRecipesScreen = ({ route }) => {
   const { category } = route.params;
   const navigation = useNavigation();
-  const [recipes, setRecipes] = useState([]);
+  const [allRecipes, setAllRecipes] = useState([]); 
   const [loading, setLoading] = useState(true);
+  const [filteredRecipes, setFilteredRecipes] = useState([]); 
   const [savedRecipes, setSavedRecipes] = useState(new Set());
   const [error, setError] = useState('');
 
+  // Función para obtener recetas de la API de Spoonacular
   const fetchRecipes = async () => {
     try {
       const apiKey = '69694db3792e4c4387992d79c64eb073'; 
-      const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=10&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+      const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+  
+      console.log("URL de la API:", url); 
+  
       const response = await axios.get(url);
-      console.log(response);
-      const recipesData = response.data.results?.map(recipe => ({
+      console.log("Respuesta completa de la API:", response.data); 
+  
+      // Mapeo de las recetas
+      const allRecipesData = response.data.results?.map(recipe => ({
         id: recipe.id,
         name: recipe.title,
         image: recipe.image,
@@ -34,17 +41,24 @@ const CategoryRecipesScreen = ({ route }) => {
           name: ingredient.name,
           amount: ingredient.amount,
           unit: ingredient.unit,
-          image: ingredient.image, 
+          image: ingredient.image,
         })) || [],
         glutenFree: recipe.glutenFree,
         vegan: recipe.vegan,
-        vegetarian: recipe.vegetarian,
+        vegetarian: recipe.vegetarian, 
         dairyFree: recipe.dairyFree,
         preparationMinutes: recipe.readyInMinutes,
         servings: recipe.servings,
+        meat: recipe.dishTypes?.includes("meat") || false,
+        bakery: recipe.dishTypes?.includes("bakery") || false
       })) || [];
+  
+      console.log("Recetas obtenidas de la API:", allRecipesData); 
       
-      setRecipes(recipesData);
+      setAllRecipes(allRecipesData);
+      setFilteredRecipes(allRecipesData); 
+      setError('');
+
     } catch (error) {
       handleError(error);
     } finally {
@@ -52,26 +66,63 @@ const CategoryRecipesScreen = ({ route }) => {
     }
   };
 
+  // Función para filtrar recetas según la categoría seleccionada
+  const filterRecipesByCategory = useCallback(() => {
+    const filtered = allRecipes.filter(recipe => {
+      switch (category) {
+        case "Vegano":
+          return recipe.vegan;
+        case "Vegetariano":
+          return recipe.vegetarian && !recipe.meat; 
+        case "Sin gluten":
+          return recipe.glutenFree;
+        case "Carnes":
+          return recipe.meat; 
+        case "Panadería":
+          return recipe.bakery; 
+        default:
+          return false; 
+      }
+    });
+
+    console.log("Recetas filtradas para la categoría:", category, filtered);
+
+    if (filtered.length === 0) {
+      setError('No se encontraron recetas en esta categoría.');
+      console.log("No hay recetas categorizadas, mostrando error.");
+    } else {
+      setFilteredRecipes(filtered);
+      setError('');
+      console.log("Recetas filtradas establecidas:", filtered);
+    }
+  }, [allRecipes, category]);
+
   useEffect(() => {
     fetchRecipes(); 
-    loadSavedRecipes(); // Cargar recetas guardadas al montar el componente
-  }, [category]);
+    loadSavedRecipes(); 
+  }, []);
+
+  useEffect(() => {
+    if (allRecipes.length > 0) {
+      filterRecipesByCategory(); 
+    }
+  }, [allRecipes, category, filterRecipesByCategory]);
 
   const loadSavedRecipes = async () => {
-    const savedRecipesString = await AsyncStorage.getItem('savedRecipes');
-    if (savedRecipesString) {
-      const savedRecipeIds = JSON.parse(savedRecipesString);
-      setSavedRecipes(new Set(savedRecipeIds)); // Actualizar el estado con los IDs guardados
+    try {
+      const savedRecipesString = await AsyncStorage.getItem('savedRecipes');
+      if (savedRecipesString) {
+        const savedRecipeIds = JSON.parse(savedRecipesString);
+        setSavedRecipes(new Set(savedRecipeIds));
+      }
+    } catch (error) {
+      console.error('Error al cargar recetas guardadas:', error);
     }
   };
 
   const handleError = (error) => {
     console.error('Error al obtener recetas:', error.message);
-    if (error.response) {
-      setError('Error al obtener recetas. Por favor intenta de nuevo.');
-    } else {
-      setError('No se recibió respuesta del servidor.');
-    }
+    setError('Error al obtener recetas. Por favor intenta de nuevo.');
   };
 
   const handleRecipeSaveToggle = useCallback(async (recipe) => {
@@ -94,18 +145,18 @@ const CategoryRecipesScreen = ({ route }) => {
       const recipeIndex = misRecetas.findIndex((rec) => rec.id === recipe.id);
 
       if (recipeIndex !== -1) {
-        // Si la receta ya está guardada, eliminarla
-        misRecetas.splice(recipeIndex, 1); // Eliminar la receta del array
+        // Eliminar receta
+        misRecetas.splice(recipeIndex, 1);
         await updateDoc(userDoc, { misRecetas });
         Alert.alert('Receta eliminada con éxito!');
         setSavedRecipes((prev) => {
           const newSet = new Set(prev);
-          newSet.delete(recipe.id); // Eliminar la receta del set de recetas guardadas
-          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet])); // Guardar el nuevo estado en AsyncStorage
+          newSet.delete(recipe.id);
+          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet]));
           return newSet;
         });
       } else {
-        // Si la receta no está guardada, guardarla
+        // Guardar receta
         const recipeData = {
           id: recipe.id,
           name: recipe.name,
@@ -124,8 +175,8 @@ const CategoryRecipesScreen = ({ route }) => {
         await updateDoc(userDoc, { misRecetas });
         Alert.alert('Receta guardada con éxito!');
         setSavedRecipes((prev) => {
-          const newSet = new Set(prev).add(recipe.id); // Añadir receta al set de recetas guardadas
-          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet])); // Guardar el nuevo estado en AsyncStorage
+          const newSet = new Set(prev).add(recipe.id);
+          AsyncStorage.setItem('savedRecipes', JSON.stringify([...newSet]));
           return newSet;
         });
       }
@@ -150,8 +201,8 @@ const CategoryRecipesScreen = ({ route }) => {
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollView}>
-          {recipes.length > 0 ? (
-            recipes.map((recipe) => (
+          {filteredRecipes.length > 0 ? (
+            filteredRecipes.map((recipe) => (
               <TouchableOpacity 
                 key={recipe.id} 
                 onPress={() => navigation.navigate('RecipeScreen', { recipe })} 
@@ -165,7 +216,7 @@ const CategoryRecipesScreen = ({ route }) => {
                     color="#fff" 
                   />
                 </TouchableOpacity>
-                <Text style={styles.detalles}>{recipe.preparationMinutes}min • {recipe.servings} porciones</Text>
+                <Text style={styles.detalles}>{recipe.preparationMinutes} min • {recipe.servings} porciones</Text>
                 <Text style={styles.recipeName}>{recipe.name}</Text>
               </TouchableOpacity>
             ))
@@ -174,7 +225,7 @@ const CategoryRecipesScreen = ({ route }) => {
           )}
         </ScrollView>
       )}
-    </View>
+    </View> 
   );
 };
 
@@ -210,24 +261,23 @@ const styles = StyleSheet.create({
   },
   detalles: {
     color: '#adadad',
+    fontSize: 12,
+    marginTop: 5,
   },
   recipeName: {
-    textAlign: 'left',
-    color: '#000',
     fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
   bookmarkButton: {
     position: 'absolute',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 5,
     top: 10,
     right: 10,
-    padding: 5,
+    backgroundColor: 'transparent',
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
-    marginVertical: 20,
   },
 });
 
