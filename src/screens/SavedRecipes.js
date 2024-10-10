@@ -74,7 +74,7 @@ const SavedRecipes = () => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Icon name="bookmark-outline" size={60} color="#aaa" />
+          <Icon name="food" size={60} color="#aaa" />
           <Text style={styles.emptyText}>No guardaste ninguna receta todavía</Text>
         </View>
       )}

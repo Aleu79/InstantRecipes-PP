@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#f1f1f1',
   },
   passwordContainer: {
     width: '90%',

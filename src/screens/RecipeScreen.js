@@ -73,6 +73,7 @@ const RecipeScreen = ({ route }) => {
           vegetarian: recipe.vegetarian,
           prepTime: recipe.preparationMinutes,
           servings: recipe.servings,
+          dairyFree: recipe.dairyFree,
         };
 
         misRecetas.push(recipeData);
@@ -165,6 +166,12 @@ const RecipeScreen = ({ route }) => {
               <View style={styles.dietDetail}>
                 <MaterialCommunityIcons name="food-apple" size={24} color="red" />
                 <Text style={styles.dietText}>Vegetariano</Text>
+              </View>
+            )}
+            {recipe.dairyFree && (
+              <View style={styles.dietDetail}>
+                <MaterialCommunityIcons name="glass-pint-outline" size={24} color="grey" />
+                <Text style={styles.dietText}>Sin lácteos</Text>
               </View>
             )}
           </View>
@@ -341,6 +348,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginRight: 10,
+    resizeMode: 'contain',
   },
   ingredientName: {
     fontSize: 16,
