@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Alert, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
@@ -16,8 +16,9 @@ const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
-  const [uploadTime, setUploadTime] = useState(0); // Tiempo restante para subir
+  const [uploadTime, setUploadTime] = useState(0);
   const [uploadLimitReached, setUploadLimitReached] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); 
 
   useEffect(() => {
     const fetchUserImage = async () => {
@@ -41,41 +42,38 @@ const UserProfile = () => {
     const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
     const uploadsRef = doc(db, 'uploads', userEmailSafe);
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth(); // 0 = Enero, 1 = Febrero, etc.
+    const currentMonth = currentDate.getMonth(); 
 
     const docSnap = await getDoc(uploadsRef);
 
     if (docSnap.exists()) {
       const data = docSnap.data();
 
-      // Si el mes actual es diferente al mes de la última subida, reinicia el contador
       if (data.lastUploadMonth !== currentMonth) {
         await setDoc(uploadsRef, {
           uploadCount: 1,
           lastUploadMonth: currentMonth,
         });
-        return true; // Permitir subida
+        return true; 
       }
 
-      // Comprobar el límite de subidas
       if (data.uploadCount < 3) {
         await setDoc(uploadsRef, {
           uploadCount: data.uploadCount + 1,
           lastUploadMonth: currentMonth,
         });
-        return true; // Permitir subida
+        return true; 
       } else {
         Alert.alert('Límite alcanzado', 'Solo puedes subir hasta 3 archivos por mes.');
         setUploadLimitReached(true);
-        return false; // No permitir subida
+        return false; 
       }
     } else {
-      // Si no hay documento, permite la subida y crea uno
       await setDoc(uploadsRef, {
         uploadCount: 1,
         lastUploadMonth: currentMonth,
       });
-      return true; // Permitir subida
+      return true; 
     }
   };
 
@@ -100,14 +98,13 @@ const UserProfile = () => {
       const selectedImage = result.assets[0];
       console.log('URI de la imagen seleccionada:', selectedImage.uri);
 
-      // Verificar el límite de subidas
       const allowed = await checkUploadLimit();
-      if (!allowed) return; // Si no se permite, salir de la función
+      if (!allowed) return; 
 
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
 
-      const filename = 'profile_picture.jpg'; // Sobrescribir siempre con el mismo nombre
+      const filename = 'profile_picture.jpg'; 
       const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
       const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
 
@@ -115,16 +112,14 @@ const UserProfile = () => {
         const startTime = Date.now();
         const uploadTask = uploadBytes(imageRef, blob);
         
-        // Manejo del progreso de subida
         uploadTask.on(
           'state_changed',
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log(`Progreso de subida: ${progress}%`);
-            // Calcular el tiempo restante
-            const elapsedTime = (Date.now() - startTime) / 1000; // En segundos
+            const elapsedTime = (Date.now() - startTime) / 1000; 
             const totalTime = (snapshot.totalBytes / snapshot.bytesTransferred) * elapsedTime;
-            setUploadTime(Math.max(0, totalTime - elapsedTime)); // Tiempo restante
+            setUploadTime(Math.max(0, totalTime - elapsedTime));
           },
           (error) => {
             console.error('Error al subir la imagen:', error);
@@ -138,7 +133,7 @@ const UserProfile = () => {
               const userDocRef = doc(db, 'users', user.email); 
               await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
               Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
-              setUploadTime(0); // Reiniciar el tiempo
+              setUploadTime(0); 
             } else {
               Alert.alert('Error', 'Usuario no autenticado.');
             }
@@ -167,7 +162,7 @@ const UserProfile = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <HeaderUserP />
       <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={pickImage}> 
+        <TouchableOpacity onPress={() => setModalVisible(true)}> 
           {image ? (
             <Image source={{ uri: image }} style={styles.profileImage} />
           ) : (
@@ -180,6 +175,7 @@ const UserProfile = () => {
           <Text style={styles.uploadTime}>Tiempo restante: {Math.ceil(uploadTime)}s</Text>
         )}
       </View>
+
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
           <Icon name="bookmark-outline" size={24} color="#333" />
@@ -195,6 +191,23 @@ const UserProfile = () => {
         </TouchableOpacity>
       </View>
       <BottomNavBar navigation={navigation} />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity style={styles.modalBackground} onPress={() => setModalVisible(false)} />
+          <View style={styles.modalContent}>
+            <Image source={{ uri: image }} style={styles.modalImage} />
+            <TouchableOpacity style={styles.editIconContainer} onPress={pickImage}>
+              <Icon name="pencil" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -212,23 +225,22 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
+    borderRadius: 50, 
+    borderColor: '#ccc',
+    borderWidth: 1,
   },
   username: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    marginVertical: 10,
   },
   userEmail: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: '#777',
   },
   uploadTime: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#f00',
-    marginTop: 10,
   },
   menuContainer: {
     marginVertical: 20,
@@ -239,10 +251,44 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   menuText: {
-    fontSize: 18,
     marginLeft: 10,
-    color: '#333',
+    fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: 300,
+    height: 300,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+  editIconContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: '#fff',
+    padding: 5,
+    borderRadius: 50,
+    elevation: 2,
   },
 });
 
 export default UserProfile;
+ 
