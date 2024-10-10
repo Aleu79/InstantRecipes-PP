@@ -35,11 +35,52 @@ const UserProfile = () => {
     fetchUserImage();
   }, [user]);
 
+  const checkUploadLimit = async () => {
+    const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
+    const uploadsRef = doc(db, 'uploads', userEmailSafe);
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth(); // 0 = Enero, 1 = Febrero, etc.
+
+    const docSnap = await getDoc(uploadsRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
+      // Si el mes actual es diferente al mes de la última subida, reinicia el contador
+      if (data.lastUploadMonth !== currentMonth) {
+        await setDoc(uploadsRef, {
+          uploadCount: 1,
+          lastUploadMonth: currentMonth,
+        });
+        return true; // Permitir subida
+      }
+
+      // Comprobar el límite de subidas
+      if (data.uploadCount < 3) {
+        await setDoc(uploadsRef, {
+          uploadCount: data.uploadCount + 1,
+          lastUploadMonth: currentMonth,
+        });
+        return true; // Permitir subida
+      } else {
+        Alert.alert('Límite alcanzado', 'Solo puedes subir hasta 3 archivos por mes.');
+        return false; // No permitir subida
+      }
+    } else {
+      // Si no hay documento, permite la subida y crea uno
+      await setDoc(uploadsRef, {
+        uploadCount: 1,
+        lastUploadMonth: currentMonth,
+      });
+      return true; // Permitir subida
+    }
+  };
+
   const pickImage = async () => {
-    const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (mediaLibraryStatus !== 'granted') {
-      console.log('Permiso de galería no concedido:', mediaLibraryStatus);
-      alert('Lo sentimos, necesitamos permisos para acceder a la galería.');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Permiso de galería no concedido:', status);
+      Alert.alert('Permiso denegado', 'Lo sentimos, necesitamos permisos para acceder a la galería.');
       return;
     }
 
@@ -56,11 +97,16 @@ const UserProfile = () => {
       const selectedImage = result.assets[0];
       console.log('URI de la imagen seleccionada:', selectedImage.uri);
 
+      // Verificar el límite de subidas
+      const allowed = await checkUploadLimit();
+      if (!allowed) return; // Si no se permite, salir de la función
+
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
 
       const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
-      const imageRef = ref(storage, `profileImages/${filename}`); 
+      const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
+      const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
 
       try {
         await uploadBytes(imageRef, blob);
@@ -76,8 +122,10 @@ const UserProfile = () => {
         }
       } catch (error) {
         console.error('Error al subir la imagen:', error);
-        Alert.alert('Error', 'No se pudo subir la imagen.'); 
+        Alert.alert('Error', 'No se pudo subir la imagen. Verifica los permisos y el estado de la conexión.');
       }
+    } else {
+      Alert.alert('Error', 'No se seleccionó ninguna imagen.');
     }
   };
 
