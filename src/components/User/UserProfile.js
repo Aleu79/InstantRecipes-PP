@@ -16,6 +16,8 @@ const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
   const [image, setImage] = useState(null);
+  const [uploadTime, setUploadTime] = useState(0); // Tiempo restante para subir
+  const [uploadLimitReached, setUploadLimitReached] = useState(false);
 
   useEffect(() => {
     const fetchUserImage = async () => {
@@ -64,6 +66,7 @@ const UserProfile = () => {
         return true; // Permitir subida
       } else {
         Alert.alert('Límite alcanzado', 'Solo puedes subir hasta 3 archivos por mes.');
+        setUploadLimitReached(true);
         return false; // No permitir subida
       }
     } else {
@@ -104,25 +107,46 @@ const UserProfile = () => {
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
 
-      const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
+      const filename = 'profile_picture.jpg'; // Sobrescribir siempre con el mismo nombre
       const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
       const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
 
       try {
-        await uploadBytes(imageRef, blob);
-        const url = await getDownloadURL(imageRef);
-        console.log('URL de la imagen subida:', url);
-        setImage(url); 
-        if (user) {
-          const userDocRef = doc(db, 'users', user.email); 
-          await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
-          Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
-        } else {
-          Alert.alert('Error', 'Usuario no autenticado.');
-        }
+        const startTime = Date.now();
+        const uploadTask = uploadBytes(imageRef, blob);
+        
+        // Manejo del progreso de subida
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log(`Progreso de subida: ${progress}%`);
+            // Calcular el tiempo restante
+            const elapsedTime = (Date.now() - startTime) / 1000; // En segundos
+            const totalTime = (snapshot.totalBytes / snapshot.bytesTransferred) * elapsedTime;
+            setUploadTime(Math.max(0, totalTime - elapsedTime)); // Tiempo restante
+          },
+          (error) => {
+            console.error('Error al subir la imagen:', error);
+            Alert.alert('Error', 'No se pudo subir la imagen. Verifica los permisos y el estado de la conexión.');
+          },
+          async () => {
+            const url = await getDownloadURL(imageRef);
+            console.log('URL de la imagen subida:', url);
+            setImage(url); 
+            if (user) {
+              const userDocRef = doc(db, 'users', user.email); 
+              await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
+              Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
+              setUploadTime(0); // Reiniciar el tiempo
+            } else {
+              Alert.alert('Error', 'Usuario no autenticado.');
+            }
+          }
+        );
       } catch (error) {
-        console.error('Error al subir la imagen:', error);
-        Alert.alert('Error', 'No se pudo subir la imagen. Verifica los permisos y el estado de la conexión.');
+        console.error('Error al iniciar la subida:', error);
+        Alert.alert('Error', 'No se pudo iniciar la subida de la imagen.');
       }
     } else {
       Alert.alert('Error', 'No se seleccionó ninguna imagen.');
@@ -138,7 +162,7 @@ const UserProfile = () => {
       Alert.alert('Error', 'No se pudo cerrar la sesión.');
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <HeaderUserP />
@@ -152,6 +176,9 @@ const UserProfile = () => {
         </TouchableOpacity>
         <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text>
         <Text style={styles.userEmail}>{user ? user.email : 'emma.phillips@gmail.com'}</Text>
+        {uploadTime > 0 && (
+          <Text style={styles.uploadTime}>Tiempo restante: {Math.ceil(uploadTime)}s</Text>
+        )}
       </View>
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
@@ -198,21 +225,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  uploadTime: {
+    fontSize: 16,
+    color: '#f00',
+    marginTop: 10,
+  },
   menuContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#eaeaea',
-    paddingTop: 20,
+    marginVertical: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eaeaea',
+    paddingVertical: 10,
   },
   menuText: {
-    fontSize: 16,
-    marginLeft: 15,
+    fontSize: 18,
+    marginLeft: 10,
     color: '#333',
   },
 });

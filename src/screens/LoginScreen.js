@@ -7,6 +7,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { UserContext } from '../context/UserContext';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication'; // Importar aquí
 
 const { height } = Dimensions.get('window');
 
@@ -59,7 +60,6 @@ const LoginScreen = () => {
       }
     }
   };
-  
 
   const handleForgotPassword = async () => {
     if (!email) {
@@ -78,6 +78,28 @@ const LoginScreen = () => {
       } else {
         Alert.alert('Error', 'Ocurrió un error al enviar el correo electrónico para restablecer tu contraseña.');
       }
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!hasHardware || !isEnrolled) {
+      Alert.alert('Error', 'No hay soporte de autenticación biométrica o no hay huellas registradas.');
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Inicia sesión con tu huella dactilar',
+      fallbackLabel: 'Usa tu correo y contraseña',
+      suppressInitials: false,
+    });
+
+    if (result.success) {
+      handleLogin(); // Llama a la función de login si la autenticación biométrica es exitosa
+    } else {
+      Alert.alert('Error', 'Autenticación fallida, intenta nuevamente.');
     }
   };
 
@@ -121,6 +143,9 @@ const LoginScreen = () => {
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Ingresar</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.biometricButton} onPress={handleBiometricLogin}>
+              <Text style={styles.buttonText}>Huella Dactilar</Text>
+            </TouchableOpacity>
             <Text style={styles.footerText}>
               ¿No tienes una cuenta?{' '}
               <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>
@@ -147,7 +172,6 @@ const styles = StyleSheet.create({
     height: height * 0.5,
     resizeMode: 'cover',
   },
-
   ondulatedBackground: {
     position: 'absolute',
     top: height * 0.45, 
@@ -157,6 +181,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fdfdfd', 
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
+  },
+  biometricButton: {
+    width: '80%',
+    height: 55,
+    backgroundColor: '#FF4500',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 25,
+    marginVertical: 16,
   },
   forgotPasswordButton: {
     width: '80%',
