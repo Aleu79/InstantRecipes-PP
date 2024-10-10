@@ -10,7 +10,7 @@ import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
 import BottomNavBar from '../BottomNavbar';
 
 const UserEdit = () => {
-  const { user } = useContext(UserContext);  
+  const { user, setUser } = useContext(UserContext);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,30 +39,37 @@ const UserEdit = () => {
 
   const handleSaveChanges = async () => {
     const currentUser = auth.currentUser;
-
+  
     if (password && password !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
-
+  
     try {
       if (username) {
         const userRef = doc(db, 'users', currentUser.email);
         await updateDoc(userRef, { username });
         await updateProfile(currentUser, { displayName: username });
+  
+        // Actualiza el estado global del usuario en el contexto
+        setUser((prevUser) => ({
+          ...prevUser,
+          username,  // Actualiza el nombre de usuario en el contexto
+        }));
+  
         Alert.alert('Éxito', 'Nombre de usuario actualizado');
       }
-
+  
       if (password) {
         await updatePassword(currentUser, password);
         Alert.alert('Éxito', 'Contraseña actualizada');
       }
-
+  
       navigation.navigate('UserProfile');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       let errorMessage;
-
+  
       switch (error.code) {
         case 'auth/weak-password':
           errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
@@ -73,10 +80,11 @@ const UserEdit = () => {
         default:
           errorMessage = error.message;
       }
-
+  
       Alert.alert('Error', errorMessage);
     }
   };
+  
 
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
