@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Modal } from 'react-native';
 import { auth } from '../../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
@@ -14,12 +14,13 @@ const UserEdit = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState(''); 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   const db = getFirestore();
 
@@ -29,15 +30,15 @@ const UserEdit = () => {
 
       if (currentUser) {
         if (initialLoad) {
-          setUsername(currentUser.displayName || ''); 
-          setInitialLoad(false); 
+          setUsername(currentUser.displayName || '');
+          setInitialLoad(false);
         }
         const userRef = doc(db, 'users', currentUser.email);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setProfileImage(userData.myuserfoto || null); 
+          setProfileImage(userData.myuserfoto || null);
         }
       }
     };
@@ -45,7 +46,7 @@ const UserEdit = () => {
     handleUpdateProfile();
   }, [initialLoad, db]);
 
-  const reauthenticateUser = async (currentPassword) => {
+  const reauthenticateUser  = async (currentPassword) => {
     const currentUser = auth.currentUser;
     const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
 
@@ -59,6 +60,11 @@ const UserEdit = () => {
   };
 
   const handleSaveChanges = async () => {
+    // Mostrar modal para ingresar la contraseña actual
+    setModalVisible(true);
+  };
+
+  const confirmSaveChanges = async () => {
     const currentUser = auth.currentUser;
   
     if (password && password !== confirmPassword) {
@@ -67,30 +73,37 @@ const UserEdit = () => {
     }
   
     try {
-      if (password) {
-        await reauthenticateUser(currentPassword);
+      if (password || username) {
+        // Verifica si la contraseña actual es correcta
+        try {
+          await reauthenticateUser  (currentPassword);
+        } catch (error) {
+          Alert.alert('Error', 'La contraseña actual es incorrecta.');
+          return;
+        }
       }
   
       // Solo actualizar el username si hay cambios
       if (username && username !== currentUser.displayName) {
         const userRef = doc(db, 'users', currentUser.email);
-        
+  
         // Actualiza el nombre en Firestore
         await updateDoc(userRef, { username });
   
         // Actualiza el displayName en Firebase Authentication
         await updateProfile(currentUser, { displayName: username });
-        
+  
         // Actualiza el contexto del usuario
-        setUser((prevUser) => ({
-          ...prevUser,
-          username,  
+        setUser((prevUser  ) => ({
+          ...prevUser  ,
+          username,
         }));
   
         Alert.alert('Éxito', 'Nombre de usuario actualizado');
       }
   
       if (password) {
+        // Actualiza la contraseña
         await updatePassword(currentUser, password);
         Alert.alert('Éxito', 'Contraseña actualizada');
       }
@@ -100,14 +113,15 @@ const UserEdit = () => {
       setPassword('');
       setConfirmPassword('');
       setCurrentPassword('');
+      setModalVisible(false);
   
       // Navegar a la pantalla de perfil
       navigation.navigate('UserProfile');
-  
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       let errorMessage;
   
+      // Manejo de errores más específico
       switch (error.code) {
         case 'auth/weak-password':
           errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
@@ -115,14 +129,16 @@ const UserEdit = () => {
         case 'auth/requires-recent-login':
           errorMessage = 'Debes iniciar sesión nuevamente para realizar este cambio.';
           break;
+        case 'auth/user-not-found':
+          errorMessage = 'No se encontró ningún usuario con esta información.';
+          break;
         default:
-          errorMessage = error.message;
+          errorMessage = 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.';
       }
   
       Alert.alert('Error', errorMessage);
     }
   };
-  
 
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
@@ -133,7 +149,18 @@ const UserEdit = () => {
         navigation.navigate('Login');
       } catch (error) {
         console.error('Error al eliminar perfil:', error);
-        Alert.alert('Error', error.message);
+        let errorMessage;
+
+        // Manejo de errores al eliminar perfil
+        switch (error.code) {
+          case 'auth/requires-recent-login':
+            errorMessage = 'Debes iniciar sesión nuevamente para eliminar tu cuenta.';
+            break;
+          default:
+            errorMessage = 'Error al eliminar el perfil. Inténtalo de nuevo más tarde.';
+        }
+
+        Alert.alert('Error', errorMessage);
       }
     } else {
       Alert.alert('Error', 'No hay usuario autenticado');
@@ -142,7 +169,7 @@ const UserEdit = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Header/>
+      <Header />
 
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
@@ -167,20 +194,6 @@ const UserEdit = () => {
           value={username}
           onChangeText={setUsername}
         />
-
-        <Text style={styles.sectionTitle}>Contraseña actual</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="Contraseña actual"
-            style={styles.input}
-            secureTextEntry={!showCurrentPassword}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-          />
-          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
-            <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
-          </TouchableOpacity>
-        </View>
 
         <Text style={styles.sectionTitle}>Nueva contraseña</Text>
         <View style={styles.passwordContainer}>
@@ -218,7 +231,38 @@ const UserEdit = () => {
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
-      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Confirma tu contraseña</Text>
+            <TextInput
+              placeholder="Contraseña actual"
+              style={styles.input}
+              secureTextEntry={!showCurrentPassword}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+            />
+            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+              <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
+            </TouchableOpacity>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
+                <Text style={styles.confirmButtonText}>Confirmar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
@@ -311,7 +355,85 @@ const styles = StyleSheet.create({
     color: '#8B0000',
     fontSize: 16,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fondo más oscuro para mayor contraste
+  },
+  modalView: {
+    width: '80%',
+    backgroundColor: '#ffffff', // Blanco para el fondo del modal
+    borderRadius: 20, // Bordes más redondeados
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000', // Sombra para dar profundidad
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // Para Android
+  },
+  modalTitle: {
+    fontSize: 24, // Tamaño de fuente más grande
+    fontWeight: 'bold',
+    color: '#333', // Color de texto más oscuro
+    marginBottom: 15,
+  },
+  input: {
+    backgroundColor: '#f2f2f2', // Color de fondo más suave para el input
+    borderRadius: 30, // Bordes redondeados
+    padding: 12,
+    paddingRight: 45,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    width: '100%',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    width: '100%',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
+  },
+  confirmButton: {
+    backgroundColor: '#388E3C',
+    borderRadius: 30, // Bordes redondeados
+    paddingVertical: 12,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  confirmButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    backgroundColor: '#FF6F61', // Color más cálido para el botón cancelar
+    borderRadius: 30, // Bordes redondeados
+    paddingVertical: 12,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  cancelButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
-
 
 export default UserEdit;
