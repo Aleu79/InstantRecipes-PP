@@ -23,6 +23,7 @@ const UserEdit = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   const db = getFirestore();
+  const [passwordStrength, setPasswordStrength] = useState(''); 
 
   useEffect(() => {
     const handleUpdateProfile = async () => {
@@ -156,7 +157,33 @@ const UserEdit = () => {
       { cancelable: false }
     );
   };
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+  
+    if (password.length >= 8) strength++; // Longitud
+    if (/[A-Z]/.test(password)) strength++; // Mayúsculas
+    if (/[a-z]/.test(password)) strength++; // Minúsculas
+    if (/[0-9]/.test(password)) strength++; // Números
+    if (/[^A-Za-z0-9]/.test(password)) strength++; // Caracteres especiales
+  
+    // Definir la fortaleza de la contraseña
+    if (strength === 5) {
+      return 'Muy fuerte';
+    } else if (strength >= 3) {
+      return 'Fuerte';
+    } else if (strength === 2) {
+      return 'Moderada';
+    } else {
+      return 'Débil';
+    }
+  };
+  
+  // Efecto para actualizar la fortaleza de la contraseña
+  useEffect(() => {
+    setPasswordStrength(calculatePasswordStrength(password));
+  }, [password]);
 
+  
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
     if (user) {
@@ -166,18 +193,6 @@ const UserEdit = () => {
         navigation.navigate('Login');
       } catch (error) {
         console.error('Error al eliminar perfil:', error);
-        let errorMessage;
-
-        // Manejo de errores al eliminar perfil
-        switch (error.code) {
-          case 'auth/requires-recent-login':
-            errorMessage = 'Debes iniciar sesión nuevamente para eliminar tu cuenta.';
-            break;
-          default:
-            errorMessage = 'Error al eliminar el perfil. Inténtalo de nuevo más tarde.';
-        }
-
-        Alert.alert('Error', errorMessage);
       }
     } else {
       Alert.alert('Error', 'No hay usuario autenticado');
@@ -187,7 +202,6 @@ const UserEdit = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Header />
-
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>
@@ -238,6 +252,12 @@ const UserEdit = () => {
           <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
             <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} />
           </TouchableOpacity>
+          <View style={styles.passwordStrengthContainer}>
+            {password ? (
+            <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
+            ) : null}
+
+          </View>
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
@@ -330,23 +350,36 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   input: {
-    backgroundColor: '#FFF',
-    borderRadius: 40,
-    padding: 12,
-    paddingRight: 45,
-    marginBottom: 15,
+    width: '90%',
+    height: 55,
+    borderColor: '#e6e6e6',
     borderWidth: 1,
-    borderColor: '#e9e9e9',
-    width: '100%',
+    borderRadius: 40,
+    paddingHorizontal: 16,
+    fontSize: 17,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    backgroundColor: '#f1f1f1',
   },
   passwordContainer: {
+    width: '90%',
+    height: 55,
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
+    justifyContent: 'center',
+    borderColor: '#e6e6e6',
+    borderWidth: 1,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  passwordStrengthContainer: {
+    flexDirection: 'column',
   },
   eyeIcon: {
-    position: 'absolute',
-    right: 15,
+    margin: 8,
   },
   saveButton: {
     backgroundColor: '#388E3C',
@@ -375,32 +408,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fondo más oscuro para mayor contraste
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', 
   },
   modalView: {
     width: '80%',
-    backgroundColor: '#ffffff', // Blanco para el fondo del modal
-    borderRadius: 20, // Bordes más redondeados
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
     padding: 30,
     alignItems: 'center',
-    shadowColor: '#000', // Sombra para dar profundidad
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5, // Para Android
+    elevation: 5, 
   },
   modalTitle: {
-    fontSize: 24, // Tamaño de fuente más grande
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333', // Color de texto más oscuro
+    color: '#333', 
     marginBottom: 15,
   },
   input: {
-    backgroundColor: '#f2f2f2', // Color de fondo más suave para el input
-    borderRadius: 30, // Bordes redondeados
+    backgroundColor: '#f2f2f2', 
+    borderRadius: 30,
     padding: 12,
     paddingRight: 45,
     marginBottom: 15,
@@ -409,7 +442,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   passwordContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     position: 'relative',
     width: '100%',
@@ -426,7 +459,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#388E3C',
-    borderRadius: 30, // Bordes redondeados
+    borderRadius: 30,
     paddingVertical: 12,
     alignItems: 'center',
     flex: 1,
@@ -434,15 +467,15 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#388E3C',
-    borderRadius: 30, // Bordes redondeados
+    borderRadius: 30, 
     paddingVertical: 12,
     alignItems: 'center',
     flex: 1,
     marginHorizontal: 5,
   },
   cancelButton: {
-    backgroundColor: '#FF6F61', // Color más cálido para el botón cancelar
-    borderRadius: 30, // Cambiado a 30 para bordes más redondeados
+    backgroundColor: '#FF6F61', 
+    borderRadius: 30,
     paddingVertical: 12,
     alignItems: 'center',
     flex: 1,
@@ -453,6 +486,11 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  passwordStrengthText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
   },
 });
 
