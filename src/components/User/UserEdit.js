@@ -46,7 +46,7 @@ const UserEdit = () => {
     handleUpdateProfile();
   }, [initialLoad, db]);
 
-  const reauthenticateUser  = async (currentPassword) => {
+  const reauthenticateUser = async (currentPassword) => {
     const currentUser = auth.currentUser;
     const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
 
@@ -66,78 +66,95 @@ const UserEdit = () => {
 
   const confirmSaveChanges = async () => {
     const currentUser = auth.currentUser;
-  
+
     if (password && password !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
-  
-    try {
-      if (password || username) {
-        // Verifica si la contraseña actual es correcta
-        try {
-          await reauthenticateUser  (currentPassword);
-        } catch (error) {
-          Alert.alert('Error', 'La contraseña actual es incorrecta.');
-          return;
-        }
-      }
-  
-      // Solo actualizar el username si hay cambios
-      if (username && username !== currentUser.displayName) {
-        const userRef = doc(db, 'users', currentUser.email);
-  
-        // Actualiza el nombre en Firestore
-        await updateDoc(userRef, { username });
-  
-        // Actualiza el displayName en Firebase Authentication
-        await updateProfile(currentUser, { displayName: username });
-  
-        // Actualiza el contexto del usuario
-        setUser((prevUser  ) => ({
-          ...prevUser  ,
-          username,
-        }));
-  
-        Alert.alert('Éxito', 'Nombre de usuario actualizado');
-      }
-  
-      if (password) {
-        // Actualiza la contraseña
-        await updatePassword(currentUser, password);
-        Alert.alert('Éxito', 'Contraseña actualizada');
-      }
-  
-      // Restablecer los campos
-      setUsername('');
-      setPassword('');
-      setConfirmPassword('');
-      setCurrentPassword('');
-      setModalVisible(false);
-  
-      // Navegar a la pantalla de perfil
-      navigation.navigate('UserProfile');
-    } catch (error) {
-      console.error('Error al actualizar perfil:', error);
-      let errorMessage;
-  
-      // Manejo de errores más específico
-      switch (error.code) {
-        case 'auth/weak-password':
-          errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
-          break;
-        case 'auth/requires-recent-login':
-          errorMessage = 'Debes iniciar sesión nuevamente para realizar este cambio.';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'No se encontró ningún usuario con esta información.';
-          break;
-        default:
-          errorMessage = 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.';
-      }
-  
-      Alert.alert('Error', errorMessage);
-    }
+
+    Alert.alert(
+      'Confirmación',
+      '¿Estás seguro de continuar?',
+      [
+        {
+          text: 'Cancelar',
+          onPress: () => setModalVisible(false),
+          style: 'cancel',
+        },
+        {
+          text: 'Continuar',
+          onPress: async () => {
+            try {
+              if (password || username) {
+                // Verifica si la contraseña actual es correcta
+                try {
+                  await reauthenticateUser(currentPassword);
+                } catch (error) {
+                  Alert.alert('Error', 'La contraseña actual es incorrecta.');
+                  return;
+                }
+              }
+
+              // Solo actualizar el username si hay cambios
+              if (username && username !== currentUser.displayName) {
+                const userRef = doc(db, 'users', currentUser.email);
+
+                // Actualiza el nombre en Firestore
+                await updateDoc(userRef, { username });
+
+                // Actualiza el displayName en Firebase Authentication
+                await updateProfile(currentUser, { displayName: username });
+
+                // Actualiza el contexto del usuario
+                setUser((prevUser) => ({
+                  ...prevUser,
+                  username,
+                }));
+
+                Alert.alert('Éxito', 'Nombre de usuario actualizado');
+              }
+
+              if (password) {
+                // Actualiza la contraseña
+                await updatePassword(currentUser, password);
+                Alert.alert('Éxito', 'Contraseña actualizada');
+              }
+
+              // Restablecer los campos
+              setUsername('');
+              setPassword('');
+              setConfirmPassword('');
+              setCurrentPassword('');
+              setModalVisible(false);
+
+              // Navegar a la pantalla de perfil
+              navigation.navigate('UserProfile');
+            } catch (error) {
+              console.error('Error al actualizar perfil:', error);
+              let errorMessage;
+
+              // Manejo de errores más específico
+              switch (error.code) {
+                case 'auth/weak-password':
+                  errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+                  break;
+                case 'auth/requires-recent-login':
+                  errorMessage = 'Debes iniciar sesión nuevamente para realizar este cambio.';
+                  break;
+                case 'auth/user-not-found':
+                  errorMessage = 'No se encontró ningún usuario con esta información.';
+                  break;
+                default:
+                  errorMessage = 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.';
+              }
+
+              Alert.alert('Error', errorMessage);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleDeleteProfile = async () => {
@@ -250,7 +267,6 @@ const UserEdit = () => {
             <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
               <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
             </TouchableOpacity>
-
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
                 <Text style={styles.confirmButtonText}>Confirmar</Text>
@@ -263,7 +279,7 @@ const UserEdit = () => {
         </View>
       </Modal>
 
-      <BottomNavBar navigation={navigation} />
+      <BottomNavBar />
     </ScrollView>
   );
 };
@@ -271,17 +287,17 @@ const UserEdit = () => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#fafafa', 
+    backgroundColor: '#fafafa',
     padding: 20,
   },
   titulocontainer: {
     flexDirection: 'row',
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   textContainer: {
-    flex: 1, 
+    flex: 1,
   },
   title: {
     fontSize: 30,
@@ -292,7 +308,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   imgprofile: {
-    marginLeft: 20, 
+    marginLeft: 20,
   },
   profileImage: {
     width: 100,
@@ -317,7 +333,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 40,
     padding: 12,
-    paddingRight: 45,  
+    paddingRight: 45,
     marginBottom: 15,
     borderWidth: 1,
     borderColor: '#e9e9e9',
@@ -326,7 +342,7 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative', 
+    position: 'relative',
   },
   eyeIcon: {
     position: 'absolute',
@@ -416,19 +432,23 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
   },
-  confirmButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    backgroundColor: '#FF6F61', // Color más cálido para el botón cancelar
+  confirmButton: {
+    backgroundColor: '#388E3C',
     borderRadius: 30, // Bordes redondeados
     paddingVertical: 12,
     alignItems: 'center',
     flex: 1,
     marginHorizontal: 5,
   },
+  cancelButton: {
+    backgroundColor: '#FF6F61', // Color más cálido para el botón cancelar
+    borderRadius: 30, // Cambiado a 30 para bordes más redondeados
+    paddingVertical: 12,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+
   cancelButtonText: {
     color: '#FFF',
     fontSize: 16,
