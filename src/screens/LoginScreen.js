@@ -1,12 +1,13 @@
+import React, { useState, useContext } from 'react';
+import { Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
-import { Alert, Image, Dimensions, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useState, useContext } from 'react';
 import { auth } from '../../firebase/firebase-config';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Alert from '../components/Alerts/Alerts';
 
 const { height } = Dimensions.get('window');
 
@@ -15,15 +16,21 @@ const LoginScreen = () => {
   const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState(''); 
   const [showPassword, setShowPassword] = useState(false); 
+  const [alert, setAlert] = useState({ visible: false, type: '', title: '', text: '' });
   const { setUser } = useContext(UserContext);
   const db = getFirestore();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
+      setAlert({
+        visible: true,
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        text: 'Por favor, ingresa tu correo y contraseña.',
+      });
       return;
     }
-
+  
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
       await AsyncStorage.setItem('userEmail', user.user.email); 
@@ -38,44 +45,41 @@ const LoginScreen = () => {
         })
       );
     } catch (error) {
-      console.log('Error completo:', error); 
-      console.log('Código de error:', error.code); 
-
       switch (error.code) {
         case 'auth/wrong-password':
-          Alert.alert('Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
+          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'La contraseña es incorrecta. Inténtalo de nuevo.' });
           break;
         case 'auth/invalid-email':
-          Alert.alert('Error', 'El formato del correo no es válido.');
+          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'El formato del correo no es válido.' });
           break;
         case 'auth/too-many-requests':
-          Alert.alert('Error', 'Demasiados intentos fallidos. Inténtalo más tarde.');
+          setAlert({ visible: true, type: ALERT_TYPE.WARNING, title: 'Error', text: 'Demasiados intentos fallidos. Inténtalo más tarde.' });
           break;
         case 'auth/invalid-credential':
-          Alert.alert('Error', 'Las credenciales son inválidas. Revisa el correo o la contraseña e intenta nuevamente.');
+          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Las credenciales son inválidas. Revisa el correo o la contraseña e intenta nuevamente.' });
           break;
         default:
-          Alert.alert('Error', 'Ocurrió un error inesperado: ' + error.message);
+          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Ocurrió un error inesperado: ' + error.message });
       }
     }
   };
 
   const handleForgotPassword = async () => {
     if (!email) {
-      Alert.alert('Error', 'Por favor, ingresa tu correo para restablecer la contraseña.');
+      setAlert({ visible: true, type: ALERT_TYPE.WARNING, title: 'Error', text: 'Por favor, ingresa tu correo para restablecer la contraseña.' });
       return;
     }
 
     try {
       await sendPasswordResetEmail(auth, email);
-      Alert.alert('Éxito', 'Se ha enviado un correo electrónico para restablecer tu contraseña.');
+      setAlert({ visible: true, type: ALERT_TYPE.SUCCESS, title: 'Éxito', text: 'Se ha enviado un correo electrónico para restablecer tu contraseña.' });
     } catch (error) {
       if (error.code === 'auth/invalid-email') {
-        Alert.alert('Error', 'El correo electrónico no es válido.');
+        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'El correo electrónico no es válido.' });
       } else if (error.code === 'auth/user-not-found') {
-        Alert.alert('Error', 'No se encontró una cuenta con este correo electrónico.');
+        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'No se encontró una cuenta con este correo electrónico.' });
       } else {
-        Alert.alert('Error', 'Ocurrió un error al enviar el correo electrónico para restablecer tu contraseña.');
+        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Ocurrió un error al enviar el correo electrónico para restablecer tu contraseña.' });
       }
     }
   };
@@ -130,7 +134,16 @@ const LoginScreen = () => {
               <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> 
+        {/* Mostrar la alerta cuando sea visible */}
+        {alert.visible && (
+          <Alert
+            type={alert.type}
+            title={alert.title}
+            text={alert.text}
+            onClose={() => setAlert({ ...alert, visible: false })}
+          />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
