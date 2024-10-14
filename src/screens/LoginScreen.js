@@ -8,6 +8,7 @@ import { UserContext } from '../context/UserContext';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from '../components/Alerts/Alerts';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const { height } = Dimensions.get('window');
 
@@ -20,69 +21,96 @@ const LoginScreen = () => {
   const { setUser } = useContext(UserContext);
   const db = getFirestore();
 
+  // Función para mostrar alertas
+  const showAlert = (type, title, text) => {
+    setAlert({
+      visible: true,
+      type: type,
+      title: title,
+      text: text,
+    });
+    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000); // Oculta la alerta después de 4 segundos
+  };
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      setAlert({
-        visible: true,
-        type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        text: 'Por favor, ingresa tu correo y contraseña.',
-      });
+    // Validación de entrada
+    if (!email.trim() || !password.trim()) {
+      showAlert(ALERT_TYPE.DANGER, 'Error', 'Por favor, ingresa tu correo y contraseña.');
       return;
     }
   
     try {
-      const user = await signInWithEmailAndPassword(auth, email, password);
-      await AsyncStorage.setItem('userEmail', user.user.email); 
-      const userDoc = doc(db, 'users', user.user.email);
+      // Intento de inicio de sesión
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+      await AsyncStorage.setItem('userEmail', userCredential.user.email); 
+      
+      const userDoc = doc(db, 'users', userCredential.user.email);
       const userData = await getDoc(userDoc);
-      const data = userData.data();
-      setUser({ email: user.user.email, username: data.username, phone: data.phone });
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        })
-      );
+      
+      if (userData.exists()) {
+        const data = userData.data();
+        setUser({ email: userCredential.user.email, username: data.username, phone: data.phone });
+        
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          })
+        );
+      } else {
+        showAlert(ALERT_TYPE.DANGER, 'Error', 'No se encontraron datos de usuario.');
+      }
+  
     } catch (error) {
+      // Manejo de errores comunes
       switch (error.code) {
         case 'auth/wrong-password':
-          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'La contraseña es incorrecta. Inténtalo de nuevo.' });
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');
           break;
         case 'auth/invalid-email':
-          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'El formato del correo no es válido.' });
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'El formato del correo no es válido.');
+          break;
+        case 'auth/user-not-found':
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'No se encontró una cuenta con este correo electrónico.');
           break;
         case 'auth/too-many-requests':
-          setAlert({ visible: true, type: ALERT_TYPE.WARNING, title: 'Error', text: 'Demasiados intentos fallidos. Inténtalo más tarde.' });
+          showAlert(ALERT_TYPE.WARNING, 'Error', 'Demasiados intentos fallidos. Inténtalo más tarde.');
           break;
         case 'auth/invalid-credential':
-          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Las credenciales son inválidas. Revisa el correo o la contraseña e intenta nuevamente.' });
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'Las credenciales son inválidas. Revisa el correo o la contraseña e intenta nuevamente.');
           break;
         default:
-          setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Ocurrió un error inesperado: ' + error.message });
+          showAlert(ALERT_TYPE.DANGER, 'Error', `Ocurrió un error inesperado: ${error.message}`);
       }
     }
   };
-
+  
   const handleForgotPassword = async () => {
-    if (!email) {
-      setAlert({ visible: true, type: ALERT_TYPE.WARNING, title: 'Error', text: 'Por favor, ingresa tu correo para restablecer la contraseña.' });
+    // Validación de entrada para recuperación de contraseña
+    if (!email.trim()) {
+      showAlert(ALERT_TYPE.WARNING, 'Error', 'Por favor, ingresa tu correo para restablecer la contraseña.');
       return;
     }
-
+  
     try {
-      await sendPasswordResetEmail(auth, email);
-      setAlert({ visible: true, type: ALERT_TYPE.SUCCESS, title: 'Éxito', text: 'Se ha enviado un correo electrónico para restablecer tu contraseña.' });
+      // Envío de correo para restablecer la contraseña
+      await sendPasswordResetEmail(auth, email.trim());
+      showAlert(ALERT_TYPE.SUCCESS, 'Éxito', 'Se ha enviado un correo electrónico para restablecer tu contraseña.');
     } catch (error) {
-      if (error.code === 'auth/invalid-email') {
-        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'El correo electrónico no es válido.' });
-      } else if (error.code === 'auth/user-not-found') {
-        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'No se encontró una cuenta con este correo electrónico.' });
-      } else {
-        setAlert({ visible: true, type: ALERT_TYPE.DANGER, title: 'Error', text: 'Ocurrió un error al enviar el correo electrónico para restablecer tu contraseña.' });
+      switch (error.code) {
+        case 'auth/invalid-email':
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico no es válido.');
+          break;
+        case 'auth/user-not-found':
+          showAlert(ALERT_TYPE.DANGER, 'Error', 'No se encontró una cuenta con este correo electrónico.');
+          break;
+        default:
+          showAlert(ALERT_TYPE.DANGER, 'Error', `Ocurrió un error al enviar el correo electrónico: ${error.message}`);
       }
     }
   };
+  
+  
 
   return (
     <KeyboardAvoidingView
@@ -135,7 +163,6 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </View>
         </View> 
-        {/* Mostrar la alerta cuando sea visible */}
         {alert.visible && (
           <Alert
             type={alert.type}
@@ -161,11 +188,11 @@ const styles = StyleSheet.create({
   },
   ondulatedBackground: {
     position: 'absolute',
-    top: height * 0.45, 
+    top: height * 0.45,
     left: 0,
     right: 0,
-    height: 100, 
-    backgroundColor: '#fdfdfd', 
+    height: 100,
+    backgroundColor: '#fdfdfd',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
   },
@@ -216,7 +243,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 16,
-    backgroundColor: '#fff',
     backgroundColor: '#f1f1f1',
   },
   passwordContainer: {
@@ -234,7 +260,7 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     fontSize: 17,
-  },  
+  },
   eyeIcon: {
     padding: 8,
   },

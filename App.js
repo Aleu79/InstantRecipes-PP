@@ -13,12 +13,14 @@ import MyRecipes  from './src/screens/MyRecipes';
 import CategoryRecipesScreen from './src/screens/CategoryRecipesScreen';
 import RecipeScreen from './src/screens/RecipeScreen';
 import CreateRecipeScreen from './src/screens/CreateRecipeScreen';
+import { AlertNotificationRoot } from 'react-native-alert-notification';
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <UserProvider> 
+      <AlertNotificationRoot>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -34,6 +36,7 @@ export default function App() {
           <Stack.Screen name="CreateRecipeScreen" component={CreateRecipeScreen}  options={{headerShown:false}}  />
         </Stack.Navigator>
       </NavigationContainer>
+      </AlertNotificationRoot>
     </UserProvider>
   );
 }
