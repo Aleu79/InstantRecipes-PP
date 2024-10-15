@@ -86,61 +86,42 @@ const UserProfile = () => {
       Alert.alert('Permiso denegado', 'Lo sentimos, necesitamos permisos para acceder a la galería.');
       return;
     }
-
+  
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
-
+  
     console.log('Resultado de la selección de imagen:', result);
-
+  
     if (result.assets && result.assets.length > 0) {
       const selectedImage = result.assets[0];
       console.log('URI de la imagen seleccionada:', selectedImage.uri);
-
+  
       const allowed = await checkUploadLimit();
       if (!allowed) return;
-
+  
       const response = await fetch(selectedImage.uri);
       const blob = await response.blob();
-
+  
       const filename = 'profile_picture.jpg';
       const userEmailSafe = user.email.replace(/[@.]/g, (c) => (c === '@' ? '%40' : '%2E'));
       const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
-
+  
       try {
-        const startTime = Date.now();
-        const uploadTask = uploadBytes(imageRef, blob);
-
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log(`Progreso de subida: ${progress}%`);
-            const elapsedTime = (Date.now() - startTime) / 1000;
-            const totalTime = (snapshot.totalBytes / snapshot.bytesTransferred) * elapsedTime;
-            setUploadTime(Math.max(0, totalTime - elapsedTime));
-          },
-          (error) => {
-            console.error('Error al subir la imagen:', error);
-            Alert.alert('Error', 'No se pudo subir la imagen. Verifica los permisos y el estado de la conexión.');
-          },
-          async () => {
-            const url = await getDownloadURL(imageRef);
-            console.log('URL de la imagen subida:', url);
-            setImage(url);
-            if (user) {
-              const userDocRef = doc(db, 'users', user.email);
-              await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
-              Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
-              setUploadTime(0);
-            } else {
-              Alert.alert('Error', 'Usuario no autenticado.');
-            }
-          }
-        );
+        const uploadTask = await uploadBytes(imageRef, blob); 
+        const url = await getDownloadURL(uploadTask.ref); // Obtener la URL después de la subida
+        console.log('URL de la imagen subida:', url);
+        setImage(url);
+        if (user) {
+          const userDocRef = doc(db, 'users', user.email);
+          await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
+          Alert.alert('Éxito', 'La imagen se subió y guardó correctamente.');
+        } else {
+          Alert.alert('Error', 'Usuario no autenticado.');
+        }
       } catch (error) {
         console.error('Error al iniciar la subida:', error);
         Alert.alert('Error', 'No se pudo iniciar la subida de la imagen.');
@@ -149,6 +130,7 @@ const UserProfile = () => {
       Alert.alert('Error', 'No se seleccionó ninguna imagen.');
     }
   };
+  
 
   const handleLogout = async () => {
     try {
