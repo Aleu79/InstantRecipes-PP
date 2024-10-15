@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 16,
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#f5f5f5',
   },
   passwordContainer: {
     width: '90%',
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     borderColor: '#e6e6e6',
     borderWidth: 1,
     borderRadius: 40,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
     marginBottom: 16,
   },

@@ -5,13 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
   Modal,
-  KeyboardAvoidingView,
-  Image,
-  Platform,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Image
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {
@@ -23,9 +22,10 @@ import {
 import { UserContext } from '../context/UserContext';
 import zxcvbn from 'zxcvbn';
 import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
+import Alert from '../components/Alerts/Alerts'; // Asegúrate de que la ruta sea correcta
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const db = getFirestore();
-
 const { height } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
@@ -39,11 +39,11 @@ const SignUpScreen = ({ navigation }) => {
   const { setUser } = useContext(UserContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [alert, setAlert] = useState({ visible: false, type: '', title: '', text: '' });
 
   const passwordStrength = password ? zxcvbn(password).score : -1;
 
   const getPasswordStrengthLabel = () => {
-    console.log('Verificando fortaleza de contraseña:', passwordStrength);
     switch (passwordStrength) {
       case 0:
         return { label: 'Muy débil', color: 'red' };
@@ -60,113 +60,90 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
+  const showAlert = (type, title, text) => {
+    setAlert({
+      visible: true,
+      type: type,
+      title: title,
+      text: text,
+    });
+    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000); // Oculta la alerta después de 4 segundos
+  };
+
   const validateFields = () => {
-    console.log('Validando campos:', { email, phone, username, password, confirmPassword });
     if (!email || !phone || !username || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      showAlert(ALERT_TYPE.DANGER, 'Error', 'Por favor completa todos los campos');
       return false;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      showAlert(ALERT_TYPE.DANGER, 'Error', 'Las contraseñas no coinciden');
       return false;
     }
     if (password.length < 8) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      showAlert(ALERT_TYPE.DANGER, 'Error', 'La contraseña debe tener al menos 8 caracteres');
       return false;
     }
-    console.log('Campos validados correctamente');
     return true;
   };
 
   const handleVerifyEmail = async () => {
-    console.log('Manejando verificación de correo...');
     if (!validateFields()) {
-      console.log('Validación fallida');
       return;
     }
-  
+
     const auth = getAuth();
-    console.log('Firebase auth inicializado');
-  
     try {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      console.log('Métodos de inicio de sesión obtenidos para el correo:', signInMethods);
-  
       if (signInMethods.length > 0) {
-        Alert.alert('Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
+        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
         return;
       }
-      console.log('Mostrando modal para aceptar términos');
       setModalVisible(true);
     } catch (error) {
-      console.log('Error durante la verificación de correo:', error.message);
-      Alert.alert('Error', error.message);
+      showAlert(ALERT_TYPE.DANGER, 'Error', error.message);
     }
   };
-  
+
   const handleSignUp = async () => {
-    console.log('Iniciando proceso de registro...');
-    
     if (!termsAccepted) {
-      console.log('Términos no aceptados');
-      Alert.alert('Error', 'Debes aceptar los términos y condiciones para registrarte.');
+      showAlert(ALERT_TYPE.DANGER, 'Error', 'Debes aceptar los términos y condiciones para registrarte.');
       return;
     }
-  
+
     const auth = getAuth();
-    console.log('Firebase auth inicializado para el registro');
-    
     try {
-      // Crear usuario y enviar verificación de correo
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('Usuario creado:', user);
-  
+
       await sendEmailVerification(user);
-      console.log('Correo de verificación enviado');
-      Alert.alert('Correo de verificación enviado', 'Por favor, revisa tu bandeja de entrada.');
-      
-      // Guardar información del usuario en Firestore
+      showAlert(ALERT_TYPE.SUCCESS, 'Éxito', 'Correo de verificación enviado. Por favor, revisa tu bandeja de entrada.');
+
       const userDoc = doc(collection(db, 'users'), email);
       await setDoc(userDoc, { username, phone, email });
-      console.log('Datos del usuario guardados en Firestore:', { username, phone, email });
-  
-      // Actualizar el estado global del usuario
       setUser({ email: user.email, username, phone });
-      console.log('Estado del usuario actualizado:', { email: user.email, username, phone });
-  
-      // Verificar si el email está confirmado
+
       const checkVerificationInterval = setInterval(async () => {
         await auth.currentUser.reload();  // Actualiza la información del usuario
-  
         if (auth.currentUser.emailVerified) {
-          console.log('El correo ha sido verificado');
-          Alert.alert('Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
+          showAlert(ALERT_TYPE.SUCCESS, 'Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
           clearInterval(checkVerificationInterval);
           navigation.navigate('Home');
-        } else {
-          console.log('El correo no ha sido verificado');
         }
       }, 1000);
-  
     } catch (error) {
-      console.log('Error durante el registro:', error.message);
-      
-      // Manejo del error de correo ya en uso
       if (error.code === 'auth/email-already-in-use') {
-        Alert.alert('Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión o usa otro correo.');
+        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión o usa otro correo.');
       } else {
-        Alert.alert('Error', error.message); // Maneja otros errores
+        showAlert(ALERT_TYPE.DANGER, 'Error', error.message);
       }
     }
   };
-  
+
   const handleAcceptTerms = () => {
-    console.log('Términos aceptados');
     setTermsAccepted(true);
-    setModalVisible(false); // Cierra el modal
-    handleSignUp(); // Llama al proceso de registro
-  };
+    setModalVisible(false);
+    handleSignUp();
+  }; 
 
   return (
     <KeyboardAvoidingView
@@ -242,6 +219,7 @@ const SignUpScreen = ({ navigation }) => {
               <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
                 Inicia sesión
               </Text>
+              <Alert visible={alert.visible} type={alert.type} title={alert.title} text={alert.text} />
             </Text>
 
 
@@ -250,43 +228,57 @@ const SignUpScreen = ({ navigation }) => {
               <Text style={styles.termsText}>Términos y condiciones de uso</Text>
             </TouchableOpacity>
           </View>
-
           <Modal animationType="slide" transparent={true} visible={modalVisible}>
           <View style={styles.modalBackground}>
             <View style={styles.modalView}>
-              <Text style={styles.modalTitle}>Términos y Condiciones</Text>
-              <ScrollView style={styles.scrollContainer}>
-                <Text style={styles.modalText}>
-                <Text style={{ fontWeight: 'bold' }}>Última actualización: 4 de octubre de 2024</Text>{'\n'}
-
-                  Al utilizar la aplicación de recetas InstantRecipes (en adelante, "la Aplicación"), aceptas cumplir con estos Términos y Condiciones. Si no estás de acuerdo con estos términos, por favor, no utilices la Aplicación.
-
-                  <Text style={{ fontWeight: 'bold' }}>1.</Text> Aceptación de Términos
-                  Al acceder y utilizar la Aplicación, aceptas que has leído, entendido y aceptado estar obligado por estos Términos y Condiciones. Estos términos pueden ser actualizados periódicamente, y se te notificará sobre cualquier cambio mediante la publicación de los nuevos términos en esta página.
-
-                  <Text style={{ fontWeight: 'bold' }}>2.</Text> Uso de la API de Spoonacular
-                  La Aplicación utiliza la API de Spoonacular para proporcionar recetas, información nutricional y otros datos relacionados con la cocina. Al utilizar nuestra Aplicación, también aceptas cumplir con los Términos de Servicio de Spoonacular, que puedes encontrar en su sitio web.
-
-                  <Text style={{ fontWeight: 'bold' }}>3.</Text> Propiedad Intelectual
-                  Todo el contenido de la Aplicación, incluyendo pero no limitándose a texto, imágenes, gráficos, logotipos, y software, es propiedad de InstantRecipes o de sus proveedores de contenido y está protegido por leyes de derechos de autor y otras leyes de propiedad intelectual. Queda prohibida la reproducción, distribución o modificación sin el permiso expreso del propietario.
-
-                  <Text style={{ fontWeight: 'bold' }}>4.</Text> Limitación de Responsabilidad
-                  La Aplicación se proporciona "tal cual" y "según disponibilidad". No garantizamos que la Aplicación esté libre de errores o interrupciones, ni que cumplirá con tus expectativas. No seremos responsables de ninguna pérdida o daño derivado del uso de la Aplicación o de la información contenida en ella.
-
-                  <Text style={{ fontWeight: 'bold' }}>5.</Text> Modificaciones
-                  Nos reservamos el derecho de modificar o interrumpir la Aplicación en cualquier momento, sin previo aviso. También podemos actualizar estos Términos y Condiciones en cualquier momento. Tu uso continuado de la Aplicación después de la publicación de cambios constituye tu aceptación de dichos cambios.
-
-                  <Text style={{ fontWeight: 'bold' }}>6.</Text> Ley Aplicable
-                  Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes del país en el que operamos, sin tener en cuenta sus principios de conflicto de leyes.
-                </Text>
-              </ScrollView>
-
-              <TouchableOpacity style={styles.acceptButton} onPress={handleAcceptTerms}>
-                <Text style={styles.buttonText}>Aceptar</Text>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Icon name="arrow-back-outline" size={24} color="#FF4500" />
               </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+
+      <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+
+      <ScrollView style={styles.scrollContainer}>
+        <Text style={styles.modalText}>
+          <Text style={{ fontWeight: 'bold' }}>Última actualización:</Text> 4 de octubre de 2024{'\n\n'}
+          
+          <Text style={styles.sectionTitle}>1. Aceptación de Términos</Text>
+          Al acceder y utilizar la aplicación InstantRecipes ("la Aplicación"), aceptas que has leído, entendido y aceptado estos Términos y Condiciones. Nos reservamos el derecho de modificar estos términos en cualquier momento. El uso continuo de la Aplicación después de las actualizaciones implica la aceptación de los cambios.{'\n\n'}
+
+          <Text style={styles.sectionTitle}>2. Uso de la API de Spoonacular</Text>
+          La Aplicación se integra con la API de Spoonacular para proporcionar recetas e información nutricional. Al usar la Aplicación, también aceptas cumplir con los Términos de Servicio de Spoonacular, disponibles en su sitio web oficial.{'\n\n'}
+
+          <Text style={styles.sectionTitle}>3. Propiedad Intelectual</Text>
+          Todos los contenidos, como texto, imágenes, logotipos y software, son propiedad de *InstantRecipes* o de sus proveedores. Está prohibida la reproducción, distribución o modificación del contenido sin autorización previa.{'\n\n'}
+
+          <Text style={styles.sectionTitle}>4. Limitación de Responsabilidad</Text>
+          La Aplicación se proporciona "tal cual" y "según disponibilidad". No garantizamos que la Aplicación esté libre de errores o interrupciones. No seremos responsables de pérdidas o daños derivados del uso de la Aplicación o su información.{'\n\n'}
+
+          <Text style={styles.sectionTitle}>5. Modificaciones</Text>
+          Nos reservamos el derecho de modificar, suspender o descontinuar la Aplicación sin previo aviso. Las actualizaciones de estos términos se publicarán en esta página.{'\n\n'}
+
+          <Text style={styles.sectionTitle}>6. Ley Aplicable</Text>
+          Estos Términos y Condiciones se regirán e interpretarán conforme a las leyes de Argentina, sin considerar los principios de conflictos de leyes.
+        </Text>
+      </ScrollView>
+
+      <TouchableOpacity 
+        style={styles.checkboxContainer} 
+        onPress={() => setTermsAccepted(!termsAccepted)}
+      >
+        <Icon 
+          name={termsAccepted ? 'checkbox-outline' : 'square-outline'} 
+          size={24} 
+          color="#FF4500" 
+        />
+        <Text style={styles.checkboxText}>Acepto los términos</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -334,6 +326,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginLeft: '5%',
   },
+
   input: {
     width: '90%',
     height: 55,
@@ -343,8 +336,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 17,
     marginBottom: 16,
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#f5f5f5', 
   },
+  
   passwordContainer: {
     width: '90%',
     height: 55,
@@ -353,16 +347,19 @@ const styles = StyleSheet.create({
     borderColor: '#e6e6e6',
     borderWidth: 1,
     borderRadius: 40,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5', 
     paddingHorizontal: 16,
     marginBottom: 16,
   },
+
   passwordInput: {
     flex: 1,
     fontSize: 17,
+    backgroundColor: 'transparent', 
   },
+
   eyeIcon: {
-    padding: 8,
+    padding: 8, 
   },
   termsContainer: {
     flexDirection: 'row',
@@ -429,6 +426,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginTop: 30,
   },
+  backButton: {
+    marginBottom: 10,
+  },
+  checkboxContainer:{
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  checkboxText: {
+    marginLeft: 5,
+  }, 
 });
 
 export default SignUpScreen;
