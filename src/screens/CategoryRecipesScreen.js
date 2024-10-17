@@ -22,12 +22,12 @@ const CategoryRecipesScreen = ({ route }) => {
     try {
       const apiKey = '69694db3792e4c4387992d79c64eb073'; 
       const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
-  
+
       console.log("URL de la API:", url); 
-  
+
       const response = await axios.get(url);
       console.log("Respuesta completa de la API:", response.data); 
-  
+
       // Mapeo de las recetas
       const allRecipesData = response.data.results?.map(recipe => ({
         id: recipe.id,
@@ -54,7 +54,10 @@ const CategoryRecipesScreen = ({ route }) => {
       })) || [];
   
       console.log("Recetas obtenidas de la API:", allRecipesData); 
-      
+
+      // Guardar las recetas en AsyncStorage
+      await AsyncStorage.setItem('allRecipes', JSON.stringify(allRecipesData));
+
       setAllRecipes(allRecipesData);
       setFilteredRecipes(allRecipesData); 
       setError('');
@@ -63,6 +66,24 @@ const CategoryRecipesScreen = ({ route }) => {
       handleError(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para cargar recetas desde AsyncStorage
+  const loadRecipesFromCache = async () => {
+    try {
+      const cachedRecipesString = await AsyncStorage.getItem('allRecipes');
+      if (cachedRecipesString) {
+        const cachedRecipes = JSON.parse(cachedRecipesString);
+        setAllRecipes(cachedRecipes);
+        setFilteredRecipes(cachedRecipes);
+        setError('');
+      } else {
+        // Si no hay recetas en caché, buscar en la API
+        await fetchRecipes();
+      }
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -98,7 +119,7 @@ const CategoryRecipesScreen = ({ route }) => {
   }, [allRecipes, category]);
 
   useEffect(() => {
-    fetchRecipes(); 
+    loadRecipesFromCache(); 
     loadSavedRecipes(); 
   }, []);
 
@@ -114,6 +135,7 @@ const CategoryRecipesScreen = ({ route }) => {
       if (savedRecipesString) {
         const savedRecipeIds = JSON.parse(savedRecipesString);
         setSavedRecipes(new Set(savedRecipeIds));
+        console.log("que soy: ",setSavedRecipes)
       }
     } catch (error) {
       console.error('Error al cargar recetas guardadas:', error);

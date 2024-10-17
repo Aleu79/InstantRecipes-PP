@@ -50,7 +50,7 @@ const HomeScreen = ({ navigation }) => {
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
-    console.log('Menú desplegable visible:', menuVisible);  // Muestra el estado del menú
+    console.log('Menú desplegable visible:', menuVisible);  
   };
 
   return (
