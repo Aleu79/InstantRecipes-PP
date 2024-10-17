@@ -256,7 +256,6 @@ const UserEdit = () => {
             {password ? (
             <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
             ) : null}
-
           </View>
         </View>
 

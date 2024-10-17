@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,9 +20,8 @@ import {
   fetchSignInMethodsForEmail,
 } from 'firebase/auth';
 import { UserContext } from '../context/UserContext';
-import zxcvbn from 'zxcvbn';
 import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
-import Alert from '../components/Alerts/Alerts'; // Asegúrate de que la ruta sea correcta
+import Alert from '../components/Alerts/Alerts'; 
 import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const db = getFirestore();
@@ -40,25 +39,25 @@ const SignUpScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [alert, setAlert] = useState({ visible: false, type: '', title: '', text: '' });
+  const [passwordStrength, setPasswordStrength] = useState(''); 
 
-  const passwordStrength = password ? zxcvbn(password).score : -1;
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
 
-  const getPasswordStrengthLabel = () => {
-    switch (passwordStrength) {
-      case 0:
-        return { label: 'Muy débil', color: 'red' };
-      case 1:
-        return { label: 'Débil', color: 'orange' };
-      case 2:
-        return { label: 'Regular', color: 'yellow' };
-      case 3:
-        return { label: 'Bien', color: '#d2d72c' };
-      case 4:
-        return { label: 'Seguro', color: 'green' };
-      default:
-        return { label: '', color: 'transparent' };
-    }
+    if (strength === 5) return 'Muy fuerte';
+    if (strength >= 3) return 'Fuerte';
+    if (strength === 2) return 'Moderada';
+    return 'Débil';
   };
+
+  useEffect(() => {
+    setPasswordStrength(calculatePasswordStrength(password));
+  }, [password]);
 
   const showAlert = (type, title, text) => {
     setAlert({
@@ -67,11 +66,11 @@ const SignUpScreen = ({ navigation }) => {
       title: title,
       text: text,
     });
-    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000); // Oculta la alerta después de 4 segundos
+    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000);
   };
 
   const validateFields = () => {
-    if (!email || !phone || !username || !password || !confirmPassword) {
+    if (!email || !username || !password || !confirmPassword) {
       showAlert(ALERT_TYPE.DANGER, 'Error', 'Por favor completa todos los campos');
       return false;
     }
@@ -87,15 +86,13 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   const handleVerifyEmail = async () => {
-    if (!validateFields()) {
-      return;
-    }
+    if (!validateFields()) return;
 
     const auth = getAuth();
     try {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       if (signInMethods.length > 0) {
-        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico ya está registrado. Intenta iniciar sesión.');
+        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico ya está registrado.');
         return;
       }
       setModalVisible(true);
@@ -109,30 +106,28 @@ const SignUpScreen = ({ navigation }) => {
       showAlert(ALERT_TYPE.DANGER, 'Error', 'Debes aceptar los términos y condiciones para registrarte.');
       return;
     }
-
     const auth = getAuth();
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       await sendEmailVerification(user);
-      showAlert(ALERT_TYPE.SUCCESS, 'Éxito', 'Correo de verificación enviado. Por favor, revisa tu bandeja de entrada.');
-
+      showAlert(ALERT_TYPE.SUCCESS, 'Éxito', 'Correo de verificación enviado.');
+      
       const userDoc = doc(collection(db, 'users'), email);
       await setDoc(userDoc, { username, phone, email });
       setUser({ email: user.email, username, phone });
 
       const checkVerificationInterval = setInterval(async () => {
-        await auth.currentUser.reload();  // Actualiza la información del usuario
+        await auth.currentUser.reload();
         if (auth.currentUser.emailVerified) {
-          showAlert(ALERT_TYPE.SUCCESS, 'Verificación completa', 'Tu cuenta ha sido verificada. Bienvenido a la app.');
+          showAlert(ALERT_TYPE.SUCCESS, 'Verificación completa', 'Cuenta verificada.');
           clearInterval(checkVerificationInterval);
           navigation.navigate('Home');
         }
       }, 1000);
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
-        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo electrónico ya está en uso. Intenta iniciar sesión o usa otro correo.');
+        showAlert(ALERT_TYPE.DANGER, 'Error', 'El correo ya está en uso.');
       } else {
         showAlert(ALERT_TYPE.DANGER, 'Error', error.message);
       }
@@ -197,20 +192,26 @@ const SignUpScreen = ({ navigation }) => {
               <TextInput
                 style={styles.passwordInput}
                 placeholder="Confirmar contraseña"
-                secureTextEntry={!showPassword}
+                secureTextEntry={!showConfirmPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholderTextColor="#999"
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
+                <Icon name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <View style={styles.passwordStrengthContainer}>
+              {password ? (
+                <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
+              ) : null}
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleVerifyEmail}>
               <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
 
@@ -222,63 +223,68 @@ const SignUpScreen = ({ navigation }) => {
               <Alert visible={alert.visible} type={alert.type} title={alert.title} text={alert.text} />
             </Text>
 
-
             <TouchableOpacity style={styles.termsContainer} onPress={() => setModalVisible(true)}>
               <Icon name="document-text-outline" size={20} color="#FF4500" />
               <Text style={styles.termsText}>Términos y condiciones de uso</Text>
             </TouchableOpacity>
           </View>
           <Modal animationType="slide" transparent={true} visible={modalVisible}>
-          <View style={styles.modalBackground}>
-            <View style={styles.modalView}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Icon name="arrow-back-outline" size={24} color="#FF4500" />
-              </TouchableOpacity>
+            <View style={styles.modalBackground}>
+              <View style={styles.modalView}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Icon name="arrow-back-outline" size={24} color="#FF4500" />
+                </TouchableOpacity>
 
-      <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+                <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+                <ScrollView style={styles.scrollContainer}>
+                  <Text style={styles.modalText}>
+                    Al registrarte en esta aplicación, aceptas los siguientes términos y condiciones:
+                    {"\n\n"}1. **Uso de los datos personales:** Los datos personales proporcionados durante el
+                    registro serán utilizados únicamente con el propósito de gestionar tu cuenta en la aplicación.
+                    {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad de tus datos, y no compartiremos
+                    tu información con terceros sin tu consentimiento expreso.
+                    {"\n\n"}3. **Responsabilidad:** No somos responsables por el uso indebido de esta aplicación ni por
+                    la divulgación accidental de información personal debido a violaciones de seguridad fuera de nuestro
+                    control.
+                    {"\n\n"}4. **Modificaciones:** Nos reservamos el derecho de actualizar estos términos en cualquier
+                    momento. Te notificaremos si realizamos cambios sustanciales.
+                    {"\n\n"}5. **Uso adecuado:** Los usuarios se comprometen a utilizar la aplicación de manera adecuada,
+                    respetando las leyes locales y los derechos de otros usuarios.
+                    {"\n\n"}Al aceptar estos términos, confirmas que has leído y comprendido nuestra política de privacidad.
+                  </Text>
+                </ScrollView>
 
-      <ScrollView style={styles.scrollContainer}>
-        <Text style={styles.modalText}>
-          <Text style={{ fontWeight: 'bold' }}>Última actualización:</Text> 4 de octubre de 2024{'\n\n'}
-          
-          <Text style={styles.sectionTitle}>1. Aceptación de Términos</Text>
-          Al acceder y utilizar la aplicación InstantRecipes ("la Aplicación"), aceptas que has leído, entendido y aceptado estos Términos y Condiciones. Nos reservamos el derecho de modificar estos términos en cualquier momento. El uso continuo de la Aplicación después de las actualizaciones implica la aceptación de los cambios.{'\n\n'}
-
-          <Text style={styles.sectionTitle}>2. Uso de la API de Spoonacular</Text>
-          La Aplicación se integra con la API de Spoonacular para proporcionar recetas e información nutricional. Al usar la Aplicación, también aceptas cumplir con los Términos de Servicio de Spoonacular, disponibles en su sitio web oficial.{'\n\n'}
-
-          <Text style={styles.sectionTitle}>3. Propiedad Intelectual</Text>
-          Todos los contenidos, como texto, imágenes, logotipos y software, son propiedad de *InstantRecipes* o de sus proveedores. Está prohibida la reproducción, distribución o modificación del contenido sin autorización previa.{'\n\n'}
-
-          <Text style={styles.sectionTitle}>4. Limitación de Responsabilidad</Text>
-          La Aplicación se proporciona "tal cual" y "según disponibilidad". No garantizamos que la Aplicación esté libre de errores o interrupciones. No seremos responsables de pérdidas o daños derivados del uso de la Aplicación o su información.{'\n\n'}
-
-          <Text style={styles.sectionTitle}>5. Modificaciones</Text>
-          Nos reservamos el derecho de modificar, suspender o descontinuar la Aplicación sin previo aviso. Las actualizaciones de estos términos se publicarán en esta página.{'\n\n'}
-
-          <Text style={styles.sectionTitle}>6. Ley Aplicable</Text>
-          Estos Términos y Condiciones se regirán e interpretarán conforme a las leyes de Argentina, sin considerar los principios de conflictos de leyes.
-        </Text>
-      </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.checkboxContainer} 
-        onPress={() => setTermsAccepted(!termsAccepted)}
-      >
-        <Icon 
-          name={termsAccepted ? 'checkbox-outline' : 'square-outline'} 
-          size={24} 
-          color="#FF4500" 
-        />
-        <Text style={styles.checkboxText}>Acepto los términos</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-
+                <TouchableOpacity
+                  style={[
+                    styles.termsCheckbox,
+                    !termsAccepted ? { borderColor: 'gray' } : {},
+                  ]}
+                  onPress={() => setTermsAccepted(!termsAccepted)}
+                >
+                  <Icon
+                    name={termsAccepted ? 'checkbox-outline' : 'square-outline'}
+                    size={24}
+                    color="#FF4500"
+                  />
+                  <Text style={styles.checkboxText}>Acepto los términos y condiciones</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.acceptButton,
+                    !termsAccepted ? { backgroundColor: 'gray' } : {},
+                  ]}
+                  disabled={!termsAccepted}
+                  onPress={handleAcceptTerms}
+                >
+                  <Text style={styles.acceptButtonText}>Aceptar y registrar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
