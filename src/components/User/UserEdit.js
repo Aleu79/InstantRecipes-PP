@@ -2,11 +2,11 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Modal } from 'react-native';
 import { auth } from '../../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
-import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { updatePassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
-import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import BottomNavBar from '../BottomNavbar';
 
 const UserEdit = () => {
@@ -15,15 +15,15 @@ const UserEdit = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
   const db = getFirestore();
-  const [passwordStrength, setPasswordStrength] = useState(''); 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
 
   useEffect(() => {
     const handleUpdateProfile = async () => {
@@ -47,21 +47,8 @@ const UserEdit = () => {
     handleUpdateProfile();
   }, [initialLoad, db]);
 
-  const reauthenticateUser = async (currentPassword) => {
-    const currentUser = auth.currentUser;
-    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
-
-    try {
-      await reauthenticateWithCredential(currentUser, credential);
-      console.log('Reautenticación exitosa');
-    } catch (error) {
-      console.error('Error en la reautenticación:', error);
-      throw error;
-    }
-  };
-
   const handleSaveChanges = async () => {
-    // Mostrar modal para ingresar la contraseña actual
+    // Mostrar modal para confirmar los cambios
     setModalVisible(true);
   };
 
@@ -86,17 +73,6 @@ const UserEdit = () => {
           text: 'Continuar',
           onPress: async () => {
             try {
-              if (password || username) {
-                // Verifica si la contraseña actual es correcta
-                try {
-                  await reauthenticateUser(currentPassword);
-                } catch (error) {
-                  Alert.alert('Error', 'La contraseña actual es incorrecta.');
-                  return;
-                }
-              }
-
-              // Solo actualizar el username si hay cambios
               if (username && username !== currentUser.displayName) {
                 const userRef = doc(db, 'users', currentUser.email);
 
@@ -125,7 +101,6 @@ const UserEdit = () => {
               setUsername('');
               setPassword('');
               setConfirmPassword('');
-              setCurrentPassword('');
               setModalVisible(false);
 
               // Navegar a la pantalla de perfil
@@ -138,9 +113,6 @@ const UserEdit = () => {
               switch (error.code) {
                 case 'auth/weak-password':
                   errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
-                  break;
-                case 'auth/requires-recent-login':
-                  errorMessage = 'Debes iniciar sesión nuevamente para realizar este cambio.';
                   break;
                 case 'auth/user-not-found':
                   errorMessage = 'No se encontró ningún usuario con esta información.';
@@ -157,6 +129,7 @@ const UserEdit = () => {
       { cancelable: false }
     );
   };
+
   const calculatePasswordStrength = (password) => {
     let strength = 0;
   
@@ -183,16 +156,23 @@ const UserEdit = () => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
-  
   const handleDeleteProfile = async () => {
     const user = auth.currentUser;
+  
     if (user) {
       try {
+        // Eliminar el documento del usuario en Firestore
+        const userRef = doc(db, 'users', user.uid); // Cambiado a usar el UID como referencia
+        await deleteDoc(userRef);
+  
+        // Eliminar el usuario de Firebase Authentication
         await user.delete();
+  
         Alert.alert('Perfil eliminado con éxito');
         navigation.navigate('Login');
       } catch (error) {
         console.error('Error al eliminar perfil:', error);
+        Alert.alert('Error', 'No se pudo eliminar el perfil. Inténtalo más tarde.');
       }
     } else {
       Alert.alert('Error', 'No hay usuario autenticado');
@@ -254,7 +234,7 @@ const UserEdit = () => {
           </TouchableOpacity>
           <View style={styles.passwordStrengthContainer}>
             {password ? (
-            <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
+              <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
             ) : null}
           </View>
         </View>
@@ -286,18 +266,16 @@ const UserEdit = () => {
             <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
               <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
             </TouchableOpacity>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
-                <Text style={styles.confirmButtonText}>Confirmar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
+
+            <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
+              <Text style={styles.confirmButtonText}>Confirmar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
       <BottomNavBar />
     </ScrollView>
   );

@@ -49,29 +49,42 @@ const MyRecipes = () => {
       try {
         const userDocRef = doc(db, 'users', user.email);
         const userDoc = await getDoc(userDocRef);
-        
+  
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          // Filtramos las recetas para eliminar la receta con el id correspondiente
-          const updatedRecipes = userData.misRecetas.filter(recipe => recipe.id !== recipeId);
+          const updatedRecipes = userData.misRecetas.map((recipe) =>
+            recipe.id === recipeId
+              ? {
+                  ...recipe,
+                  category: "", 
+                  dietType: "", 
+                  glutenFree: "", 
+                  prepTime: "", 
+                  servings: "", 
+                  vegetarian: "", 
+                  recipeName: "",
+                  ingredients: [],
+                  preparation: [],
+                }
+              : recipe
+          );
   
-          // Actualizamos el documento del usuario con las recetas filtradas
           await setDoc(userDocRef, { misRecetas: updatedRecipes });
   
-          // Actualizamos el estado local para reflejar el cambio
           setMyRecipes(updatedRecipes);
-          Alert.alert('Éxito', 'Receta eliminada correctamente.');
+          Alert.alert('Éxito', 'Los campos específicos se han eliminado correctamente.');
         } else {
           Alert.alert('Error', 'No se encontraron datos para este usuario.');
         }
       } catch (error) {
-        console.error('Error al eliminar receta:', error);
-        Alert.alert('Error', 'No se pudo eliminar la receta. Inténtalo de nuevo más tarde.');
+        console.error('Error al eliminar campos:', error);
+        Alert.alert('Error', 'No se pudieron eliminar los campos. Inténtalo de nuevo más tarde.');
       }
     } else {
-      Alert.alert('Error', 'Debes estar autenticado para eliminar recetas.');
+      Alert.alert('Error', 'Debes estar autenticado para realizar esta acción.');
     }
   };
+  
   
   const confirmDelete = (recipeId) => {
     Alert.alert(
