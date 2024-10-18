@@ -7,38 +7,40 @@ import { useNavigation } from '@react-navigation/native';
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState('19 de octubre de 2024');
+  const [lastUpdated, setLastUpdated] = useState('30 de octubre de 2024'); 
   const navigation = useNavigation();
 
-  // Lógica para mostrar notificación si los términos son actualizados
   useEffect(() => {
     const checkForUpdates = async () => {
-      const currentUpdateDate = '19 de octubre de 2024';
-      
-      // Obtener estado de notificación desde AsyncStorage
-      const hasNotified = await AsyncStorage.getItem('hasNotified');
+      const currentUpdateDate = '30 de octubre de 2024'; 
+      try {
+        const storedDate = await AsyncStorage.getItem('lastUpdateDate');
+        const notificationShown = await AsyncStorage.getItem('notificationShown'); 
 
-      if (currentUpdateDate !== lastUpdated && !hasNotified) {
-        Toast.show({
-          type: 'warning',
-          title: 'Términos y Condiciones Actualizados',
-          textBody: 'Los términos y condiciones han sido actualizados.',
-        });
+        // Solo muestra la notificación si la fecha cambió y aún no se mostró
+        if ((!storedDate || storedDate !== currentUpdateDate) && !notificationShown) {
+          Toast.show({
+            type: 'warning',
+            title: 'Términos y Condiciones Actualizados',
+            textBody: 'Los términos y condiciones han sido actualizados.',
+          });
 
-        // Marcar que la notificación ya fue mostrada
-        await AsyncStorage.setItem('hasNotified', 'true');
-        setLastUpdated(currentUpdateDate); 
+          await AsyncStorage.setItem('lastUpdateDate', currentUpdateDate);
+          await AsyncStorage.setItem('notificationShown', 'true'); 
+        }
+        setLastUpdated(currentUpdateDate);
+      } catch (error) {
+        console.error('Error al verificar actualizaciones:', error);
       }
     };
 
     checkForUpdates();
-  }, [lastUpdated]);
+  }, []);
 
   const handleAcceptTerms = () => {
     Alert.alert('Éxito', 'Has aceptado los términos y condiciones.');
     setTermsAccepted(true);
-    // Redirige a UserProfile
-    navigation.navigate('UserProfile');
+    navigation.navigate('UserProfile'); 
   };
 
   return (
@@ -49,18 +51,17 @@ const TerminosyCondiciones = () => {
       <ScrollView style={styles.scrollContainer}>
         <Text style={styles.text}>
           Al registrarte en esta aplicación, aceptas los siguientes términos y condiciones:
-          {"\n\n"}1. **Uso de los datos personales:** Los datos personales proporcionados durante el
-          registro serán utilizados únicamente con el propósito de gestionar tu cuenta en la aplicación.
-          {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad de tus datos, y no compartiremos
-          tu información con terceros sin tu consentimiento expreso.
-          {"\n\n"}3. **Responsabilidad:** No somos responsables por el uso indebido de esta aplicación ni por
-          la divulgación accidental de información personal debido a violaciones de seguridad fuera de nuestro
-          control.
-          {"\n\n"}4. **Modificaciones:** Nos reservamos el derecho de actualizar estos términos en cualquier
-          momento. Te notificaremos si realizamos cambios sustanciales.
-          {"\n\n"}5. **Uso adecuado:** Los usuarios se comprometen a utilizar la aplicación de manera adecuada,
-          respetando las leyes locales y los derechos de otros usuarios.
-          {"\n\n"}Al aceptar estos términos, confirmas que has leído y comprendido nuestra política de privacidad.
+          {"\n\n"}1. **Uso de los datos personales:** Los datos proporcionados serán utilizados
+          únicamente para gestionar tu cuenta.
+          {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad de tus datos y
+          no compartirlos sin tu consentimiento.
+          {"\n\n"}3. **Responsabilidad:** No somos responsables del uso indebido de la app ni por
+          violaciones de seguridad fuera de nuestro control.
+          {"\n\n"}4. **Modificaciones:** Podemos actualizar estos términos en cualquier momento y
+          se notificará si hay cambios importantes.
+          {"\n\n"}5. **Uso adecuado:** Los usuarios deben utilizar la aplicación respetando las leyes
+          locales y los derechos de otros usuarios.
+          {"\n\n"}Aceptando estos términos, confirmas haber leído y entendido nuestra política de privacidad.
         </Text>
       </ScrollView>
 
@@ -100,10 +101,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
