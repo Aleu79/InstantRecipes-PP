@@ -25,6 +25,7 @@ const UserEdit = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
 
+
   useEffect(() => {
     const handleUpdateProfile = async () => {
       const currentUser = auth.currentUser;
@@ -277,7 +278,7 @@ const UserEdit = () => {
           </View>
         </View>
       </Modal>
-      <BottomNavBar />
+      <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
 };
