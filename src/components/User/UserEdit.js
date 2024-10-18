@@ -161,8 +161,8 @@ const UserEdit = () => {
   
     if (user) {
       try {
-        // Eliminar el documento del usuario en Firestore
-        const userRef = doc(db, 'users', user.uid); // Cambiado a usar el UID como referencia
+        // Eliminar el documento del usuario en Firestore usando su email
+        const userRef = doc(db, 'users', user.email); 
         await deleteDoc(userRef);
   
         // Eliminar el usuario de Firebase Authentication
@@ -178,6 +178,7 @@ const UserEdit = () => {
       Alert.alert('Error', 'No hay usuario autenticado');
     }
   };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
