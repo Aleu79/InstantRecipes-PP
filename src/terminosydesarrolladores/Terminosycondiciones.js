@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Toast } from 'react-native-alert-notification';
-import { useNavigation } from '@react-navigation/native'; // Importar useNavigation
+import { useNavigation } from '@react-navigation/native'; 
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('19 de octubre de 2024');
-  const navigation = useNavigation(); // Instancia de navegación
+  const navigation = useNavigation(); 
 
   // Lógica para mostrar notificación si los términos son actualizados
   useEffect(() => {

@@ -13,9 +13,8 @@ const SearchScreen = ({ navigation }) => {
   const apiKey = '69694db3792e4c4387992d79c64eb073';
 
   useEffect(() => {
-    // Obtener recetas para las categorías predefinidas
     const fetchCategories = async () => {
-      const exampleCategories = ['Vegano', 'Vegetariano', 'Panadería', 'Sin Tacc']; // Mismas categorías que en HomeScreen
+      const exampleCategories = ['Vegano', 'Vegetariano', 'Panadería', 'Sin Tacc'];
       const categoriesData = await Promise.all(
         exampleCategories.map(async (category) => {
           const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey=${apiKey}&addRecipeInformation=true`;
@@ -67,6 +66,9 @@ const SearchScreen = ({ navigation }) => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
+        <TouchableOpacity onPress={() => navigation.navigate('FilterByIngre')} style={styles.filterButton}>
+          <Ionicons name="filter" size={24} color="black" />
+        </TouchableOpacity>
       </View>
 
       {searchQuery.length > 2 && recipes.length > 0 && (
@@ -132,6 +134,9 @@ const styles = StyleSheet.create({
     padding: 15,
     height: 50,
     paddingLeft: 30,
+  },
+  filterButton: {
+    marginLeft: 10,
   },
   resultsContainer: {
     marginVertical: 10,
