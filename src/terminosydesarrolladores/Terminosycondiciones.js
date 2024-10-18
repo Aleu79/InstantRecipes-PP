@@ -2,24 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Toast } from 'react-native-alert-notification';
-import { useNavigation } from '@react-navigation/native'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('19 de octubre de 2024');
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
 
   // Lógica para mostrar notificación si los términos son actualizados
   useEffect(() => {
-    const checkForUpdates = () => {
-      const currentUpdateDate = '17 de octubre de 2024';
-      if (currentUpdateDate !== lastUpdated) {
+    const checkForUpdates = async () => {
+      const currentUpdateDate = '19 de octubre de 2024';
+      
+      // Obtener estado de notificación desde AsyncStorage
+      const hasNotified = await AsyncStorage.getItem('hasNotified');
+
+      if (currentUpdateDate !== lastUpdated && !hasNotified) {
         Toast.show({
           type: 'warning',
           title: 'Términos y Condiciones Actualizados',
           textBody: 'Los términos y condiciones han sido actualizados.',
         });
-        setLastUpdated(currentUpdateDate);
+
+        // Marcar que la notificación ya fue mostrada
+        await AsyncStorage.setItem('hasNotified', 'true');
+        setLastUpdated(currentUpdateDate); 
       }
     };
 
