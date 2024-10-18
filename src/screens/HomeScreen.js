@@ -42,8 +42,7 @@ const HomeScreen = ({ navigation }) => {
 
   const categoryImages = {
     Vegano: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
-    Carnes: 'https://i.pinimg.com/564x/fb/fd/a2/fbfda2193d781e9e357860bbea548fa2.jpg',
-    Panadería: 'https://i.pinimg.com/564x/9a/69/c3/9a69c3409690f1a9a10578a48d84ac6c.jpg',
+    'Sin Lacteos': 'https://i.pinimg.com/564x/fb/fd/a2/fbfda2193d781e9e357860bbea548fa2.jpg',
     Vegetariano: 'https://www.anitahealthy.com/wp-content/uploads/2020/02/Veggie-Bowl-de-Lentilhas-e-abo%CC%81bora-2-1-600x800.jpg',
     'Sin Tacc': 'https://i.pinimg.com/564x/6a/d3/3d/6ad33d29ebcbfe87b8fd7a1d4086749b.jpg',
   };

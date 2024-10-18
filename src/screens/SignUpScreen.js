@@ -150,6 +150,7 @@ const SignUpScreen = ({ navigation }) => {
         <View style={styles.container}>
           <Image source={require('../../assets/login.jpg')} style={styles.backgroundImage} />
           <View style={styles.ondulatedBackground} /> 
+  
           <View style={styles.form}>
             <Text style={styles.title}>¡Bienvenido!</Text>
             <Text style={styles.subtitle}>Crea tu cuenta</Text>
@@ -161,7 +162,7 @@ const SignUpScreen = ({ navigation }) => {
               onChangeText={setUsername}
               placeholderTextColor="#999"
             />
-
+  
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -170,7 +171,7 @@ const SignUpScreen = ({ navigation }) => {
               keyboardType="email-address"
               placeholderTextColor="#999"
             />
-
+  
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
@@ -187,7 +188,7 @@ const SignUpScreen = ({ navigation }) => {
                 <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
-
+  
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
@@ -204,17 +205,17 @@ const SignUpScreen = ({ navigation }) => {
                 <Icon name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
               </TouchableOpacity>
             </View>
-
+  
             <View style={styles.passwordStrengthContainer}>
               {password ? (
                 <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
               ) : null}
             </View>
-
+  
             <TouchableOpacity style={styles.button} onPress={handleVerifyEmail}>
               <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
-
+  
             <Text style={styles.footerText}>
               ¿Ya tienes una cuenta?{' '}
               <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
@@ -222,12 +223,13 @@ const SignUpScreen = ({ navigation }) => {
               </Text>
               <Alert visible={alert.visible} type={alert.type} title={alert.title} text={alert.text} />
             </Text>
-
+  
             <TouchableOpacity style={styles.termsContainer} onPress={() => setModalVisible(true)}>
               <Icon name="document-text-outline" size={20} color="#FF4500" />
               <Text style={styles.termsText}>Términos y condiciones de uso</Text>
             </TouchableOpacity>
           </View>
+  
           <Modal animationType="slide" transparent={true} visible={modalVisible}>
             <View style={styles.modalBackground}>
               <View style={styles.modalView}>
@@ -237,8 +239,12 @@ const SignUpScreen = ({ navigation }) => {
                 >
                   <Icon name="arrow-back-outline" size={24} color="#FF4500" />
                 </TouchableOpacity>
-
+  
                 <Text style={styles.modalTitle}>Términos y Condiciones</Text>
+                <Text style={styles.modalText}>
+                  {"\n\n"}**Última actualización:** 17 de octubre de 2024
+                </Text>
+                
                 <ScrollView style={styles.scrollContainer}>
                   <Text style={styles.modalText}>
                     Al registrarte en esta aplicación, aceptas los siguientes términos y condiciones:
@@ -256,7 +262,7 @@ const SignUpScreen = ({ navigation }) => {
                     {"\n\n"}Al aceptar estos términos, confirmas que has leído y comprendido nuestra política de privacidad.
                   </Text>
                 </ScrollView>
-
+  
                 <TouchableOpacity
                   style={[
                     styles.termsCheckbox,
@@ -285,6 +291,7 @@ const SignUpScreen = ({ navigation }) => {
               </View>
             </View>
           </Modal>
+  
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
