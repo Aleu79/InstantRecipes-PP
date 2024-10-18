@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Toast } from 'react-native-alert-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { db, auth } from '../../firebase/firebase-config'; 
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState('30 de octubre de 2024'); 
+  const [lastUpdated, setLastUpdated] = useState('30 de octubre de 2024');
   const navigation = useNavigation();
+  const user = auth.currentUser; 
 
   useEffect(() => {
     const checkForUpdates = async () => {
-      const currentUpdateDate = '30 de octubre de 2024'; 
+      const currentUpdateDate = '30 de octubre de 2024';
       try {
         const storedDate = await AsyncStorage.getItem('lastUpdateDate');
-        const notificationShown = await AsyncStorage.getItem('notificationShown'); 
+        const notificationShown = await AsyncStorage.getItem('notificationShown');
 
-        // Solo muestra la notificación si la fecha cambió y aún no se mostró
         if ((!storedDate || storedDate !== currentUpdateDate) && !notificationShown) {
           Toast.show({
             type: 'warning',
@@ -26,7 +35,7 @@ const TerminosyCondiciones = () => {
           });
 
           await AsyncStorage.setItem('lastUpdateDate', currentUpdateDate);
-          await AsyncStorage.setItem('notificationShown', 'true'); 
+          await AsyncStorage.setItem('notificationShown', 'true');
         }
         setLastUpdated(currentUpdateDate);
       } catch (error) {
@@ -34,34 +43,63 @@ const TerminosyCondiciones = () => {
       }
     };
 
-    checkForUpdates();
-  }, []);
+    const checkTermsAcceptance = async () => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.email);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists() && userDoc.data().terminos) {
+          setTermsAccepted(true);
+        }
+      }
+    };
 
-  const handleAcceptTerms = () => {
-    Alert.alert('Éxito', 'Has aceptado los términos y condiciones.');
-    setTermsAccepted(true);
-    navigation.navigate('UserProfile'); 
+    checkForUpdates();
+    checkTermsAcceptance();
+  }, [user]);
+
+  const handleAcceptTerms = async () => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.email);
+        await setDoc(userDocRef, { terminos: true }, { merge: true });
+
+        Alert.alert('Éxito', 'Has aceptado los términos y condiciones.');
+        setTermsAccepted(true);
+        navigation.navigate('UserProfile');
+      } catch (error) {
+        console.error('Error al guardar términos en Firestore:', error);
+        if (error.code === 'permission-denied') {
+          Alert.alert('Error', 'No tienes permiso para guardar datos en Firestore.');
+        } else {
+          Alert.alert('Error', 'No se pudo guardar tu aceptación. Inténtalo nuevamente.');
+        }
+      }
+    } else {
+      Alert.alert('Error', 'No se encontró un usuario autenticado.');
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Términos y Condiciones</Text>
-      <Text style={styles.lastUpdated}>**Última actualización:** {lastUpdated}</Text>
+      <Text style={styles.lastUpdated}>
+        **Última actualización:** {lastUpdated}
+      </Text>
 
       <ScrollView style={styles.scrollContainer}>
         <Text style={styles.text}>
-          Al registrarte en esta aplicación, aceptas los siguientes términos y condiciones:
-          {"\n\n"}1. **Uso de los datos personales:** Los datos proporcionados serán utilizados
-          únicamente para gestionar tu cuenta.
-          {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad de tus datos y
-          no compartirlos sin tu consentimiento.
-          {"\n\n"}3. **Responsabilidad:** No somos responsables del uso indebido de la app ni por
-          violaciones de seguridad fuera de nuestro control.
-          {"\n\n"}4. **Modificaciones:** Podemos actualizar estos términos en cualquier momento y
-          se notificará si hay cambios importantes.
-          {"\n\n"}5. **Uso adecuado:** Los usuarios deben utilizar la aplicación respetando las leyes
-          locales y los derechos de otros usuarios.
-          {"\n\n"}Aceptando estos términos, confirmas haber leído y entendido nuestra política de privacidad.
+          Al registrarte en esta aplicación, aceptas los siguientes términos y
+          condiciones:
+          {"\n\n"}1. **Uso de los datos personales:** Los datos proporcionados
+          serán utilizados únicamente para gestionar tu cuenta.
+          {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad
+          de tus datos y no compartirlos sin tu consentimiento.
+          {"\n\n"}3. **Responsabilidad:** No somos responsables del uso indebido
+          de la app ni por violaciones de seguridad fuera de nuestro control.
+          {"\n\n"}4. **Modificaciones:** Podemos actualizar estos términos en
+          cualquier momento y se notificará si hay cambios importantes.
+          {"\n\n"}5. **Uso adecuado:** Los usuarios deben utilizar la aplicación
+          respetando las leyes locales y los derechos de otros usuarios.
         </Text>
       </ScrollView>
 
@@ -70,14 +108,16 @@ const TerminosyCondiciones = () => {
           styles.termsCheckbox,
           !termsAccepted ? { borderColor: 'gray' } : {},
         ]}
-        onPress={() => setTermsAccepted(!termsAccepted)}
+        onPress={() => !termsAccepted && setTermsAccepted(!termsAccepted)} 
       >
         <Icon
           name={termsAccepted ? 'checkbox-outline' : 'square-outline'}
           size={24}
           color="#FF4500"
         />
-        <Text style={styles.checkboxText}>Acepto los términos y condiciones</Text>
+        <Text style={styles.checkboxText}>
+          Acepto los términos y condiciones
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -85,10 +125,12 @@ const TerminosyCondiciones = () => {
           styles.acceptButton,
           !termsAccepted ? { backgroundColor: 'gray' } : {},
         ]}
-        disabled={!termsAccepted}
-        onPress={handleAcceptTerms}
+        disabled={!termsAccepted && !termsAccepted}
+        onPress={termsAccepted ? () => navigation.navigate('UserProfile') : handleAcceptTerms} // Navegar a UserProfile si ya está aceptado
       >
-        <Text style={styles.acceptButtonText}>Aceptar y Volver</Text>
+        <Text style={styles.acceptButtonText}>
+          {termsAccepted ? 'Volver' : 'Aceptar y Volver'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -125,7 +167,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: '#333',
-    textAlign: 'left',
   },
   termsCheckbox: {
     flexDirection: 'row',
@@ -138,7 +179,6 @@ const styles = StyleSheet.create({
   checkboxText: {
     marginLeft: 10,
     fontSize: 16,
-    color: '#333',
   },
   acceptButton: {
     backgroundColor: '#FF4500',
