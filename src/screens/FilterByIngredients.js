@@ -7,9 +7,13 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const FilterByIngredients = () => {
+  const navigation = useNavigation();
   const [includeIngredients, setIncludeIngredients] = useState('');
   const [excludeIngredients, setExcludeIngredients] = useState('');
   const [includedList, setIncludedList] = useState([]);
@@ -34,69 +38,78 @@ const FilterByIngredients = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Filtros</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Filtros</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>Mostrarme recetas con:</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Escribí ingredientes..."
-            value={includeIngredients}
-            onChangeText={setIncludeIngredients}
-          />
-          <Button title="Agregar" onPress={handleAddIncluded} />
+        <View style={[styles.section, { marginTop: 50 }]}>
+          <Text style={styles.subtitle}>Mostrarme recetas con:</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Escribí ingredientes..."
+              placeholderTextColor="#888"
+              value={includeIngredients}
+              onChangeText={setIncludeIngredients}
+            />
+            <Button title="Agregar" onPress={handleAddIncluded} />
+          </View>
+          <View style={styles.tagContainer}>
+            {includedList.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.tag}
+                onPress={() =>
+                  handleRemoveItem(includedList, setIncludedList, item)
+                }
+              >
+                <Text style={styles.tagText}>{item} ✕</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-        <View style={styles.tagContainer}>
-          {includedList.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.tag}
-              onPress={() =>
-                handleRemoveItem(includedList, setIncludedList, item)
-              }
-            >
-              <Text style={styles.tagText}>{item} ✕</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>Mostrarme recetas sin:</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Escribí ingredientes..."
-            value={excludeIngredients}
-            onChangeText={setExcludeIngredients}
-          />
-          <Button title="Agregar" onPress={handleAddExcluded} />
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Mostrarme recetas sin:</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Escribí ingredientes..."
+              placeholderTextColor="#888"
+              value={excludeIngredients}
+              onChangeText={setExcludeIngredients}
+            />
+            <Button title="Agregar" onPress={handleAddExcluded} />
+          </View>
+          <View style={styles.tagContainer}>
+            {excludedList.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.tag}
+                onPress={() =>
+                  handleRemoveItem(excludedList, setExcludedList, item)
+                }
+              >
+                <Text style={styles.tagText}>{item} ✕</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-        <View style={styles.tagContainer}>
-          {excludedList.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.tag}
-              onPress={() =>
-                handleRemoveItem(excludedList, setExcludedList, item)
-              }
-            >
-              <Text style={styles.tagText}>{item} ✕</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.clearButton}>
-        <Text style={styles.clearText}>Borrar</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate('SearchScreen')}
+        >
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <TouchableOpacity style={styles.showRecipesButton}>
         <Text style={styles.showRecipesText}>Mostrar 131562 recetas</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -104,20 +117,22 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
-    backgroundColor: '#000',
+    marginTop: 40,
+    backgroundColor: '#fafafa',
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   subtitle: {
     fontSize: 18,
-    color: '#fff',
+    color: '#555',
     marginBottom: 8,
   },
   inputContainer: {
@@ -127,18 +142,21 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#333',
-    color: '#fff',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
+    height: 40,
     marginRight: 8,
+    color: '#333',
   },
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   tag: {
-    backgroundColor: '#444',
+    backgroundColor: '#e0e0e0',
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -146,25 +164,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tagText: {
-    color: '#fff',
+    color: '#333',
   },
-  clearButton: {
+  backButton: {
     alignSelf: 'center',
     marginBottom: 16,
   },
-  clearText: {
-    color: '#fff',
+  backText: {
+    color: '#f57c00',
     textDecorationLine: 'underline',
+    fontSize: 16,
   },
   showRecipesButton: {
     backgroundColor: '#f57c00',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   showRecipesText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 18,
   },
 });
 
