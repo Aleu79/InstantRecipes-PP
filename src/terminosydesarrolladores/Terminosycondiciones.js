@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { db, auth } from '../../firebase/firebase-config'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { deleteField } from 'firebase/firestore'; 
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -23,9 +24,13 @@ const TerminosyCondiciones = () => {
   useEffect(() => {
     const checkForUpdates = async () => {
       const currentUpdateDate = '30 de octubre de 2024';
+      console.log("Comprobando actualizaciones de términos...");
       try {
         const storedDate = await AsyncStorage.getItem('lastUpdateDate');
         const notificationShown = await AsyncStorage.getItem('notificationShown');
+
+        console.log("Fecha de actualización almacenada:", storedDate);
+        console.log("Notificación mostrada:", notificationShown);
 
         if ((!storedDate || storedDate !== currentUpdateDate) && !notificationShown) {
           Toast.show({
@@ -36,6 +41,7 @@ const TerminosyCondiciones = () => {
 
           await AsyncStorage.setItem('lastUpdateDate', currentUpdateDate);
           await AsyncStorage.setItem('notificationShown', 'true');
+          console.log("Notificación de actualización mostrada y fechas almacenadas.");
         }
         setLastUpdated(currentUpdateDate);
       } catch (error) {
@@ -47,9 +53,16 @@ const TerminosyCondiciones = () => {
       if (user) {
         const userDocRef = doc(db, 'users', user.email);
         const userDoc = await getDoc(userDocRef);
+        console.log("Documento de usuario:", userDoc.data());
+
         if (userDoc.exists() && userDoc.data().terminos) {
           setTermsAccepted(true);
+          console.log("Términos aceptados previamente.");
+        } else {
+          console.log("El usuario no ha aceptado los términos aún.");
         }
+      } else {
+        console.log("No hay usuario autenticado.");
       }
     };
 
@@ -57,17 +70,22 @@ const TerminosyCondiciones = () => {
     checkTermsAcceptance();
   }, [user]);
 
-  const handleAcceptTerms = async () => {
+  const handleTermsToggle = async () => {
     if (user) {
       try {
         const userDocRef = doc(db, 'users', user.email);
-        await setDoc(userDocRef, { terminos: true }, { merge: true });
+        
+        // Si los términos están aceptados, eliminarlos de Firestore
+        if (termsAccepted) {
+          await setDoc(userDocRef, { terminos: deleteField() }, { merge: true }); 
+        } else {
+          await setDoc(userDocRef, { terminos: true }, { merge: true });
+        }
 
-        Alert.alert('Éxito', 'Has aceptado los términos y condiciones.');
-        setTermsAccepted(true);
-        navigation.navigate('UserProfile');
+        setTermsAccepted(!termsAccepted);
+        console.log(`Términos ${termsAccepted ? 'rechazados' : 'aceptados'} y guardados en Firestore.`);
       } catch (error) {
-        console.error('Error al guardar términos en Firestore:', error);
+        console.error('Error al guardar o eliminar términos en Firestore:', error);
         if (error.code === 'permission-denied') {
           Alert.alert('Error', 'No tienes permiso para guardar datos en Firestore.');
         } else {
@@ -106,9 +124,9 @@ const TerminosyCondiciones = () => {
       <TouchableOpacity
         style={[
           styles.termsCheckbox,
-          !termsAccepted ? { borderColor: 'gray' } : {},
+          { borderColor: 'gray' },
         ]}
-        onPress={() => !termsAccepted && setTermsAccepted(!termsAccepted)} 
+        onPress={handleTermsToggle} 
       >
         <Icon
           name={termsAccepted ? 'checkbox-outline' : 'square-outline'}
@@ -125,8 +143,7 @@ const TerminosyCondiciones = () => {
           styles.acceptButton,
           !termsAccepted ? { backgroundColor: 'gray' } : {},
         ]}
-        disabled={!termsAccepted && !termsAccepted}
-        onPress={termsAccepted ? () => navigation.navigate('UserProfile') : handleAcceptTerms} // Navegar a UserProfile si ya está aceptado
+        onPress={termsAccepted ? () => navigation.goBack() : handleTermsToggle}
       >
         <Text style={styles.acceptButtonText}>
           {termsAccepted ? 'Volver' : 'Aceptar y Volver'}
