@@ -59,13 +59,18 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.greetingText}>
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            ) : (
-              <Icon name="person" size={40} color="#333" />
-            )}
-          </TouchableOpacity>
+          <View style={styles.containernot}>
+            <TouchableOpacity onPress={() => console.log('Notificaciones')}>
+              <Icon name="notifications" size={30} color="orange" style={styles.notificacion}/>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              ) : (
+                <Icon name="person" size={40} color="#333" />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Text style={styles.sectionTitle}>Categorías</Text>
@@ -230,10 +235,17 @@ const styles = StyleSheet.create({
   menuicon: {
     marginRight: 8,
   },
+  containernot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 40,
+  },
+  notificacion: {
+    marginRight: 20,
   },
 });
 

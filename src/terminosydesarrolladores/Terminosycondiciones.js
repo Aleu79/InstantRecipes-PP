@@ -17,13 +17,13 @@ import { deleteField } from 'firebase/firestore';
 
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState('30 de octubre de 2024');
+  const [lastUpdated, setLastUpdated] = useState('10 de octubre de 2024');
   const navigation = useNavigation();
   const user = auth.currentUser; 
 
   useEffect(() => {
     const checkForUpdates = async () => {
-      const currentUpdateDate = '30 de octubre de 2024';
+      const currentUpdateDate = '10 de octubre de 2024';
       console.log("Comprobando actualizaciones de términos...");
       try {
         const storedDate = await AsyncStorage.getItem('lastUpdateDate');
