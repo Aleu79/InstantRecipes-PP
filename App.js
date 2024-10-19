@@ -18,7 +18,8 @@ import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondic
 import { Toast } from 'react-native-alert-notification';
 import FilterByIngredients from './src/screens/FilterByIngredients';
 import Settings from './src/components/User/Settings';
-
+import Notifications from './src/screens/Notifications';
+import DevelopersScreen from './src/terminosydesarrolladores/Desarroladores';
 
 const Stack = createStackNavigator();
 
@@ -43,6 +44,8 @@ export default function App() {
           <Stack.Screen name="Terminos" component={TerminosyCondiciones}  options={{headerShown:false}}  />
           <Stack.Screen name="FilterByIngre" component={FilterByIngredients}  options={{headerShown:false}}  />
           <Stack.Screen name="Settings" component={Settings}  options={{headerShown:false}}  />
+          <Stack.Screen name="Notifications" component={Notifications}  options={{headerShown:false}}  />
+          <Stack.Screen name="DevelopersScreen" component={DevelopersScreen}  options={{headerShown:false}}  />
         </Stack.Navigator>
       </NavigationContainer>
       </AlertNotificationRoot>

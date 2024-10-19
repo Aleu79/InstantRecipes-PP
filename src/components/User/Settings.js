@@ -25,7 +25,7 @@ const Settings = () => {
                 <Icon name="document-text-outline" size={24} color="#333" />
                 <Text style={styles.menuText}>Términos y Condiciones</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('DevelopersScreen')}>
                 <Icon name="desktop-outline" size={24} color="#333" />
                 <Text style={styles.menuText}>Desarrolladores</Text>
             </TouchableOpacity>
