@@ -194,9 +194,10 @@ const CreateRecipeScreen = () => {
           />
 
           <View>
-            <View style={styles.row}>
-              <View style={styles.iconInputWrapper}>
-                <Icon name="people-outline" size={24} color="#333" />
+            <View style={styles.detailscontainer}>
+                <TouchableOpacity>
+                  <Icon name={'people-outline'} size={24} color="#999" />
+                </TouchableOpacity>
                 <TextInput
                   style={styles.inputDetail}
                   placeholder="Porciones"
@@ -204,17 +205,20 @@ const CreateRecipeScreen = () => {
                   onChangeText={setServings}
                 />
               </View>
-              <View style={styles.iconInputWrapper}>
-                <Icon name="time-outline" size={24} color="#333" />
+              <View style={styles.detailscontainer}>
+                <TouchableOpacity>
+                  <Icon name={'time-outline'} size={24} color="#999" />
+                </TouchableOpacity>
                 <TextInput
                   style={styles.inputDetail}
-                  placeholder="Tiempo de preparación"
+                  placeholder="Preparación"
                   value={prepTime}
                   onChangeText={setPrepTime}
                   multiline={true}
                 />
               </View>
             </View>
+
 
             <View style={styles.iconInputWrapper}>
               <Icon name="list-outline" size={24} color="#333" />
@@ -256,39 +260,41 @@ const CreateRecipeScreen = () => {
 
           {activeTab === 'ingredients' && (
             <View style={styles.ingredientsContainer}>
-              {ingredients.map((ingredient, index) => (
-                <View key={index} style={styles.ingredientRow}>
-                  <TextInput
-                    style={styles.ingredientInput}
-                    placeholder="Ingrediente"
-                    value={ingredient}
-                    onChangeText={(text) => handleIngredientChange(text, index)}
-                  />
-                  <TouchableOpacity onPress={() => handleRemoveIngredient(index)}>
-                    <Text style={styles.removeIngredientText}>X</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
-                <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
-              </TouchableOpacity>
-            </View>
+            {ingredients.map((ingredient, index) => (
+              <View key={index} style={styles.ingredientRow}>
+                <TextInput
+                  style={styles.ingredientInput}
+                  placeholder="Ingrediente"
+                  value={ingredient}
+                  onChangeText={(text) => handleIngredientChange(text, index)}
+                />
+                <TouchableOpacity onPress={() => handleRemoveIngredient(index)}>
+                  <Icon name="trash-outline" size={24} color="red" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
+              <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
+            </TouchableOpacity>
+          </View>
+
           )}
 
           {activeTab === 'preparation' && (
             <View style={styles.preparationContainer}>
               {preparation.map((step, index) => (
-                <View key={index} style={styles.stepRow}>
-                  <TextInput
-                    style={styles.stepInput}
-                    placeholder="Paso de preparación"
-                    value={step}
-                    onChangeText={(text) => handleStepChange(text, index)}
-                  />
-                  <TouchableOpacity onPress={() => handleRemoveStep(index)}>
-                    <Text style={styles.removeStepText}>X</Text>
-                  </TouchableOpacity>
-                </View>
+               <View key={index} style={styles.stepRow}>
+               <TextInput
+                 style={styles.stepInput}
+                 placeholder="Paso de preparación"
+                 value={step}
+                 onChangeText={(text) => handleStepChange(text, index)}
+               />
+               <TouchableOpacity onPress={() => handleRemoveStep(index)} style={styles.removeStepButton}>
+                 <Text style={styles.removeStepText}>X</Text>
+               </TouchableOpacity>
+             </View>
+             
               ))}
               <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
                 <Text style={styles.addButtonText}>Agregar Paso</Text>
@@ -319,7 +325,6 @@ const CreateRecipeScreen = () => {
           <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
             <Text style={styles.saveButtonText}>Guardar Receta</Text>
           </TouchableOpacity>
-        </View>
       </ScrollView>
     </>
   );
@@ -336,6 +341,7 @@ const styles = StyleSheet.create({
   recipeImage: {
     width: '100%',
     height: 330,
+    resizeMode: 'adjust',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
   },
@@ -356,9 +362,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   recipeName: {
-    fontSize: 24,
+    fontSize: 20,
     textAlign: 'left',
     marginVertical: 40,
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 40,
+    paddingHorizontal: 15,
   },
   input: {
     backgroundColor: '#f1f1f1',
@@ -386,13 +396,29 @@ const styles = StyleSheet.create({
   },
   inputDetail: {
     flex: 1,
-    fontSize: 16,
-    marginLeft: 10,
-    backgroundColor: 'transparent',
-    width: '30%',
-    lineHeight: 20,
+    width: '45%',
     height: 'auto',
+    marginLeft: 10,
+    fontSize: 15,
+    lineHeight: 20,
     textAlignVertical: 'top',
+    borderBottomColor: '#999',
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 40,
+    paddingHorizontal: 10,
+  },
+  detailscontainer:{
+    width: '45%',
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#e6e6e6',
+    borderWidth: 1,
+    borderRadius: 40,
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   tabsDietas: {
     flexDirection: 'row',

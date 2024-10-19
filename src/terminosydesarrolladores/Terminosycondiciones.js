@@ -101,22 +101,22 @@ const TerminosyCondiciones = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Términos y Condiciones</Text>
       <Text style={styles.lastUpdated}>
-        **Última actualización:** {lastUpdated}
+      <Text style={{ fontWeight: 'bold' }}>Última actualización: </Text>{lastUpdated}
       </Text>
 
       <ScrollView style={styles.scrollContainer}>
         <Text style={styles.text}>
           Al registrarte en esta aplicación, aceptas los siguientes términos y
           condiciones:
-          {"\n\n"}1. **Uso de los datos personales:** Los datos proporcionados
+          {"\n\n"}1. <Text style={{ fontWeight: 'bold' }}>Uso de los datos personales: </Text> Los datos proporcionados
           serán utilizados únicamente para gestionar tu cuenta.
-          {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad
+          {"\n\n"}2. <Text style={{ fontWeight: 'bold' }}>Seguridad:</Text> Nos comprometemos a proteger la privacidad
           de tus datos y no compartirlos sin tu consentimiento.
-          {"\n\n"}3. **Responsabilidad:** No somos responsables del uso indebido
+          {"\n\n"}3. <Text style={{ fontWeight: 'bold' }}>Responsabilidad:</Text> No somos responsables del uso indebido
           de la app ni por violaciones de seguridad fuera de nuestro control.
-          {"\n\n"}4. **Modificaciones:** Podemos actualizar estos términos en
+          {"\n\n"}4. <Text style={{ fontWeight: 'bold' }}>Modificaciones:</Text> Podemos actualizar estos términos en
           cualquier momento y se notificará si hay cambios importantes.
-          {"\n\n"}5. **Uso adecuado:** Los usuarios deben utilizar la aplicación
+          {"\n\n"}5. <Text style={{ fontWeight: 'bold' }}>Uso Adecuado:</Text> Los usuarios deben utilizar la aplicación
           respetando las leyes locales y los derechos de otros usuarios.
         </Text>
       </ScrollView>
@@ -156,7 +156,7 @@ const TerminosyCondiciones = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 30,
     backgroundColor: 'white',
     borderRadius: 20,
     shadowColor: '#000',
@@ -171,12 +171,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FF4500',
     textAlign: 'center',
+    marginTop: 10,
   },
   lastUpdated: {
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
     marginBottom: 10,
+    marginTop: 20,
   },
   scrollContainer: {
     marginBottom: 10,
@@ -199,9 +201,9 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     backgroundColor: '#FF4500',
-    borderRadius: 10,
+    borderRadius: 20,
     paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     alignItems: 'center',
   },
   acceptButtonText: {
