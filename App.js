@@ -17,7 +17,7 @@ import { AlertNotificationRoot } from 'react-native-alert-notification';
 import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondiciones';
 import { Toast } from 'react-native-alert-notification';
 import FilterByIngredients from './src/screens/FilterByIngredients';
-import Notifications from './src/screens/Notifications';
+import Settings from './src/components/User/Settings';
 
 
 const Stack = createStackNavigator();
@@ -42,7 +42,7 @@ export default function App() {
           <Stack.Screen name="CreateRecipeScreen" component={CreateRecipeScreen}  options={{headerShown:false}}  />
           <Stack.Screen name="Terminos" component={TerminosyCondiciones}  options={{headerShown:false}}  />
           <Stack.Screen name="FilterByIngre" component={FilterByIngredients}  options={{headerShown:false}}  />
-          <Stack.Screen name="Notifications" component={Notifications}  options={{headerShown:false}}  />
+          <Stack.Screen name="Settings" component={Settings}  options={{headerShown:false}}  />
         </Stack.Navigator>
       </NavigationContainer>
       </AlertNotificationRoot>
