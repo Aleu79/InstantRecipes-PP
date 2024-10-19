@@ -163,24 +163,42 @@ const UserEdit = () => {
     const user = auth.currentUser;
   
     if (user) {
-      try {
-        // Eliminar el documento del usuario en Firestore usando su email
-        const userRef = doc(db, 'users', user.email); 
-        await deleteDoc(userRef);
+      // Mostrar una alerta de confirmación antes de eliminar el perfil
+      Alert.alert(
+        'Confirmar Eliminación',
+        '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Eliminar',
+            onPress: async () => {
+              try {
+                // Eliminar el documento del usuario en Firestore usando su email
+                const userRef = doc(db, 'users', user.email);
+                await deleteDoc(userRef);
   
-        // Eliminar el usuario de Firebase Authentication
-        await user.delete();
+                // Eliminar el usuario de Firebase Authentication
+                await user.delete();
   
-        Alert.alert('Perfil eliminado con éxito');
-        navigation.navigate('Login');
-      } catch (error) {
-        console.error('Error al eliminar perfil:', error);
-        Alert.alert('Error', 'No se pudo eliminar el perfil. Inténtalo más tarde.');
-      }
+                Alert.alert('Perfil eliminado con éxito');
+                navigation.navigate('Login');
+              } catch (error) {
+                console.error('Error al eliminar perfil:', error);
+                Alert.alert('Error', 'No se pudo eliminar el perfil. Inténtalo más tarde.');
+              }
+            },
+          },
+        ],
+        { cancelable: false } 
+      );
     } else {
       Alert.alert('Error', 'No hay usuario autenticado');
     }
   };
+  
   
 
   return (
