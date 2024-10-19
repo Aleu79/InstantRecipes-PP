@@ -10,7 +10,7 @@ import { getFirestore, doc, updateDoc, getDoc, deleteDoc } from 'firebase/firest
 import BottomNavBar from '../BottomNavbar';
 
 const UserEdit = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, addNotification } = useContext(UserContext); 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -88,13 +88,15 @@ const UserEdit = () => {
                   ...prevUser,
                   username,
                 }));
-
+                addNotification('Cambio de nombre', 'Has cambiado tu nombre de usuario.');
+                console.log("addNotification funcionas: ", addNotification)
                 Alert.alert('Éxito', 'Nombre de usuario actualizado');
               }
 
               if (password) {
                 // Actualiza la contraseña
                 await updatePassword(currentUser, password);
+                addNotification('Cambio de contraseña', 'Has cambiado tu contraseña.');
                 Alert.alert('Éxito', 'Contraseña actualizada');
               }
 

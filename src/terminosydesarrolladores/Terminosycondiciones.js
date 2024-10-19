@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { db, auth } from '../../firebase/firebase-config'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { deleteField } from 'firebase/firestore'; 
-
+  
 const TerminosyCondiciones = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('10 de octubre de 2024');

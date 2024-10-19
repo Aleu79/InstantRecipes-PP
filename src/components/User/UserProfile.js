@@ -125,6 +125,11 @@ const UserProfile = () => {
           <Text style={styles.menuText}>Tus recetas</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
+          <Icon name="mail-outline" size={24} color="#333" />
+          <Text style={styles.menuText}>Bandeja de Notificaciones</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Terminos')}>
           <Icon name="document-text-outline" size={24} color="#333" />
           <Text style={styles.menuText}>Términos y Condiciones</Text>
