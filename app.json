@@ -4,12 +4,12 @@
     "slug": "InstantRecipes",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logoapp.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "rezizeMode": "cover",
+      "backgroundColor": "#f7f7f8"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/LogoApp.png",
+        "foregroundImage": "./assets/logoapp.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.aleu79.InstantRecipes",
