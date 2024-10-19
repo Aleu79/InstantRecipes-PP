@@ -2,11 +2,13 @@ import React, { useContext, useRef, useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
+import { useTheme } from '../context/ThemeContext'; 
 import { auth } from '../../firebase/firebase-config';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import BottomNavBar from '../components/BottomNavbar';
 
 const HomeScreen = ({ navigation }) => {
+  const { isDarkTheme } = useTheme(); // Uso del contexto para obtener el estado del tema (oscuro o claro)  
   const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false);
   const { user } = useContext(UserContext);
@@ -16,23 +18,17 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const handleUpdateProfile = async () => {
       const currentUser = auth.currentUser;
-      console.log('Usuario autenticado actual:', currentUser);  // Verifica qué usuario está autenticado
 
       if (currentUser) {
         try {
           const userRef = doc(db, 'users', currentUser.email);
           const userDoc = await getDoc(userRef);
-          console.log('Documento del usuario:', userDoc.data());  // Verifica los datos del documento
-          console.log('Profile image URL:', profileImage);
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            console.log('Datos del usuario recuperados:', userData);  // Muestra los datos que se recuperan
             setProfileImage(userData.myuserfoto || null); // Recuperar la imagen de perfil
-          } else {
-            console.log('No se encontraron datos para este usuario.');
           }
         } catch (error) {
-          console.error('Error al obtener el documento del usuario:', error);  // Muestra si ocurre algún error
+          console.error('Error al obtener el documento del usuario:', error);
         }
       }
     };
@@ -49,19 +45,21 @@ const HomeScreen = ({ navigation }) => {
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
-    console.log('Menú desplegable visible:', menuVisible);  
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
+      {/* El contenedor principal ajusta su estilo según el tema actual (oscuro o claro) */}       
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <View style={styles.bienvenida}>
-          <Text style={styles.greetingText}>
+          <Text style={[styles.greetingText, isDarkTheme ? styles.darkText : styles.lightText]}> 
+            {/* El texto de saludo cambia de color según el tema */}            
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
           <View style={styles.containernot}>
             <TouchableOpacity onPress={() => console.log('Notificaciones')}>
-              <Icon name="notifications" size={30} color="orange" style={styles.notificacion}/>
+              <Icon name="notifications" size={30} color={isDarkTheme ? '#fff' : 'orange'} style={styles.notificacion}/> 
+              {/* El icono de notificaciones cambia de color según el tema */}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
               {profileImage ? (
@@ -73,7 +71,8 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Categorías</Text>
+        <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
+          {/* El título de la sección también cambia de color según el tema */}
         <ScrollView
           ref={categoriesScrollRef}
           horizontal
@@ -85,12 +84,12 @@ const HomeScreen = ({ navigation }) => {
               key={index}
               style={styles.categoryButton}
               onPress={() => {
-                console.log('Categoría seleccionada:', category);  // Muestra qué categoría se selecciona
                 navigation.navigate('CategoryRecipesScreen', { category });
               }}
             >
               <Image source={{ uri: categoryImages[category] }} style={styles.categoryImage} />
-              <Text style={styles.categoryButtonText}>{category}</Text>
+              <Text style={[styles.categoryButtonText, isDarkTheme ? styles.darkText : styles.lightText]}>{category}</Text> 
+              {/* El texto de las categorías también cambia según el tema */}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -104,19 +103,18 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.menuContainer}>
           <TouchableOpacity style={styles.menuItem} onPress={() => { 
             setMenuVisible(false); 
-            console.log('Navegando a crear receta');
             navigation.navigate('CreateRecipeScreen'); 
           }}>
             <Icon name="book-outline" size={24} color="#333" style={styles.menuicon}/>
-            <Text style={styles.menuItemText}>Crear Receta</Text>
+            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>Crear Receta</Text> 
+            {/* Las opciones del menú también cambian de estilo según el tema */}
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={() => { 
             setMenuVisible(false); 
-            console.log('Navegando a mis recetas');
             navigation.navigate('MyRecipes'); 
           }}>
             <Icon name="cafe-outline" size={24} color="#333" style={styles.menuicon}/>
-            <Text style={styles.menuItemText}>Mis Recetas</Text>
+            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>Mis Recetas</Text> 
           </TouchableOpacity>
         </View>
       )}
@@ -129,20 +127,16 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+  },
+  darkContainer: {
+    backgroundColor: '#121212', // Color de fondo oscuro
+  },
+  lightContainer: {
+    backgroundColor: '#fafafa', // Color de fondo claro
   },
   scrollViewContainer: {
     paddingTop: 50,
     paddingBottom: 100,
-  },
-  carouselContainer: {
-    marginBottom: 20,
-  },
-  carouselImage: {
-    width: 300,
-    height: 150,
-    borderRadius: 10,
-    marginRight: 10,
   },
   bienvenida: {
     flexDirection: 'row',
@@ -154,8 +148,13 @@ const styles = StyleSheet.create({
   greetingText: {
     fontSize: 30, 
     fontWeight: 'bold',
-    color: '#000',
     flex: 1, 
+  },
+  darkText: {
+    color: '#fff', // Color de texto en modo oscuro
+  },
+  lightText: {
+    color: '#000', // Color de texto en modo claro
   },
   username: {
     fontWeight: 'bold',
@@ -188,7 +187,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryButtonText: {
-    color: '#000',
     fontWeight: 'bold',
     fontSize: 14,
     maxWidth: '100%',
@@ -197,57 +195,43 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 90,
     right: 20,
-    backgroundColor: '#FFA500',
-    borderRadius: 30,
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 4,
-    elevation: 5,
+    backgroundColor: '#FF5722',
+    borderRadius: 50,
+    padding: 15,
   },
   menuContainer: {
     position: 'absolute',
-    bottom: 160, 
+    bottom: 70,
     right: 20,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    backgroundColor: '#fff', // Ajusta según el tema
+    borderRadius: 10,
     elevation: 5,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   menuItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 10,
   },
   menuItemText: {
+    marginLeft: 10,
     fontSize: 16,
   },
   menuicon: {
-    marginRight: 8,
-  },
-  containernot: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 40,
+    marginRight: 10,
   },
   notificacion: {
     marginRight: 20,
   },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
 });
-
 
 export default HomeScreen;
