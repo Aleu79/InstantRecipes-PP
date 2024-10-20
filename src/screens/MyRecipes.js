@@ -107,13 +107,11 @@ const MyRecipes = () => {
           <Text style={styles.placeholderText}>Sin Imagen</Text>
         </View>
       )}
-      <View style={styles.recipeInfo}>
+       <View style={styles.recipeInfo}>
         <Text style={styles.recipeName}>{item.recipeName || 'Receta sin nombre'}</Text>
         <Text style={styles.recipeCategory}>{item.category || 'Sin categoría'}</Text>
-        <Text style={styles.recipeDetail}>Tipo de dieta: {item.dietType || 'No especificado'}</Text>
-        <Text style={styles.recipeDetail}>Sin gluten: {item.glutenFree || 'No especificado'}</Text>
-        <Text style={styles.recipeDetail}>Porciones: {item.servings || 'No especificado'}</Text>
-        <Text style={styles.recipeDetail}>Tiempo de preparación: {item.prepTime || 'No especificado'} minutos</Text>
+        <Text style={styles.recipeDetail}>Porciones: <Text style={styles.detailText}>{item.servings || 'No especificado'}</Text></Text>
+        <Text style={styles.recipeDetail}>Tiempo de preparación: <Text style={styles.detailText}>{item.prepTime || 'No especificado'} minutos</Text></Text>
         <TouchableOpacity 
           style={styles.deleteButton}
           onPress={() => confirmDelete(item.id)}
@@ -165,6 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   recipeCard: {
+    width: '48%', // Ocupa un 48% de la pantalla
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -183,6 +182,36 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
+  recipeInfo: {
+    flex: 1,
+  },
+  recipeName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  recipeCategory: {
+    fontSize: 14,
+    color: '#666',
+  },
+  recipeDetail: {
+    fontSize: 12,
+    color: '#aaa', // Letras grises
+  },
+  detailText: {
+    fontWeight: 'normal',
+  },
+  deleteButton: {
+    marginTop: 10,
+    backgroundColor: '#f77f00',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   placeholderImage: {
     width: '100%',
     height: 150,
@@ -195,14 +224,6 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#aaa',
     fontSize: 12,
-  },
-  recipeInfo: {
-    flex: 1,
-  },
-  recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
   },
   recipeCategory: {
     fontSize: 14,

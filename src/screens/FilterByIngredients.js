@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const FilterByIngredients = () => {
   const navigation = useNavigation();
@@ -66,7 +67,7 @@ const FilterByIngredients = () => {
                   handleRemoveItem(includedList, setIncludedList, item)
                 }
               >
-                <Text style={styles.tagText}>{item} ✕</Text>
+                 <Text style={styles.tagText}>{item} <Icon name="close" size={20} color="#000"/></Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -93,7 +94,7 @@ const FilterByIngredients = () => {
                   handleRemoveItem(excludedList, setExcludedList, item)
                 }
               >
-                <Text style={styles.tagText}>{item} ✕</Text>
+                <Text style={styles.tagText}>{item} <Icon name="close" size={20} color="#000"/></Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -162,6 +163,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginRight: 8,
     marginBottom: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tagText: {
     color: '#333',
