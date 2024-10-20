@@ -4,10 +4,12 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
+import { useTheme } from '../context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CategoryRecipesScreen = ({ route }) => {
   const { category } = route.params; 
+  const { isDarkTheme } = useTheme(); 
   const navigation = useNavigation();
   const [allRecipes, setAllRecipes] = useState([]); 
   const [loading, setLoading] = useState(true);
@@ -128,15 +130,15 @@ const CategoryRecipesScreen = ({ route }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#fff" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
       <Header />
-      <Text style={styles.title}>Recetas {category}</Text>
+      <Text style={[styles.title, isDarkTheme && styles.darkTitle]}>Recetas {category}</Text>
       {error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -146,7 +148,7 @@ const CategoryRecipesScreen = ({ route }) => {
               <TouchableOpacity 
                 key={recipe.id} 
                 onPress={() => navigation.navigate('RecipeScreen', { recipe })} 
-                style={styles.recipeContainer}
+                style={[styles.recipeContainer, isDarkTheme && styles.darkRecipeContainer]}
               >
                 <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
                 <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleRecipeSaveToggle(recipe)}>
@@ -156,12 +158,16 @@ const CategoryRecipesScreen = ({ route }) => {
                     color="#fff" 
                   />
                 </TouchableOpacity>
-                <Text style={styles.detalles}>{recipe.preparationMinutes} min • {recipe.servings} porciones</Text>
-                <Text style={styles.recipeName}>{recipe.name}</Text>
+                <Text style={[styles.detalles, isDarkTheme && styles.darkDetalles]}>
+                  {recipe.preparationMinutes} min • {recipe.servings} porciones
+                </Text>
+                <Text style={[styles.recipeName, isDarkTheme && styles.darkRecipeName]}>
+                  {recipe.name}
+                </Text>
               </TouchableOpacity>
             ))
           ) : (
-            <Text>No hay recetas disponibles para esta categoría.</Text>
+            <Text style={isDarkTheme ? styles.darkText : styles.lightText}>No hay recetas disponibles para esta categoría.</Text>
           )}
         </ScrollView>
       )}
@@ -174,11 +180,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  darkContainer: {
+    backgroundColor: '#1e1e1e',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
+    color: '#000',
+  },
+  darkTitle: {
+    color: '#fff',
   },
   scrollView: {
     padding: 10,
@@ -196,6 +209,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 2,
+  },
+  darkRecipeContainer: {
+    backgroundColor: '#2c2c2c',
   },
   recipeImage: {
     width: '100%',
@@ -215,15 +231,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
   },
+  darkDetalles: {
+    color: '#ccc',
+  },
   recipeName: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 5,
+    color: '#000',
+  },
+  darkRecipeName: {
+    color: '#fff',
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
     marginTop: 20,
+  },
+  darkText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  lightText: {
+    color: '#000',
+    textAlign: 'center',
   },
 });
 
