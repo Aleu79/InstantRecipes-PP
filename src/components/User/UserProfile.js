@@ -13,11 +13,12 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import HeaderUserP from '../Headers/HeaderUserP';
 import { signOut } from 'firebase/auth';
 import BottomNavBar from '../BottomNavbar';
+import { useTheme } from '../../context/ThemeContext';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
-
+  const { isDarkTheme } = useTheme(); 
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -75,12 +76,10 @@ const UserProfile = () => {
         const userDocRef = doc(db, 'users', user.email);
         const userDocSnap = await getDoc(userDocRef);
         
-        // Crear el documento si no existe
         if (!userDocSnap.exists()) {
           await setDoc(userDocRef, { email: user.email }, { merge: true });
         }
 
-        // Subir la imagen y obtener la URL
         const uploadTask = await uploadBytes(imageRef, blob);
         const url = await getDownloadURL(uploadTask.ref);
         setImage(url);
@@ -95,49 +94,49 @@ const UserProfile = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={isDarkTheme ? styles.darkContainer : styles.lightContainer}>
       <HeaderUserP />
 
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           {isLoading ? (
-            <ActivityIndicator size="large" color="#333" />
+            <ActivityIndicator size="large" color={isDarkTheme ? "#fff" : "#333"} />
           ) : image ? (
             <Image source={{ uri: image }} style={styles.profileImage} />
           ) : (
-            <Icon name="person-circle-outline" size={100} color="#333" />
+            <Icon name="person-circle-outline" size={100} color={isDarkTheme ? "#fff" : "#333"} />
           )}
         </TouchableOpacity>
-        <Text style={styles.username}>{user ? user.username : 'Invitado'}</Text>
-        <Text style={styles.userEmail}>{user ? user.email : 'emma.phillips@gmail.com'}</Text>
+        <Text style={[styles.username, { color: isDarkTheme ? '#fff' : '#000' }]}>{user ? user.username : 'Invitado'}</Text>
+        <Text style={[styles.userEmail, { color: isDarkTheme ? '#fff' : '#000' }]}>{user ? user.email : 'emma.phillips@gmail.com'}</Text>
       </View>
 
       <View style={styles.separator} />
 
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SavedRecipes')}>
-          <Icon name="bookmark-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Guardados</Text>
+          <Icon name="bookmark-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
+          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Guardados</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('MyRecipes')}>
-          <Icon name="cafe-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Tus recetas</Text>
+          <Icon name="cafe-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
+          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Tus recetas</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
-          <Icon name="mail-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Bandeja de Notificaciones</Text>
+          <Icon name="mail-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
+          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Bandeja de Notificaciones</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Settings')}>
-          <Icon name="settings-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Ajustes</Text>
+          <Icon name="settings-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
+          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Ajustes</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-          <Icon name="log-out-outline" size={24} color="#333" />
-          <Text style={styles.menuText}>Cerrar sesión</Text>
+          <Icon name="log-out-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
+          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
 
@@ -151,7 +150,7 @@ const UserProfile = () => {
       >
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.modalBackground} onPress={() => setModalVisible(false)} />
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: isDarkTheme ? '#333' : '#fff' }]}>
             <Image source={{ uri: image }} style={styles.modalImage} />
             <TouchableOpacity style={styles.editIconContainer} onPress={pickImage}>
               <View style={styles.editIconBackground}>
@@ -166,9 +165,14 @@ const UserProfile = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  lightContainer: {
     flexGrow: 1,
     backgroundColor: '#fafafa',
+    padding: 20,
+  },
+  darkContainer: {
+    flexGrow: 1,
+    backgroundColor: '#000',
     padding: 20,
   },
   username: {
@@ -212,33 +216,32 @@ const styles = StyleSheet.create({
   modalBackground: {
     position: 'absolute',
     top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'transparent',
+    width: 300,
+    padding: 10,
+    borderRadius: 10,
     alignItems: 'center',
   },
   modalImage: {
-    width: 300,
-    height: 300,
-    borderRadius: 150, 
-    overflow: 'hidden',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    marginBottom: 10,
   },
   editIconContainer: {
     position: 'absolute',
-    bottom: 10,
-    right: 10,
-    backgroundColor: 'transparent',
-    borderRadius: 50,
-    padding: 10,
+    bottom: 20,
+    right: 20,
   },
   editIconBackground: {
-    backgroundColor: 'black', // Fondo negro redondeado
-    borderRadius: 50,
-    padding: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    padding: 5,
   },
 });
 
