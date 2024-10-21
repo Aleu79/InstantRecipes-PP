@@ -1,42 +1,78 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, TextInput, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext'; 
 import { auth } from '../../firebase/firebase-config';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import Categories from '../components/Categories';
+import Recipes from '../components/ Recipes';
+
+import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
 
 const HomeScreen = ({ navigation }) => {
-  const { isDarkTheme } = useTheme(); // Uso del contexto para obtener el estado del tema (oscuro o claro)  
+  const { isDarkTheme } = useTheme();  
   const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false);
   const { user } = useContext(UserContext);
   const [profileImage, setProfileImage] = useState(null); 
+  const [activeCategory, setActiveCategory] = useState('Beef');
+  const [categories, setCategories] = useState([]);
+  const [meals, setMeals] = useState([]);
   const db = getFirestore();
 
   useEffect(() => {
-    const handleUpdateProfile = async () => {
-      const currentUser = auth.currentUser;
-
-      if (currentUser) {
-        try {
-          const userRef = doc(db, 'users', currentUser.email);
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileImage(userData.myuserfoto || null); // Recuperar la imagen de perfil
-          }
-        } catch (error) {
-          console.error('Error al obtener el documento del usuario:', error);
-        }
-      }
-    };
-
     handleUpdateProfile();
+    getCategories();
+    getRecipes(); 
   }, []);
 
+  const handleUpdateProfile = async () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const userRef = doc(db, 'users', currentUser.email);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setProfileImage(userData.myuserfoto || null);
+        }
+      } catch (error) {
+        console.error('Error al obtener el documento del usuario:', error);
+      }
+    }
+  };
+
+  const getCategories = async () => {
+    try {
+      const response = await axios.get('https://themealdb.com/api/json/v1/1/categories.php');
+      if (response && response.data) {
+        setCategories(response.data.categories);
+      }
+    } catch (error) {
+      console.log("error", error.message);
+    }
+  };
+
+  const getRecipes = async (category = "Beef") => {
+    try {
+      const response = await axios.get(`https://themealdb.com/api/json/v1/1/filter.php?c=${category}`);
+      if (response && response.data) {
+        setMeals(response.data.meals);
+      }
+    } catch (error) {
+      console.log("error", error.message);
+    }
+  };
+
+  const handleChangeCategory = (category) => {
+    setActiveCategory(category);
+    getRecipes(category);
+  };
+
   const categoryImages = {
+    Beef: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
     Vegano: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
     'Sin Lacteos': 'https://i.pinimg.com/564x/fb/fd/a2/fbfda2193d781e9e357860bbea548fa2.jpg',
     Vegetariano: 'https://www.anitahealthy.com/wp-content/uploads/2020/02/Veggie-Bowl-de-Lentilhas-e-abo%CC%81bora-2-1-600x800.jpg',
@@ -49,17 +85,15 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
-      {/* El contenedor principal ajusta su estilo según el tema actual (oscuro o claro) */}       
+      <StatusBar barStyle={isDarkTheme ? 'light-content' : 'dark-content'} backgroundColor={isDarkTheme ? '#121212' : '#fafafa'} />
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <View style={styles.bienvenida}>
-          <Text style={[styles.greetingText, isDarkTheme ? styles.darkText : styles.lightText]}> 
-            {/* El texto de saludo cambia de color según el tema */}            
+          <Text style={[styles.greetingText, isDarkTheme ? styles.darkText : styles.lightText]}>
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
           <View style={styles.containernot}>
             <TouchableOpacity onPress={() => console.log('Notificaciones')}>
               <Icon name="notifications" size={30} color={isDarkTheme ? '#fff' : 'orange'} style={styles.notificacion}/> 
-              {/* El icono de notificaciones cambia de color según el tema */}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
               {profileImage ? (
@@ -72,27 +106,31 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
-          {/* El título de la sección también cambia de color según el tema */}
         <ScrollView
           ref={categoriesScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.categoriesContainer}
         >
-          {Object.keys(categoryImages).map((category, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.categoryButton}
-              onPress={() => {
-                navigation.navigate('CategoryRecipesScreen', { category });
-              }}
-            >
-              <Image source={{ uri: categoryImages[category] }} style={styles.categoryImage} />
-              <Text style={[styles.categoryButtonText, isDarkTheme ? styles.darkText : styles.lightText]}>{category}</Text> 
-              {/* El texto de las categorías también cambia según el tema */}
-            </TouchableOpacity>
-          ))}
+          {categories.length > 0 && <Categories categories={categories} activeCategory={activeCategory} handleChangesCategory={handleChangeCategory}/>}
         </ScrollView>
+
+        {/* Search bar  */}
+        <View style={{ flexDirection: "row", borderRadius: 30, backgroundColor: "#d3d3d3", alignItems: "center", marginVertical: 20 }}>
+          <TextInput
+            placeholder='Search any recipe'
+            placeholderTextColor={"#808080"}
+            style={{ fontSize: 16, flex: 1, textAlign: "justify", paddingLeft: 10 }}
+          />
+          <View style={{ backgroundColor: "#FFF", alignItems: "center", justifyContent: "center", padding: 10, borderRadius: 20, marginRight: 5 }}>
+            <Icon name="search" size={24} color={"#808080"} />
+          </View>
+        </View>
+
+        {/* Recipes */}
+        <View>
+          <Recipes meals={meals} categories={categories} />        
+        </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.floatingButton} onPress={toggleMenu}>
@@ -107,7 +145,6 @@ const HomeScreen = ({ navigation }) => {
           }}>
             <Icon name="book-outline" size={24} color="#333" style={styles.menuicon}/>
             <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>Crear Receta</Text> 
-            {/* Las opciones del menú también cambian de estilo según el tema */}
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={() => { 
             setMenuVisible(false); 
@@ -129,10 +166,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   darkContainer: {
-    backgroundColor: '#121212', // Color de fondo oscuro
+    backgroundColor: '#121212',
   },
   lightContainer: {
-    backgroundColor: '#fafafa', // Color de fondo claro
+    backgroundColor: '#fafafa',
   },
   scrollViewContainer: {
     paddingTop: 50,
@@ -151,10 +188,10 @@ const styles = StyleSheet.create({
     flex: 1, 
   },
   darkText: {
-    color: '#fff', // Color de texto en modo oscuro
+    color: '#fff',
   },
   lightText: {
-    color: '#000', // Color de texto en modo claro
+    color: '#000',
   },
   username: {
     fontWeight: 'bold',
@@ -170,27 +207,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 20,
   },
-  categoryButton: {
-    borderRadius: 75,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    marginRight: -20, 
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 110,
-    height: 110,
-  },
-  categoryImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: 8,
-  },
-  categoryButtonText: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    maxWidth: '100%',
-  },
   floatingButton: {
     position: 'absolute',
     bottom: 90,
@@ -201,36 +217,34 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 150,
     right: 20,
-    backgroundColor: '#fff', // Ajusta según el tema
-    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
     elevation: 5,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    width: 200,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    padding: 15,
   },
   menuItemText: {
     marginLeft: 10,
     fontSize: 16,
   },
-  menuicon: {
-    marginRight: 10,
+  containernot: {
+    flexDirection: 'row',
   },
   notificacion: {
-    marginRight: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   profileImage: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    marginLeft: 20,
   },
 });
 

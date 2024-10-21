@@ -124,7 +124,7 @@ const LoginScreen = () => {
           <View style={styles.ondulatedBackground} /> 
           <View style={styles.form}>
             <Text style={styles.title}>Hola!</Text>
-            <Text style={styles.subtitle}>Ingresa a tu cuenta</Text>
+            <Text style={styles.subtitle}>Ingresa a tu cuenta </Text>
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -154,12 +154,10 @@ const LoginScreen = () => {
             </TouchableOpacity>
             <Text style={styles.footerText}>
               ¿No tienes una cuenta?{' '}
-              <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>
-                Regístrate
-              </Text>
+              <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>Regístrate  </Text>
             </Text>
             <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
-              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?    </Text>
             </TouchableOpacity>
           </View>
         </View> 

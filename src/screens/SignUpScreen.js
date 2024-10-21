@@ -153,7 +153,7 @@ const SignUpScreen = ({ navigation }) => {
   
           <View style={styles.form}>
             <Text style={styles.title}>¡Bienvenido!</Text>
-            <Text style={styles.subtitle}>Crea tu cuenta</Text>
+            <Text style={styles.subtitle}>Crea tu cuenta    </Text>
             
             <TextInput
               style={styles.input}
@@ -218,15 +218,13 @@ const SignUpScreen = ({ navigation }) => {
   
             <Text style={styles.footerText}>
               ¿Ya tienes una cuenta?{' '}
-              <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>
-                Inicia sesión
-              </Text>
+              <Text style={styles.footerLink} onPress={() => navigation.navigate('Login')}>Inicia sesión     </Text>
               <Alert visible={alert.visible} type={alert.type} title={alert.title} text={alert.text} />
             </Text>
   
             <TouchableOpacity style={styles.termsContainer} onPress={() => setModalVisible(true)}>
               <Icon name="document-text-outline" size={20} color="#FF4500" />
-              <Text style={styles.termsText}>Términos y condiciones de uso</Text>
+              <Text style={styles.termsText}>Términos y condiciones de uso    </Text>
             </TouchableOpacity>
           </View>
   
@@ -275,7 +273,7 @@ const SignUpScreen = ({ navigation }) => {
                     size={24}
                     color="#FF4500"
                   />
-                  <Text style={styles.checkboxText}>Acepto los términos y condiciones</Text>
+                  <Text style={styles.checkboxText}>Acepto los términos y condiciones   </Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
@@ -286,7 +284,7 @@ const SignUpScreen = ({ navigation }) => {
                   disabled={!termsAccepted}
                   onPress={handleAcceptTerms}
                 >
-                  <Text style={styles.acceptButtonText}>Aceptar y registrar</Text>
+                  <Text style={styles.acceptButtonText}>Aceptar y registrar    </Text>
                 </TouchableOpacity>
               </View>
             </View>
