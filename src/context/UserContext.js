@@ -45,7 +45,7 @@ export const UserProvider = ({ children, navigation }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      await AsyncStorage.removeItem('userToken'); // Eliminar el token de AsyncStorage
+      await AsyncStorage.removeItem('token'); // Eliminar el token de AsyncStorage
       setUser(null); // Opcional: Restablece el estado del usuario a null
       navigation.navigate('Login'); // Navegar a la pantalla de inicio de sesión
     } catch (error) {
