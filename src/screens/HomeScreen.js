@@ -108,16 +108,15 @@ const HomeScreen = ({ navigation }) => {
 
 
         {/* Search bar  */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder='Buscar'
-            placeholderTextColor={"#aaaaaa"}
-            style={styles.searchInput}
-          />
+        <TouchableOpacity 
+          style={styles.searchContainer} 
+          onPress={() => navigation.navigate('SearchScreen')}
+        >
+          <Text style={styles.searchPlaceholder}>Buscar</Text>
           <View style={styles.searchIcon}>
             <Icon name="search" size={24} color={"#808080"} />
           </View>
-        </View>
+        </TouchableOpacity>
 
         <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
         <ScrollView
@@ -212,9 +211,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5", 
     alignItems: "center", 
     marginVertical: 20,
-    maxWidth: '90%',
-    margin: 'auto', 
-    paddingHorizontal: 10,
+    width: '90%',
+    alignSelf: 'center',
+    paddingLeft: 20,
+    justifyContent: 'space-between',
   },
   searchInput: {
     fontSize: 16, 
@@ -222,6 +222,10 @@ const styles = StyleSheet.create({
     textAlign: "justify", 
     paddingLeft: 10
   },
+  searchPlaceholder: {
+    color: "#aaaaaa",
+    fontSize: 16,
+  },  
   searchIcon:{
     alignItems: "center", 
     justifyContent: "center", 

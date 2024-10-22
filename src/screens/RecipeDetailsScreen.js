@@ -13,7 +13,8 @@ const RecipeDetailsScreen = (props) => {
     const [meals, setMeals] = useState(null);
     const [loading, setLoading] = useState(true);
     const item = props.route.params;
-
+    const [activeTab, setActiveTab] = useState('strIngredient');
+    
     useEffect(() => {
         getMealData(item.idMeal);
     }, []);
@@ -39,6 +40,9 @@ const RecipeDetailsScreen = (props) => {
         }
         return indexes;
     };
+
+    
+    const preparationSteps = meals?.strInstructions ? meals?.strInstructions.split('. ') : [];
 
     return (
         <ScrollView
@@ -103,29 +107,131 @@ const RecipeDetailsScreen = (props) => {
                         <Text style={styles.sectionTitle}>Instructions</Text>
                         <Text style={styles.instructionsText}>{meals?.strInstructions}</Text>
                     </Animated.View>
+
+                <View style={styles.separator}></View>
+
+                <View style={styles.tabsContainer}>
+                    <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
+                    <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
+                    </View>
+
+                    {activeTab === 'ingredients' ? (
+                    <IngredientsList ingredients={recipe.ingredients || []} />
+                    ) : (
+                    <PreparationList preparationSteps={preparationSteps} />
+                    )}
                 </View>
             )}
         </ScrollView>
     );
 };
 
-const renderMiscIcon = (IconComponent, value, label) => (
-    <View style={styles.miscItem}>
-        <View style={styles.miscIcon}>
-            <IconComponent size={hp(4)} strokeWidth={hp(2.5)} width={hp(4)} height={hp(4)} />
-        </View>
-        <View style={styles.miscLabel}>
-            <Text style={styles.miscValue}>{value}</Text>
-            <Text style={styles.miscText}>{label}</Text>
-        </View>
+
+const TabButton = ({ isActive, onPress, text }) => (
+    <TouchableOpacity
+      style={[styles.tabButton, isActive ? styles.activeTab : styles.inactiveTab]}
+      onPress={onPress}
+    >
+      <Text style={[styles.tabText, isActive && styles.activeTabText]}>{text}</Text>
+    </TouchableOpacity>
+  );
+  
+  const IngredientsList = ({ ingredients }) => (
+    <View style={styles.ingredientsContainer}>
+      {ingredients.length > 0 ? (
+        ingredients.map((ingredient, index) => (
+          <IngredientItem key={index} ingredient={ingredient} />
+        ))
+      ) : (
+        <Text>No hay ingredientes disponibles.</Text>
+      )}
     </View>
-);
+  );
+  
+  const IngredientItem = ({ ingredient }) => (
+    <View style={styles.ingredientWrapper}>
+      <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`} } style={styles.ingredientImage} />
+      <View>
+        <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.originalName)}</Text>
+        <Text style={styles.ingredientAmount}>{ingredient.amount} {ingredient.unit}</Text>
+      </View>
+    </View>
+  );
+  
+  const PreparationList = ({ preparationSteps }) => (
+    <View style={styles.preparationContainer}>
+      {preparationSteps.length > 0 ? (
+        preparationSteps.map((step, index) => (
+          <Text key={index} style={styles.preparationStep}>{step}</Text>
+        ))
+      ) : (
+        <Text>No hay instrucciones disponibles.</Text>
+      )}
+    </View>
+  );
+  
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#FFFFFF",
         flex: 1,
     },
+    separator: {
+        height: 1,
+        backgroundColor: '#eee',
+        marginVertical: 10,
+      },
+      tabsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      },
+      tabButton: {
+        paddingVertical: 10,
+        flex: 1,
+        alignItems: 'center',
+      },
+      activeTab: {
+        borderBottomWidth: 2,
+        borderBottomColor: '#000',
+      },
+      inactiveTab: {
+        borderBottomWidth: 0,
+      },
+      tabText: {
+        fontSize: 16,
+        color: '#888',
+      },
+      activeTabText: {
+        color: '#000',
+      },
+      ingredientsContainer: {
+        marginTop: 10,
+      },
+      ingredientWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+      },
+      ingredientImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 10,
+      },
+      ingredientName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+      },
+      ingredientAmount: {
+        color: '#888',
+      },
+      preparationContainer: {
+        marginTop: 10,
+      },
+      preparationStep: {
+        fontSize: 16,
+        marginBottom: 5,
+      },
     scrollContainer: {
         paddingBottom: 30,
     },
