@@ -8,7 +8,6 @@ import Loading from './Loading';
 import { useNavigation } from '@react-navigation/native';
 
 const RecipeCard = ({ item, index, navigation }) => {
-    console.log("KKKK Meals", item);
     let isEven = index % 2 === 0;
 
     return (
@@ -57,8 +56,7 @@ const RecipeCard = ({ item, index, navigation }) => {
 
 const Recipes = ({ meals, categories }) => {
     const navigation = useNavigation();
-    console.log("Meals data:", meals);
-    console.log("Categories data:", categories);
+
 
     return (
         <View style={{ marginHorizontal: 20, marginVertical: 20 }}>
@@ -69,7 +67,7 @@ const Recipes = ({ meals, categories }) => {
                 ) : (
                     <MasonryList
                         data={meals}
-                        keyExtractor={(item) => item.idMeal} // Corrige aquí
+                        keyExtractor={(item) => item.idMeal} 
                         numColumns={2}
                         showsVerticalScrollIndicator={false}
                         renderItem={({ item, index }) => <RecipeCard item={item} index={index} navigation={navigation} />}

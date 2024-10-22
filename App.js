@@ -14,8 +14,8 @@ import CategoryRecipesScreen from './src/screens/CategoryRecipesScreen';
 import RecipeScreen from './src/screens/RecipeScreen';
 import CreateRecipeScreen from './src/screens/CreateRecipeScreen';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
-import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondiciones';
 import { Toast } from 'react-native-alert-notification';
+import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondiciones';
 import FilterByIngredients from './src/screens/FilterByIngredients';
 import Settings from './src/components/User/Settings';
 import Notifications from './src/screens/Notifications';
@@ -23,21 +23,31 @@ import DevelopersScreen from './src/terminosydesarrolladores/Desarroladores';
 import { ThemeProvider } from './src/context/ThemeContext'; 
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
+import LoadingScreen from './src/screens/LoadingScreen'; 
 
 const Stack = createStackNavigator();
 
 function AppNavigation() {
-  const { user } = useContext(UserContext); // Accede al contexto de usuario
+  const { user } = useContext(UserContext); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true); 
 
   useEffect(() => {
-    // Lógica para verificar si el usuario está logueado
+    console.log("Valor de user en useEffect:", user);
+    
     if (user) {
-      setIsLoggedIn(true); // Si el usuario está autenticado, actualiza el estado
+      setIsLoggedIn(true); 
     } else {
-      setIsLoggedIn(false); // Si no está autenticado, lo dirige a login/registro
+      setIsLoggedIn(false); 
     }
+    
+    setIsVerifying(false); 
+    console.log("Estado de isLoggedIn en useEffect:", isLoggedIn);
   }, [user]);
+
+  if (isVerifying) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Stack.Navigator initialRouteName={isLoggedIn ? "Welcome" : "Login"}>
@@ -53,7 +63,7 @@ function AppNavigation() {
           <Stack.Screen name="Sign Up" component={SignUpScreen} options={{ headerShown: false }} />
         </>
       )}
-      {/* Estas pantallas se pueden mostrar en ambos casos si las necesitas */}
+      {/* Estas pantallas se pueden mostrar en ambos casos si se necesita */}
       <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown:false}} />
       <Stack.Screen name="MyRecipes" component={MyRecipes} options={{headerShown:false}} />
       <Stack.Screen name="SavedRecipes" component={SavedRecipes} options={{headerShown:false}} />
