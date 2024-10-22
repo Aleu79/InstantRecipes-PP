@@ -82,6 +82,9 @@ const HomeScreen = ({ navigation }) => {
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
   };
+  const handlePress = () => {
+    navigation.navigate('SearchScreen');
+  };
 
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
@@ -108,15 +111,13 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Search bar  */}
         <View style={styles.searchContainer}>
-          <TextInput
-            placeholder='Buscar'
-            placeholderTextColor={"#aaaaaa"}
-            style={styles.searchInput}
-          />
-          <View style={styles.searchIcon}>
-            <Icon name="search" size={24} color={"#808080"} />
-          </View>
-        </View>
+      <TouchableOpacity onPress={handlePress} style={styles.searchInput}>
+        <Text style={styles.placeholderText}>Buscar</Text> 
+      </TouchableOpacity>
+      <View style={styles.searchIcon}>
+        <Icon name="search" size={24} color={"#808080"} />
+      </View>
+    </View>
 
         <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
         <ScrollView

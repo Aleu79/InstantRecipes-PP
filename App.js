@@ -6,7 +6,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import UserProfile from './src/components/User/UserProfile';
 import UserEdit from './src/components/User/UserEdit';
-import { UserProvider, UserContext } from './src/context/UserContext'; // Importa el contexto de usuario
+import { UserProvider, UserContext } from './src/context/UserContext';
 import SearchScreen from './src/screens/SearchScreen';
 import SavedRecipes from './src/screens/SavedRecipes';
 import MyRecipes from './src/screens/MyRecipes';
@@ -27,16 +27,16 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 const Stack = createStackNavigator();
 
 function AppNavigation() {
-  const { user } = useContext(UserContext); // Accede al contexto de usuario
+  const { user } = useContext(UserContext); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Lógica para verificar si el usuario está logueado
-    if (user) {
-      setIsLoggedIn(true); // Si el usuario está autenticado, actualiza el estado
-    } else {
-      setIsLoggedIn(false); // Si no está autenticado, lo dirige a login/registro
-    }
+    
+    const checkTokenValidity = () => {
+      setIsLoggedIn(!!(user && user.token));
+    };
+  
+    checkTokenValidity();
   }, [user]);
 
   return (
@@ -45,7 +45,19 @@ function AppNavigation() {
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-          {/* Agrega más pantallas que quieras mostrar después del login */}
+          <Stack.Screen name="UserProfile" component={UserProfile} options={{ headerShown: false }} />
+          <Stack.Screen name="MyRecipes" component={MyRecipes} options={{ headerShown: false }} />
+          <Stack.Screen name="SavedRecipes" component={SavedRecipes} options={{ headerShown: false }} />
+          <Stack.Screen name="UserEdit" component={UserEdit} options={{ headerShown: false }} />
+          <Stack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="RecipeScreen" component={RecipeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="CategoryRecipesScreen" component={CategoryRecipesScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="CreateRecipeScreen" component={CreateRecipeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="FilterByIngre" component={FilterByIngredients} options={{ headerShown: false }} />
+          <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false }} />
+          <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false }} />
+          <Stack.Screen name="DevelopersScreen" component={DevelopersScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="RecipeDetailsScreen" component={RecipeDetailsScreen} options={{ headerShown: false }} />
         </>
       ) : (
         <>
@@ -53,21 +65,6 @@ function AppNavigation() {
           <Stack.Screen name="Sign Up" component={SignUpScreen} options={{ headerShown: false }} />
         </>
       )}
-      {/* Estas pantallas se pueden mostrar en ambos casos si las necesitas */}
-      <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown:false}} />
-      <Stack.Screen name="MyRecipes" component={MyRecipes} options={{headerShown:false}} />
-      <Stack.Screen name="SavedRecipes" component={SavedRecipes} options={{headerShown:false}} />
-      <Stack.Screen name="UserEdit" component={UserEdit} options={{headerShown:false}} />
-      <Stack.Screen name="SearchScreen" component={SearchScreen} options={{headerShown:false}} />
-      <Stack.Screen name="RecipeScreen" component={RecipeScreen} options={{headerShown:false}} />
-      <Stack.Screen name="CategoryRecipesScreen" component={CategoryRecipesScreen} options={{headerShown:false}} />
-      <Stack.Screen name="CreateRecipeScreen" component={CreateRecipeScreen} options={{headerShown:false}} />
-      <Stack.Screen name="Terminos" component={TerminosyCondiciones} options={{headerShown:false}} />
-      <Stack.Screen name="FilterByIngre" component={FilterByIngredients} options={{headerShown:false}} />
-      <Stack.Screen name="Settings" component={Settings} options={{headerShown:false}} />
-      <Stack.Screen name="Notifications" component={Notifications} options={{headerShown:false}} />
-      <Stack.Screen name="DevelopersScreen" component={DevelopersScreen} options={{headerShown:false}} />
-      <Stack.Screen name="RecipeDetailsScreen" component={RecipeDetailsScreen} options={{headerShown:false}}/>
     </Stack.Navigator>
   );
 }

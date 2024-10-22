@@ -42,15 +42,19 @@ const LoginScreen = () => {
     try {
       // Intento de inicio de sesión
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
-      await AsyncStorage.setItem('userEmail', userCredential.user.email); 
+      
+      // Obtener el token y guardarlo en AsyncStorage
+      const token = await userCredential.user.getIdToken();
+      await AsyncStorage.setItem('userToken', token);  // Guardar el token en el dispositivo
+      console.log('Token actual:', token);
       
       const userDoc = doc(db, 'users', userCredential.user.email);
       const userData = await getDoc(userDoc);
       
       if (userData.exists()) {
         const data = userData.data();
-        setUser({ email: userCredential.user.email, username: data.username, phone: data.phone });
-        
+        setUser({ email: userCredential.user.email, username: data.username, phone: data.phone, token });
+  
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
