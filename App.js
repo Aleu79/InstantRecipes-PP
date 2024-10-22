@@ -6,7 +6,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import UserProfile from './src/components/User/UserProfile';
 import UserEdit from './src/components/User/UserEdit';
-import { UserProvider, UserContext } from './src/context/UserContext'; // Importa el contexto de usuario
+import { UserProvider, UserContext } from './src/context/UserContext';
 import SearchScreen from './src/screens/SearchScreen';
 import SavedRecipes from './src/screens/SavedRecipes';
 import MyRecipes from './src/screens/MyRecipes';

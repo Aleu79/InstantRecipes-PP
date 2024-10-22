@@ -11,7 +11,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, db, auth } from '../../../firebase/firebase-config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import HeaderUserP from '../Headers/HeaderUserP';
-import { signOut } from 'firebase/auth';
 import BottomNavBar from '../BottomNavbar';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -22,6 +21,8 @@ const UserProfile = () => {
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const { handleLogout } = useContext(UserContext);
+
 
   useEffect(() => {
     const fetchUserImage = async () => {
@@ -37,15 +38,7 @@ const UserProfile = () => {
     fetchUserImage();
   }, [user]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigation.navigate('Login');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      Alert.alert('Error', 'No se pudo cerrar la sesión.');
-    }
-  };
+
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -129,7 +122,7 @@ const UserProfile = () => {
           <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Ajustes</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => handleLogout(navigation)}>
           <Icon name="log-out-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
           <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Cerrar sesión</Text>
         </TouchableOpacity>

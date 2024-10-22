@@ -83,6 +83,9 @@ const HomeScreen = ({ navigation }) => {
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
   };
+  const handlePress = () => {
+    navigation.navigate('SearchScreen');
+  };
 
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>

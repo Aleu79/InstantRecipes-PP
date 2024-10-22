@@ -23,6 +23,8 @@ import { UserContext } from '../context/UserContext';
 import { getFirestore, setDoc, doc, collection } from 'firebase/firestore';
 import Alert from '../components/Alerts/Alerts'; 
 import { ALERT_TYPE } from 'react-native-alert-notification';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const db = getFirestore();
 const { height } = Dimensions.get('window');
@@ -115,8 +117,14 @@ const SignUpScreen = ({ navigation }) => {
       
       const userDoc = doc(collection(db, 'users'), email);
       await setDoc(userDoc, { username, phone, email });
-      setUser({ email: user.email, username, phone });
-
+  
+      // Obtener el token y guardarlo en AsyncStorage
+      const token = await user.getIdToken();
+      console.log("El token es: ", token);
+      await AsyncStorage.setItem('userToken', token);  // Guardar el token en el dispositivo
+  
+      setUser({ email: user.email, username, phone, token });  // Pasar el token al contexto
+  
       const checkVerificationInterval = setInterval(async () => {
         await auth.currentUser.reload();
         if (auth.currentUser.emailVerified) {
@@ -133,6 +141,7 @@ const SignUpScreen = ({ navigation }) => {
       }
     }
   };
+  
 
   const handleAcceptTerms = () => {
     setTermsAccepted(true);
