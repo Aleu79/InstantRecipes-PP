@@ -124,11 +124,6 @@ const UserProfile = () => {
           <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Tus recetas</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Notifications')}>
-          <Icon name="mail-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
-          <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Bandeja de Notificaciones</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Settings')}>
           <Icon name="settings-outline" size={24} color={isDarkTheme ? "#fff" : "#333"} />
           <Text style={[styles.menuText, { color: isDarkTheme ? '#fff' : '#000' }]}>Ajustes</Text>

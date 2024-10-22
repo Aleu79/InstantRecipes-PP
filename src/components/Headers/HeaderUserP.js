@@ -27,14 +27,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: '5%',
-    marginTop: '5%',
-    backgroundColor: '#F2F2F2',
+    backgroundColor: '#fafafa',
   },
   darkIconsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: '5%',
-    marginTop: '5%',
     backgroundColor: '#000',
   },
   backIcon: {

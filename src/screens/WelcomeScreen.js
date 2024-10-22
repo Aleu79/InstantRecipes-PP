@@ -4,7 +4,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 
-const WellcomeScreen = () => {
+const WelcomeScreen = () => {
 
     const ring1padding = useSharedValue(0);
     const ring2padding = useSharedValue(0);
@@ -44,7 +44,7 @@ const WellcomeScreen = () => {
   )
 }
 
-export default WellcomeScreen
+export default WelcomeScreen
 
 const styles = StyleSheet.create({
     Container:{

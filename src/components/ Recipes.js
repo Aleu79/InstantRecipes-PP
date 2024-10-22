@@ -22,7 +22,7 @@ const RecipeCard = ({ item, index, navigation }) => {
                     paddingLeft: isEven ? 0 : 8,
                     paddingRight: isEven ? 8 : 0 
                 }}
-                onPress={() => { navigation.navigate("Recipedetails", { ...item }) }}
+                onPress={() => { navigation.navigate("RecipeDetailsScreen", { ...item }) }}
             >
                 {Platform.OS === 'ios' ? (
                     <CachedImage

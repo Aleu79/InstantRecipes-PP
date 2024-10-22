@@ -105,6 +105,19 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
+
+        {/* Search bar  */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            placeholder='Buscar'
+            placeholderTextColor={"#aaaaaa"}
+            style={styles.searchInput}
+          />
+          <View style={styles.searchIcon}>
+            <Icon name="search" size={24} color={"#808080"} />
+          </View>
+        </View>
+
         <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
         <ScrollView
           ref={categoriesScrollRef}
@@ -114,18 +127,6 @@ const HomeScreen = ({ navigation }) => {
         >
           {categories.length > 0 && <Categories categories={categories} activeCategory={activeCategory} handleChangesCategory={handleChangeCategory}/>}
         </ScrollView>
-
-        {/* Search bar  */}
-        <View style={{ flexDirection: "row", borderRadius: 30, backgroundColor: "#d3d3d3", alignItems: "center", marginVertical: 20 }}>
-          <TextInput
-            placeholder='Search any recipe'
-            placeholderTextColor={"#808080"}
-            style={{ fontSize: 16, flex: 1, textAlign: "justify", paddingLeft: 10 }}
-          />
-          <View style={{ backgroundColor: "#FFF", alignItems: "center", justifyContent: "center", padding: 10, borderRadius: 20, marginRight: 5 }}>
-            <Icon name="search" size={24} color={"#808080"} />
-          </View>
-        </View>
 
         {/* Recipes */}
         <View>
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   lightContainer: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#fdfdfd',
   },
   scrollViewContainer: {
     paddingTop: 50,
@@ -203,6 +204,30 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     marginHorizontal: 16,
   },
+  searchContainer:{
+    flexDirection: "row", 
+    borderRadius: 30, 
+    borderColor: '#e6e6e6',  
+    backgroundColor: "#f5f5f5", 
+    alignItems: "center", 
+    marginVertical: 20,
+    maxWidth: '90%',
+    margin: 'auto', 
+    paddingHorizontal: 10,
+  },
+  searchInput: {
+    fontSize: 16, 
+    flex: 1, 
+    textAlign: "justify", 
+    paddingLeft: 10
+  },
+  searchIcon:{
+    alignItems: "center", 
+    justifyContent: "center", 
+    padding: 10, 
+    borderRadius: 20, 
+    marginRight: 5
+  },
   categoriesContainer: {
     paddingHorizontal: 15,
     marginBottom: 20,
@@ -211,7 +236,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 90,
     right: 20,
-    backgroundColor: '#FF5722',
+    backgroundColor: '#ff6c22',
     borderRadius: 50,
     padding: 15,
   },

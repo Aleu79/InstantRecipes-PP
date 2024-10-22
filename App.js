@@ -22,7 +22,7 @@ import Notifications from './src/screens/Notifications';
 import DevelopersScreen from './src/terminosydesarrolladores/Desarroladores';
 import { ThemeProvider } from './src/context/ThemeContext'; 
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
-import WellcomeScreen from './src/screens/WellcomeScreen';
+import WelcomeScreen from './src/screens/WelcomeScreen';
 
 const Stack = createStackNavigator();
 
@@ -40,10 +40,10 @@ function AppNavigation() {
   }, [user]);
 
   return (
-    <Stack.Navigator initialRouteName={isLoggedIn ? "Wellcome" : "Login"}>
+    <Stack.Navigator initialRouteName={isLoggedIn ? "Welcome" : "Login"}>
       {isLoggedIn ? (
         <>
-          <Stack.Screen name="Wellcome" component={WellcomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           {/* Agrega más pantallas que quieras mostrar después del login */}
         </>

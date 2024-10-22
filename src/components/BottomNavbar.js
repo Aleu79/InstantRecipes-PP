@@ -11,8 +11,8 @@ const BottomNavBar = ({ navigation }) => {
       <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Home')}>
         <Icon name="home-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('SearchScreen')}>
-        <Icon name="search-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Notifications')}>
+        <Icon name="mail-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('SavedRecipes')}>
         <Icon name="bookmark-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />

@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from 'react
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
 import Header from '../components/Headers/Header';
+import BottomNavBar from '../components/BottomNavbar';
+import { useNavigation } from '@react-navigation/native';
 
 const Notifications = ({ navigation }) => {
   const { notifications, removeNotification, clearNotifications, readNotifications } = useContext(UserContext);
@@ -67,7 +69,8 @@ const Notifications = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+   <>
+     <View style={styles.container}>
       <Header
         title="Notificaciones"
         leftIcon={
@@ -113,6 +116,8 @@ const Notifications = ({ navigation }) => {
         />
       )}
     </View>
+    <BottomNavBar navigation={navigation}/>
+   </>
   );
 };
 
