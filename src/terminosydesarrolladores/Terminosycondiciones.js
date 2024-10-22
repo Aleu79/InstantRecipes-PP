@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -8,47 +8,21 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Toast } from 'react-native-alert-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { db, auth } from '../../firebase/firebase-config'; 
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore'; 
 import { deleteField } from 'firebase/firestore'; 
-  
+import { UserContext } from '../context/UserContext';
+
 const TerminosyCondiciones = () => {
+  const { addNotification } = useContext(UserContext); 
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState('10 de octubre de 2024');
+  const [lastUpdated, setLastUpdated] = useState('25 de octubre de 2024');
   const navigation = useNavigation();
   const user = auth.currentUser; 
 
   useEffect(() => {
-    const checkForUpdates = async () => {
-      const currentUpdateDate = '10 de octubre de 2024';
-      console.log("Comprobando actualizaciones de términos...");
-      try {
-        const storedDate = await AsyncStorage.getItem('lastUpdateDate');
-        const notificationShown = await AsyncStorage.getItem('notificationShown');
-
-        console.log("Fecha de actualización almacenada:", storedDate);
-        console.log("Notificación mostrada:", notificationShown);
-
-        if ((!storedDate || storedDate !== currentUpdateDate) && !notificationShown) {
-          Toast.show({
-            type: 'warning',
-            title: 'Términos y Condiciones Actualizados',
-            textBody: 'Los términos y condiciones han sido actualizados.',
-          });
-
-          await AsyncStorage.setItem('lastUpdateDate', currentUpdateDate);
-          await AsyncStorage.setItem('notificationShown', 'true');
-          console.log("Notificación de actualización mostrada y fechas almacenadas.");
-        }
-        setLastUpdated(currentUpdateDate);
-      } catch (error) {
-        console.error('Error al verificar actualizaciones:', error);
-      }
-    };
-
     const checkTermsAcceptance = async () => {
       if (user) {
         const userDocRef = doc(db, 'users', user.email);
@@ -66,42 +40,42 @@ const TerminosyCondiciones = () => {
       }
     };
 
-    checkForUpdates();
     checkTermsAcceptance();
   }, [user]);
-
   const handleTermsToggle = async () => {
     if (user) {
-      try {
-        const userDocRef = doc(db, 'users', user.email);
-        
-        // Si los términos están aceptados, eliminarlos de Firestore
-        if (termsAccepted) {
-          await setDoc(userDocRef, { terminos: deleteField() }, { merge: true }); 
-        } else {
-          await setDoc(userDocRef, { terminos: true }, { merge: true });
-        }
+        try {
+            const userDocRef = doc(db, 'users', user.email);
+            
+            // Si los términos están aceptados, eliminarlos de Firestore
+            if (termsAccepted) {
+                await setDoc(userDocRef, { terminos: deleteField() }, { merge: true });
+                addNotification('Cambio de términos', 'Has rechazado los términos y condiciones.');
+            } else {
+                await setDoc(userDocRef, { terminos: true }, { merge: true });
+                addNotification('Cambio de términos', 'Has aceptado los términos y condiciones.');
+            }
 
-        setTermsAccepted(!termsAccepted);
-        console.log(`Términos ${termsAccepted ? 'rechazados' : 'aceptados'} y guardados en Firestore.`);
-      } catch (error) {
-        console.error('Error al guardar o eliminar términos en Firestore:', error);
-        if (error.code === 'permission-denied') {
-          Alert.alert('Error', 'No tienes permiso para guardar datos en Firestore.');
-        } else {
-          Alert.alert('Error', 'No se pudo guardar tu aceptación. Inténtalo nuevamente.');
+            setTermsAccepted(!termsAccepted);
+            console.log(`Términos ${termsAccepted ? 'rechazados' : 'aceptados'} y guardados en Firestore.`);
+        } catch (error) {
+            console.error('Error al guardar o eliminar términos en Firestore:', error);
+            if (error.code === 'permission-denied') {
+                Alert.alert('Error', 'No tienes permiso para guardar datos en Firestore.');
+            } else {
+                Alert.alert('Error', 'No se pudo guardar tu aceptación. Inténtalo nuevamente.');
+            }
         }
-      }
     } else {
-      Alert.alert('Error', 'No se encontró un usuario autenticado.');
+        Alert.alert('Error', 'No se encontró un usuario autenticado.');
     }
-  };
+};
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Términos y Condiciones</Text>
       <Text style={styles.lastUpdated}>
-      <Text style={{ fontWeight: 'bold' }}>Última actualización: </Text>{lastUpdated}
+        <Text style={{ fontWeight: 'bold' }}>Última actualización: </Text>{lastUpdated}
       </Text>
 
       <ScrollView style={styles.scrollContainer}>

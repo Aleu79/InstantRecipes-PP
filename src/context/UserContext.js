@@ -45,8 +45,8 @@ export const UserProvider = ({ children, navigation }) => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      await AsyncStorage.removeItem('token'); // Eliminar el token de AsyncStorage
-      setUser(null); // Opcional: Restablece el estado del usuario a null
+      await AsyncStorage.removeItem('token'); 
+      setUser(null); 
       navigation.navigate('Login'); // Navegar a la pantalla de inicio de sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
@@ -66,11 +66,20 @@ export const UserProvider = ({ children, navigation }) => {
       id: Date.now().toString(),
       title,
       body,
-      date: new Date().toLocaleString(),
+      date: new Date().toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      }) + ' ' + new Date().toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false 
+      }), 
       pinned: false,
     };
     setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
   };
+  
 
   const removeNotification = (id) => {
     setNotifications((prevNotifications) => prevNotifications.filter(notification => notification.id !== id));
