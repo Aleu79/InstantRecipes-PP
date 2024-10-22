@@ -44,7 +44,7 @@ function AppNavigation() {
       {isLoggedIn ? (
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
           {/* Agrega más pantallas que quieras mostrar después del login */}
         </>
       ) : (

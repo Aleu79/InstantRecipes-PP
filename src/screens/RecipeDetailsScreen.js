@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { CachedImage } from '../helpers/image';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
-import { ClockIcon, FireIcon, HeartIcon, Square3Stack3DIcon, UsersIcon } from 'react-native-heroicons/solid';
 import axios from 'axios';
 import Loading from '../components/Loading';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import { FontAwesome } from '@expo/vector-icons';
 
 const RecipeDetailsScreen = (props) => {
     const [isFavourite, setFavourite] = useState(false);
@@ -65,34 +65,23 @@ const RecipeDetailsScreen = (props) => {
                 )}
             </View>
 
-            {/* Back & Heart Buttons */}
             <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.headerButtons}>
                 <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
                     <ChevronLeftIcon size={3.5} strokeWidth={4.5} color="#fbbf24" width={hp(3.5)} height={hp(3.5)} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.favButton} onPress={() => setFavourite(!isFavourite)}>
-                    <HeartIcon size={3.5} strokeWidth={4.5} color={isFavourite ? "red" : "#808080"} width={hp(3.5)} height={hp(3.5)} />
+                <TouchableOpacity style={styles.bookmarkButton} onPress={() => setFavourite(!isFavourite)}>
+                    <FontAwesome name="bookmark-o" size={24} strokeWidth={4.5} color="#fff" />
                 </TouchableOpacity>
             </Animated.View>
 
-            {/* Meals description */}
             {loading ? (
                 <Loading size="large" style={styles.loading} />
             ) : (
                 <View style={styles.detailsContainer}>
-                    {/* Meal Name & Area */}
                     <Animated.View entering={FadeInDown.duration(700).springify().damping(12)} style={styles.nameAreaContainer}>
                         <Text style={styles.mealName}>{meals?.strMeal}</Text>
                         <Text style={styles.mealArea}>{meals?.strArea}</Text>
-                    </Animated.View>
-
-                    {/* Miscellaneous Icons (Time, Servings, etc.) */}
-                    <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} style={styles.miscContainer}>
-                        {renderMiscIcon(ClockIcon, '35', 'Mins')}
-                        {renderMiscIcon(UsersIcon, '3', 'Servings')}
-                        {renderMiscIcon(Square3Stack3DIcon, 'Easy', '')}
-                        {renderMiscIcon(FireIcon, '300', 'Kcal')}
                     </Animated.View>
 
                     {/* Ingredients */}
@@ -169,14 +158,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    favButton: {
+    bookmarkButton: {
         padding: 10,
-        marginRight: 5,
-        backgroundColor: "#FFF",
-        borderRadius: 50,
-        alignItems: "center",
-        justifyContent: "center",
-    },
+      },
     loading: {
         marginTop: 20,
     },

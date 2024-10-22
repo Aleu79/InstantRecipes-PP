@@ -8,7 +8,7 @@ const BottomNavBar = ({ navigation }) => {
 
   return (
     <View style={[styles.navbar, isDarkTheme ? styles.darkNavbar : styles.lightNavbar]}>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Home')}>
+      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('HomeScreen')}>
         <Icon name="home-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Notifications')}>

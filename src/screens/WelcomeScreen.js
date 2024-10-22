@@ -15,7 +15,7 @@ const WelcomeScreen = () => {
         setTimeout(()=>ring1padding.value =withSpring(ring1padding.value+hp(5)),100)
         setTimeout(() => ring2padding.value = withSpring(ring1padding.value + hp(5.5)), 300)
 
-        setTimeout(()=>navigation.navigate('Home'),1500)
+        setTimeout(()=>navigation.navigate('HomeScreen'),1500)
 
     },[])
 

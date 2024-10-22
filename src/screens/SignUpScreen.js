@@ -122,7 +122,7 @@ const SignUpScreen = ({ navigation }) => {
         if (auth.currentUser.emailVerified) {
           showAlert(ALERT_TYPE.SUCCESS, 'Verificación completa', 'Cuenta verificada.');
           clearInterval(checkVerificationInterval);
-          navigation.navigate('Home');
+          navigation.navigate('HomeScreen');
         }
       }, 1000);
     } catch (error) {
