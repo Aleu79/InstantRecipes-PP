@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { auth } from '../../firebase/firebase-config';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import Categories from '../components/Categories';
-import Recipes from '../components/ Recipes';
+import Recipes from '../components/Recipes';
 
 import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
@@ -49,6 +49,7 @@ const HomeScreen = ({ navigation }) => {
       const response = await axios.get('https://themealdb.com/api/json/v1/1/categories.php');
       if (response && response.data) {
         setCategories(response.data.categories);
+        console.log(response);
       }
     } catch (error) {
       console.log("error", error.message);

@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Platform }
 import React from 'react';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { CachedImage } from '../helpers /image';
+import { CachedImage } from '../helpers/image';
 
 const Categories = ({ categories = [], activeCategory, handleChangesCategory }) => {
     return (
