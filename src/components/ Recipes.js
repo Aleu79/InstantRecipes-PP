@@ -62,7 +62,7 @@ const Recipes = ({ meals, categories }) => {
 
     return (
         <View style={{ marginHorizontal: 20, marginVertical: 20 }}>
-            <Text style={{ fontSize: hp(3), fontWeight: "600", color: "#808080" }}>Recipes</Text>
+            <Text style={{ fontSize: hp(3), fontWeight: "600", color: "#808080" }}>Recetas</Text>
             <View>
                 {categories.length === 0 || meals.length === 0 ? (
                     <Loading size="large" style={{ marginVertical: 20 }} />

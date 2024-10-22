@@ -67,7 +67,7 @@ function AppNavigation() {
       <Stack.Screen name="Settings" component={Settings} options={{headerShown:false}} />
       <Stack.Screen name="Notifications" component={Notifications} options={{headerShown:false}} />
       <Stack.Screen name="DevelopersScreen" component={DevelopersScreen} options={{headerShown:false}} />
-      <Stack.Screen name="Recipedetails" component={RecipeDetailsScreen} options={{headerShown:false}}/>
+      <Stack.Screen name="RecipeDetailsScreen" component={RecipeDetailsScreen} options={{headerShown:false}}/>
     </Stack.Navigator>
   );
 }
