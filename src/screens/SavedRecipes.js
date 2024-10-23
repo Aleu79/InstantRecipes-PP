@@ -138,7 +138,7 @@ const SavedRecipes = () => {
         setSavedRecipes(updatedRecipes);
         setCache((prevCache) => {
           const newCache = { ...prevCache };
-          delete newCache[id]; // Elimina la receta de la caché
+          delete newCache[id]; 
           return newCache;
         });
       }

@@ -13,8 +13,6 @@ import MyRecipes from './src/screens/MyRecipes';
 import CategoryRecipesScreen from './src/screens/CategoryRecipesScreen';
 import RecipeScreen from './src/screens/RecipeScreen';
 import CreateRecipeScreen from './src/screens/CreateRecipeScreen';
-import { AlertNotificationRoot } from 'react-native-alert-notification';
-import { Toast } from 'react-native-alert-notification';
 import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondiciones';
 import FilterByIngredients from './src/screens/FilterByIngredients';
 import Settings from './src/components/User/Settings';
@@ -55,7 +53,6 @@ function AppNavigation() {
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
-          {/* Agrega más pantallas que quieras mostrar después del login */}
         </>
       ) : (
         <>
@@ -86,12 +83,9 @@ export default function App() {
   return (
     <UserProvider>
       <ThemeProvider>
-        <AlertNotificationRoot>
-          <Toast />
           <NavigationContainer>
             <AppNavigation /> 
           </NavigationContainer>
-        </AlertNotificationRoot>
       </ThemeProvider>
     </UserProvider>
   );

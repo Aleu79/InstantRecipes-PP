@@ -25,7 +25,7 @@ const CreateRecipeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
  
 
-  // Request media library permissions
+  // Solicitar permisos 
   const requestPermissions = async () => {
     const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (mediaLibraryStatus !== 'granted') {
@@ -42,7 +42,7 @@ const CreateRecipeScreen = () => {
   };
   
   
-  // Pick an image from the gallery
+  // elegir imagenes de la Galeria
   const pickImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -73,13 +73,10 @@ const CreateRecipeScreen = () => {
     const imageRef = ref(storage, `recipeImages/${filename}`);
   
     try {
-      // Subir el blob a Firebase Storage
       await uploadBytes(imageRef, blob);
       
-      // Obtener la URL de descarga de la imagen
       const url = await getDownloadURL(imageRef);
       
-      // Establecer la URL de la imagen en el estado o donde lo necesites
       setRecipeImage(url);
       
       Alert.alert('Éxito', 'La imagen se subió correctamente.');
@@ -89,9 +86,8 @@ const CreateRecipeScreen = () => {
     }
   };
 
-  // Save the recipe and the image URL to Firestore
   const saveRecipe = async () => {
-    const user = auth.currentUser; // Obtener el usuario autenticado
+    const user = auth.currentUser; 
     if (!user) {
       Alert.alert('Error', 'Debes estar autenticado para guardar una receta.');
       return;
@@ -125,7 +121,6 @@ const CreateRecipeScreen = () => {
       };
   
       try {
-        // Guardar la receta en el documento del usuario en Firestore
         await setDoc(userDocRef, {
           misRecetas: [...currentRecipes, recipeData],
         }, { merge: true }); 

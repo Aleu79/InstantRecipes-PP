@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect} from 'react';
 import { auth } from '../../firebase/firebase-config'; 
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { signOut } from 'firebase/auth'; // Asegúrate de importar signOut
+import { signOut } from 'firebase/auth'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
@@ -42,23 +42,27 @@ export const UserProvider = ({ children, navigation }) => {
     return unsubscribe;
   }, []);
   
-  const handleLogout = async () => {
+  const handleLogout = async (navigation) => {
     try {
       await signOut(auth);
-      await AsyncStorage.removeItem('token'); 
-      setUser(null); 
-      navigation.navigate('Login'); // Navegar a la pantalla de inicio de sesión
+      await AsyncStorage.removeItem('userToken');
+      setUser(null);
+      checkTokenAfterLogout();
+      if (navigation) {
+        navigation.navigate('Login');
+      }
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       Alert.alert('Error', 'No se pudo cerrar la sesión.');
     }
   };
+  
+  
   const checkTokenAfterLogout = async () => {
     const token = await AsyncStorage.getItem('userToken');
-    console.log('Token después de cerrar sesión:', token); // Debería ser null
+    console.log('Token después de cerrar sesión:', token); 
   };
   
-  // Llama a esta función después de que se llame a handleLogout
   checkTokenAfterLogout();
 
   const addNotification = (title, body) => {

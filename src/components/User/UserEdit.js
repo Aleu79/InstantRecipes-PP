@@ -163,7 +163,6 @@ const UserEdit = () => {
     const user = auth.currentUser;
   
     if (user) {
-      // Mostrar una alerta de confirmación antes de eliminar el perfil
       Alert.alert(
         'Confirmar Eliminación',
         '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',

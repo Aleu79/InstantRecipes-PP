@@ -29,11 +29,10 @@ const LoginScreen = () => {
       title: title,
       text: text,
     });
-    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000); // Oculta la alerta después de 4 segundos
+    setTimeout(() => setAlert({ visible: false, type: '', title: '', text: '' }), 4000); 
   };
 
   const handleLogin = async () => {
-    // Validación de entrada
     if (!email.trim() || !password.trim()) {
       showAlert(ALERT_TYPE.DANGER, 'Error', 'Por favor, ingresa tu correo y contraseña.');
       return;
@@ -43,9 +42,8 @@ const LoginScreen = () => {
       // Intento de inicio de sesión
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
       
-      // Obtener el token y guardarlo en AsyncStorage
       const token = await userCredential.user.getIdToken();
-      await AsyncStorage.setItem('userToken', token);  // Guardar el token en el dispositivo
+      await AsyncStorage.setItem('userToken', token);  
       console.log('Token actual:', token);
       
       const userDoc = doc(db, 'users', userCredential.user.email);

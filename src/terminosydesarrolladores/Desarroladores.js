@@ -6,27 +6,22 @@ import Header from '../components/Headers/Header';
 const DevelopersScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      {/* Header con opción para volver */}
       <View style={styles.customHeader}>
         <Header title="Desarrolladores" goBack={() => navigation.goBack()} />
       </View>
 
-      {/* Contenido principal de la pantalla */}
       <View style={styles.content}>
         <View style={styles.header}>
           <Icon name="code-slash-outline" size={40} color="#4CAF50" /> 
           <Text style={styles.title}>Desarrolladores</Text>
         </View>
 
-        {/* Icono representativo */}
         <Icon name="construct-outline" size={150} color="#4CAF50" style={styles.icon} />  
 
-        {/* Mensaje principal */}
         <Text style={styles.message}>
           Aún no tenemos información sobre desarrolladores en esta sección.
         </Text>
 
-        {/* Mensaje secundario o sugerencia */}
         <Text style={styles.subMessage}>
           ¡Estén atentos! Pronto actualizaremos esta sección con más detalles.
         </Text>
