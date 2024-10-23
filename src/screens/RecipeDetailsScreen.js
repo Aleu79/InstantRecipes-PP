@@ -180,11 +180,12 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#eee',
         marginVertical: 10,
-      },
-      tabsContainer: {
+    },
+    tabsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-      },
+        justifyContent: 'space-evenly', // Cambiado a space-evenly para distribuir las pestañas equitativamente
+        marginTop: 20, // Añadido para separar las pestañas del contenido superior
+    },
       tabButton: {
         paddingVertical: 10,
         flex: 1,
@@ -203,27 +204,21 @@ const styles = StyleSheet.create({
       },
       activeTabText: {
         color: '#000',
+        fontWeight: 'bold', // Resalta la pestaña activa
       },
       ingredientsContainer: {
         marginTop: 10,
+        flexDirection: "row",
+        flexWrap: "wrap",
       },
       ingredientWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
+        width: "50%", // Mantener los ingredientes al 50% del ancho
+        padding: 10, // Añadir padding para separar mejor cada ingrediente
       },
-      ingredientImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 10,
-      },
-      ingredientName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-      },
-      ingredientAmount: {
-        color: '#888',
+      ingredientText: {
+        fontSize: hp(2),
+        color: "#808080",
+        fontWeight: '500',
       },
       preparationContainer: {
         marginTop: 10,
@@ -231,7 +226,8 @@ const styles = StyleSheet.create({
       preparationStep: {
         fontSize: 16,
         marginBottom: 5,
-      },
+        textAlign: 'justify',
+    },
     scrollContainer: {
         paddingBottom: 30,
     },
@@ -289,40 +285,6 @@ const styles = StyleSheet.create({
         fontSize: hp(2),
         fontWeight: '600',
         color: "#a8a8a8",
-    },
-    miscContainer: {
-        flexDirection: "row",
-        justifyContent: 'space-around',
-    },
-    miscItem: {
-        borderRadius: 100,
-        backgroundColor: '#fbbf24',
-        padding: 5,
-    },
-    miscIcon: {
-        width: hp(6.5),
-        height: hp(6.5),
-        flex: 1,
-        borderRadius: 50,
-        justifyContent: "center",
-        alignItems: 'center',
-        backgroundColor: '#FFF',
-    },
-    miscLabel: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 5,
-    },
-    miscValue: {
-        fontSize: hp(2),
-        fontWeight: "bold",
-        color: "#808080",
-    },
-    miscText: {
-        fontSize: hp(1.3),
-        fontWeight: "bold",
-        color: "#808080",
     },
     section: {
         marginVertical: 2,
