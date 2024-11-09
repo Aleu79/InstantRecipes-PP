@@ -25,7 +25,7 @@ const WelcomeScreen = () => {
 
           <Animated.View style={[styles.Circle1,{padding:ring2padding}]}>
             <Animated.View style={[styles.Circle,{padding:ring1padding}]}>
-                <Image source={require('../../assets/logoapp.png')}
+                <Image source={require('../../assets/logoappsinfondo.png')}
                 style={styles.ImageLogo}
                 resizeMode='contain'
                 />
@@ -34,10 +34,10 @@ const WelcomeScreen = () => {
           </Animated.View>
           <View style={styles.textContainer}>
             <Text style={styles.text}>
-                Food
+                Cocina
             </Text>
             <Text style={[styles.text,{fontSize:hp(2)}]}>
-                Food is always right
+                Cocinar es el mejor ingrediente para la felicidad
             </Text>
           </View>
     </View>
