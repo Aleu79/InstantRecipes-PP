@@ -31,6 +31,11 @@ const RecipeDetailsScreen = (props) => {
         }
     };
 
+
+    const capitalizeFirstLetter = (string) => {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    };
+
     const ingredientsIndexes = (meals) => {
         let indexes = [];
         for (let i = 1; i <= 20; i++) {
@@ -152,7 +157,9 @@ const TabButton = ({ isActive, onPress, text }) => (
     <View style={styles.ingredientWrapper}>
       <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`} } style={styles.ingredientImage} />
       <View>
-        <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.originalName)}</Text>
+      <Text style={styles.ingredientName}>
+        {capitalizeFirstLetter(ingredient.originalName)}
+      </Text>
         <Text style={styles.ingredientAmount}>{ingredient.amount} {ingredient.unit}</Text>
       </View>
     </View>

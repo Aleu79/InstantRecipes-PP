@@ -138,7 +138,7 @@ const CategoryRecipesScreen = ({ route }) => {
   return (
     <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
       <Header />
-      <Text style={[styles.title, isDarkTheme && styles.darkTitle]}>Recetas {category}</Text>
+      <Text style={[styles.title, isDarkTheme && styles.darkTitle]}>{category}</Text>
       {error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
@@ -194,68 +194,57 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   scrollView: {
-    padding: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   recipeContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginVertical: 10,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  darkRecipeContainer: {
-    backgroundColor: '#2c2c2c',
+    width: '45%',
+    marginBottom: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    position: 'relative',
+    paddingBottom: 10,
+    marginRight: 10,
   },
   recipeImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 10,
+    height: 250,
+    borderRadius: 20,
+    resizeMode: 'cover',
+  },
+  detalles: {
+    color: '#adadad',
+  },
+  recipeName: {
+    textAlign: 'left',
+    color: '#000',
+    fontSize: 16,
   },
   bookmarkButton: {
     position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
     top: 10,
     right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
     padding: 5,
-  },
-  detalles: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#777',
-  },
-  darkDetalles: {
-    color: '#ccc',
-  },
-  recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 5,
-    color: '#000',
-  },
-  darkRecipeName: {
-    color: '#fff',
   },
   errorText: {
     color: 'red',
     textAlign: 'center',
-    marginTop: 20,
-  },
-  darkText: {
-    color: '#fff',
-    textAlign: 'center',
+    marginVertical: 20,
   },
   lightText: {
-    color: '#000',
+    color: '#555',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  darkText: {
+    color: '#ccc',
+    fontSize: 16,
     textAlign: 'center',
   },
 });
+
 
 export default CategoryRecipesScreen;
