@@ -168,6 +168,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 5,
   },
   darkContainer: {
     backgroundColor: '#121212',
@@ -176,8 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fdfdfd',
   },
   scrollViewContainer: {
-    paddingTop: 50,
-    paddingBottom: 100,
+    paddingTop: '3%',
   },
   bienvenida: {
     flexDirection: 'row',
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 90,
     right: 20,
-    backgroundColor: '#ff6c22',
+    backgroundColor: '#ff783b',
     borderRadius: 50,
     padding: 15,
   },
@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     elevation: 5,
+    marginBottom: 10,
     width: 200,
   },
   menuItem: {

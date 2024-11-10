@@ -5,7 +5,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import axios from 'axios';
 import Loading from '../components/Loading';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { FontAwesome } from '@expo/vector-icons';
 
 const RecipeDetailsScreen = (props) => {
@@ -13,7 +13,7 @@ const RecipeDetailsScreen = (props) => {
     const [meals, setMeals] = useState(null);
     const [loading, setLoading] = useState(true);
     const item = props.route.params;
-    const [activeTab, setActiveTab] = useState('strIngredient');
+    const [activeTab, setActiveTab] = useState('ingredients');
     
     useEffect(() => {
         getMealData(item.idMeal);
@@ -31,11 +31,6 @@ const RecipeDetailsScreen = (props) => {
         }
     };
 
-
-    const capitalizeFirstLetter = (string) => {
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    };
-
     const ingredientsIndexes = (meals) => {
         let indexes = [];
         for (let i = 1; i <= 20; i++) {
@@ -46,8 +41,7 @@ const RecipeDetailsScreen = (props) => {
         return indexes;
     };
 
-    
-    const preparationSteps = meals?.strInstructions ? meals?.strInstructions.split('. ') : [];
+    const preparationSteps = meals?.strInstructions ? meals.strInstructions.split('. ') : [];
 
     return (
         <ScrollView
@@ -56,7 +50,7 @@ const RecipeDetailsScreen = (props) => {
             contentContainerStyle={styles.scrollContainer}
         >
             <StatusBar style='light' />
-            
+
             {/* Recipe Image */}
             <View style={styles.imageContainer}>
                 {Platform.OS === 'ios' ? (
@@ -72,204 +66,151 @@ const RecipeDetailsScreen = (props) => {
                         sharedTransitionTag={item.strMeal}
                     />
                 )}
+                <View style={styles.ondulatedBackground} />
             </View>
 
-            <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.headerButtons}>
+            <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.headerContainer}>
                 <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
-                    <ChevronLeftIcon size={3.5} strokeWidth={4.5} color="#fbbf24" width={hp(3.5)} height={hp(3.5)} />
+                    <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.bookmarkButton} onPress={() => setFavourite(!isFavourite)}>
-                    <FontAwesome name="bookmark-o" size={24} strokeWidth={4.5} color="#fff" />
+                    <FontAwesome name="bookmark-o" size={28} strokeWidth={2.5} color="#fff" />
                 </TouchableOpacity>
             </Animated.View>
 
             {loading ? (
                 <Loading size="large" style={styles.loading} />
             ) : (
-                <View style={styles.detailsContainer}>
-                    <Animated.View entering={FadeInDown.duration(700).springify().damping(12)} style={styles.nameAreaContainer}>
-                        <Text style={styles.mealName}>{meals?.strMeal}</Text>
-                        <Text style={styles.mealArea}>{meals?.strArea}</Text>
-                    </Animated.View>
+               <ScrollView style={styles.container}>
+                 <View style={styles.detailsContainer}>
+                    <View style={styles.contentContainer}>
+                        <Text style={styles.recipeName}>{meals?.strMeal}</Text>
+                    </View>
 
-                    {/* Ingredients */}
-                    <Animated.View entering={FadeIn.delay(400).duration(700).springify().damping(12)} style={styles.section}>
-                        <Text style={styles.sectionTitle}>Ingredients</Text>
-                        <View style={styles.ingredientsContainer}>
-                            {ingredientsIndexes(meals).map((index) => (
-                                <View key={index} style={styles.ingredientWrapper}>
-                                    <Text style={styles.ingredientText}>
-                                        {meals['strIngredient' + index]} - {meals['strMeasure' + index]}
-                                    </Text>
-                                </View>
-                            ))}
-                        </View>
-                    </Animated.View>
+                    <View style={styles.separator}></View>
 
-                    {/* Instructions */}
-                    <Animated.View entering={FadeIn.delay(600).duration(700).springify().damping(12)} style={styles.section}>
-                        <Text style={styles.sectionTitle}>Instructions</Text>
-                        <Text style={styles.instructionsText}>{meals?.strInstructions}</Text>
-                    </Animated.View>
-
-                <View style={styles.separator}></View>
-
-                <View style={styles.tabsContainer}>
-                    <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
-                    <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
+                    {/* Tabs */}
+                    <View style={styles.tabsContainer}>
+                        <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
+                        <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
                     </View>
 
                     {activeTab === 'ingredients' ? (
-                    <IngredientsList ingredients={recipe.ingredients || []} />
+                        <IngredientsList ingredients={ingredientsIndexes(meals).map(i => ({
+                            name: meals['strIngredient' + i],
+                            measure: meals['strMeasure' + i]
+                        }))} />
                     ) : (
-                    <PreparationList preparationSteps={preparationSteps} />
+                        <PreparationList preparationSteps={preparationSteps} />
                     )}
-                </View>
+                 </View>
+               </ScrollView>
             )}
         </ScrollView>
     );
 };
 
-
 const TabButton = ({ isActive, onPress, text }) => (
     <TouchableOpacity
-      style={[styles.tabButton, isActive ? styles.activeTab : styles.inactiveTab]}
-      onPress={onPress}
+        style={[styles.tabButton, isActive ? styles.activeTab : styles.inactiveTab]}
+        onPress={onPress}
     >
-      <Text style={[styles.tabText, isActive && styles.activeTabText]}>{text}</Text>
+        <Text style={[styles.tabText, isActive && styles.activeTabText]}>{text}</Text>
     </TouchableOpacity>
-  );
-  
-  const IngredientsList = ({ ingredients }) => (
+);
+
+const IngredientsList = ({ ingredients }) => (
     <View style={styles.ingredientsContainer}>
-      {ingredients.length > 0 ? (
-        ingredients.map((ingredient, index) => (
-          <IngredientItem key={index} ingredient={ingredient} />
-        ))
-      ) : (
-        <Text>No hay ingredientes disponibles.</Text>
-      )}
+        {ingredients.length > 0 ? (
+            ingredients.map((ingredient, index) => (
+                <IngredientItem key={index} ingredient={ingredient} />
+            ))
+        ) : (
+            <Text>No hay ingredientes disponibles.</Text>
+        )}
     </View>
-  );
-  
-  const IngredientItem = ({ ingredient }) => (
-    <View style={styles.ingredientWrapper}>
-      <Image source={{ uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`} } style={styles.ingredientImage} />
-      <View>
-      <Text style={styles.ingredientName}>
-        {capitalizeFirstLetter(ingredient.originalName)}
-      </Text>
-        <Text style={styles.ingredientAmount}>{ingredient.amount} {ingredient.unit}</Text>
-      </View>
-    </View>
-  );
-  
-  const PreparationList = ({ preparationSteps }) => (
+);
+
+const IngredientItem = ({ ingredient }) => {
+    const ingredientImageUrl = `https://www.themealdb.com/images/ingredients/${ingredient.name}.png`;
+
+    return (
+        <View style={styles.ingredientWrapper}>
+            <Image
+                source={{ uri: ingredientImageUrl }}
+                style={styles.ingredientImage}
+            />
+            <View>
+              <Text style={styles.ingredientName}>{ingredient.name}</Text>
+              <Text style={styles.ingredientAmount}>{ingredient.measure}</Text>
+            </View>
+        </View>
+    );
+};
+
+const PreparationList = ({ preparationSteps }) => (
     <View style={styles.preparationContainer}>
-      {preparationSteps.length > 0 ? (
-        preparationSteps.map((step, index) => (
-          <Text key={index} style={styles.preparationStep}>{step}</Text>
-        ))
-      ) : (
-        <Text>No hay instrucciones disponibles.</Text>
-      )}
+        {preparationSteps.length > 0 ? (
+            preparationSteps.map((step, index) => (
+                <View key={index} style={styles.preparationItem}>
+                    <Text style={styles.stepNumber}>{index + 1}</Text>
+                    <Text style={styles.preparationStep}>{step}</Text>
+                </View>
+            ))
+        ) : (
+            <Text>No hay instrucciones disponibles.</Text>
+        )}
     </View>
   );
   
+
 
 const styles = StyleSheet.create({
     container: {
         backgroundColor: "#FFFFFF",
         flex: 1,
     },
-    separator: {
-        height: 1,
-        backgroundColor: '#eee',
-        marginVertical: 10,
-    },
-    tabsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-evenly', // Cambiado a space-evenly para distribuir las pestañas equitativamente
-        marginTop: 20, // Añadido para separar las pestañas del contenido superior
-    },
-      tabButton: {
-        paddingVertical: 10,
-        flex: 1,
-        alignItems: 'center',
-      },
-      activeTab: {
-        borderBottomWidth: 2,
-        borderBottomColor: '#000',
-      },
-      inactiveTab: {
-        borderBottomWidth: 0,
-      },
-      tabText: {
-        fontSize: 16,
-        color: '#888',
-      },
-      activeTabText: {
-        color: '#000',
-        fontWeight: 'bold', // Resalta la pestaña activa
-      },
-      ingredientsContainer: {
-        marginTop: 10,
-        flexDirection: "row",
-        flexWrap: "wrap",
-      },
-      ingredientWrapper: {
-        width: "50%", // Mantener los ingredientes al 50% del ancho
-        padding: 10, // Añadir padding para separar mejor cada ingrediente
-      },
-      ingredientText: {
-        fontSize: hp(2),
-        color: "#808080",
-        fontWeight: '500',
-      },
-      preparationContainer: {
-        marginTop: 10,
-      },
-      preparationStep: {
-        fontSize: 16,
-        marginBottom: 5,
-        textAlign: 'justify',
-    },
     scrollContainer: {
         paddingBottom: 30,
     },
+
     imageContainer: {
         flexDirection: "row",
         justifyContent: "center",
     },
     image: {
-        width: wp(98),
-        height: hp(50),
-        borderRadius: 53,
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
-        marginTop: 4,
+        width: '100%',
+        height: 400,
+        overflow: 'hidden',
     },
-    headerButtons: {
+    ondulatedBackground: {
         position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 30,
+        backgroundColor: '#fdfdfd',
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+    },
+    headerContainer: {
+        position: 'absolute',
+        alignItems: "flex-start",
         justifyContent: "space-between",
-        alignItems: "center",
         width: "100%",
         padding: 20,
         flexDirection: "row",
-        top: 20,
     },
     backButton: {
-        padding: 10,
-        marginLeft: 5,
-        backgroundColor: "#FFF",
-        borderRadius: 50,
-        alignItems: "center",
-        justifyContent: "center",
+        paddingHorizontal: 10,
     },
     bookmarkButton: {
-        padding: 10,
-      },
+        paddingHorizontal: 10,
+    },
+    contentContainer: {
+      padding: 20,
+    },
     loading: {
         marginTop: 20,
     },
@@ -280,46 +221,95 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         paddingTop: 8,
     },
-    nameAreaContainer: {
-        marginVertical: 2,
+    recipeName: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 10,
     },
-    mealName: {
-        fontSize: hp(3),
+    separator: {
+      height: 1,
+      backgroundColor: '#eee',
+      marginVertical: 10,
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 40,
+        width: '95%', 
+        alignSelf: 'center',
+        marginBottom: 10,
+    },
+    tabButton: {
+        paddingVertical: 10,
+        flex: 1,
+        alignItems: 'center',
+    },
+    activeTab: {
+        borderBottomWidth: 2,
+        borderBottomColor: '#ddd',
+        borderBottomStartRadius: 25,
+        borderBottomEndRadius: 25,
+    },
+    inactiveTab: {
+        borderBottomWidth: 0,
+    },
+    tabText: {
+        fontSize: 16,
+        color: '#888',
+    },
+    activeTabText: {
+        color: '#000',
         fontWeight: 'bold',
-        color: "#808080",
-    },
-    mealArea: {
-        fontSize: hp(2),
-        fontWeight: '600',
-        color: "#a8a8a8",
-    },
-    section: {
-        marginVertical: 2,
-    },
-    sectionTitle: {
-        fontSize: hp(2.5),
-        fontWeight: 'bold',
-        color: "#808080",
     },
     ingredientsContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
+        marginTop: 10,
     },
     ingredientWrapper: {
-        width: "50%",
-        padding: 5,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 10,
+      paddingHorizontal: 25,
     },
-    ingredientText: {
-        fontSize: hp(2),
-        color: "#808080",
-        fontWeight: '500',
+    ingredientImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: 10,
     },
-    instructionsText: {
-        fontSize: hp(2),
-        color: "#808080",
-        fontWeight: '500',
-        textAlign: 'left',
+    ingredientName: {
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    ingredientAmount: {
+      color: '#888',
+    },
+    preparationContainer: {
+        marginTop: 10,
+        padding: 15,
+        width: '90%',
+    },
+    preparationItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'left',
+        marginBottom: 10,
+        paddingHorizontal: 20,
+    },
+    stepNumber: {
+        backgroundColor: '#fbbf24', 
+        color: 'white',
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        marginRight: 15,
+    },
+    preparationStep: {
+        fontSize: 16,
     },
 });
 
