@@ -115,7 +115,7 @@ const RecipeScreen = ({ route }) => {
     <>
       {/* Header fijo */}
       <View style={styles.headerContainer}>
-                <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                     <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
                 </TouchableOpacity>
 
@@ -247,15 +247,26 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
   },
-
   headerContainer: {
-    position: 'absolute',
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    width: "100%",
-    padding: 20,
-    flexDirection: "row",
-},
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
+    alignContent: 'flex-start',
+    alignItems: 'center',
+    position: 'absolute', 
+    top: 20, 
+    left: 0,
+    right: 0,
+    zIndex: 1, 
+  },
+  backIcon: {
+    paddingLeft: 10,
+  },
+  bookmarkButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
+    padding: 5,
+  },
   imageContainer: {
     height: 400,
     overflow: 'hidden',
@@ -302,34 +313,32 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderRadius: 25,
     backgroundColor: '#f5f5f5',
-    borderRadius: 40,
-    width: '95%', 
-    alignSelf: 'center',
-    marginBottom: 10,
+    padding: 5,
   },
   tabButton: {
-      paddingVertical: 10,
-      flex: 1,
-      alignItems: 'center',
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
   },
   activeTab: {
-      borderBottomWidth: 2,
-      borderBottomColor: '#ddd',
-      borderBottomStartRadius: 25,
-      borderBottomEndRadius: 25,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 15,
   },
   inactiveTab: {
-      borderBottomWidth: 0,
+    backgroundColor: 'transparent',
   },
   tabText: {
-      fontSize: 16,
-      color: '#888',
+    fontSize: 16,
+    color: '#888',
   },
   activeTabText: {
-      color: '#000',
-      fontWeight: 'bold',
+    color: '#000',
+    fontWeight: 'bold',
   },
   ingredientsContainer: {
     marginTop: 10,
@@ -365,18 +374,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: '#333',
-  },
-  backIcon: {
-    padding: 10,
-  },
-  bookmarkButton: {
-    padding: 10,
-  },preparationContainer: {
+  preparationContainer: {
     marginTop: 10,
     padding: 15,
     width: '90%',

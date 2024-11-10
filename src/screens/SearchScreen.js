@@ -56,9 +56,6 @@ const SearchScreen = ({ navigation }) => {
           const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
           try {
             const response = await attemptRequest(url);
-            console.log(`Categorías recibidas para ${category}:`, response.data.results); 
-            console.log('URL de la API:', url);
-
             return { category, recipes: response.data.results };
           } catch (error) {
             console.error(`Error al obtener recetas para ${category}:`, error);
@@ -77,9 +74,7 @@ const SearchScreen = ({ navigation }) => {
       try {
         const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
         const response = await attemptRequest(url);
-        console.log('Recetas encontradas para la búsqueda:', response.data.results); 
         setRecipes(response.data.results);
-        console.log('Recetas establecidas:', response.data.results);
       } catch (error) {
         console.error('Error al buscar recetas:', error);
       } finally {
@@ -94,8 +89,8 @@ const SearchScreen = ({ navigation }) => {
     const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
     try {
       const response = await attemptRequest(url);
-      setSelectedCategoryRecipes(response.data.results); // Guardar recetas de la categoría seleccionada
-      navigation.navigate('CategoryRecipesScreen', { category }); // Navegar a la pantalla de recetas de la categoría
+      setSelectedCategoryRecipes(response.data.results);
+      navigation.navigate('CategoryRecipesScreen', { category });
     } catch (error) {
       console.error(`Error al obtener recetas para ${category}:`, error);
     }
@@ -104,7 +99,6 @@ const SearchScreen = ({ navigation }) => {
   const renderRecipeItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
-        console.log('Receta seleccionada:', item); 
         navigation.navigate('RecipeScreen', { recipe: item });
       }}
       style={styles.recipeItem}
@@ -202,9 +196,6 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     marginLeft: 10,
-  },
-  resultsContainer: {
-    marginVertical: 10,
   },
   recipeItem: {
     padding: 10,

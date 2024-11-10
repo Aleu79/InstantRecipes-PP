@@ -19,9 +19,10 @@ const CreateRecipeScreen = () => {
   const [recipeImage, setRecipeImage] = useState(null);
   const [ingredients, setIngredients] = useState(['']);
   const [preparation, setPreparation] = useState(['']);
-  const [dietType, setDietType] = useState('vegan');
-  const [glutenFree, setGlutenFree] = useState('no'); 
-  const [vegetarian, setVegetarian] = useState('no'); 
+  const [glutenFree, setGlutenFree] = useState(''); 
+  const [vegetarian, setVegetarian] = useState(''); 
+  const [vegan, setVegan] = useState(''); 
+  const [dairyfree, setDairyFree] = useState(''); 
   const [servings, setServings] = useState(''); 
   const [prepTime, setPrepTime] = useState('');
   const [categories] = useState(['Sin TACC', 'Sin lácteos', 'Vegetariano', 'Vegano']); 
@@ -45,7 +46,6 @@ const CreateRecipeScreen = () => {
   };
   
   
-  // elegir imagenes de la Galeria
   const pickImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -237,21 +237,6 @@ const CreateRecipeScreen = () => {
                 />
               </View>
             </View>
-
-
-            <View style={styles.iconInputWrapper}>
-              <Icon name="list-outline" size={24} color="#333" />
-              <Picker
-                selectedValue={selectedCategory}
-                style={styles.inputDetail}
-                onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-              >
-                <Picker.Item label="Vino" value="" />
-                {categories.map((category, index) => (
-                  <Picker.Item key={index} label={category} value={category} />
-                ))}
-              </Picker>
-            </View>
           </View>
 
           <View style={styles.separator} />
@@ -354,24 +339,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  imageContainer: {
-    position: 'relative',
-  },
   recipeImage: {
     width: '100%',
     height: 330,
     resizeMode: 'adjust',
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
   },
   headerContainer: {
     position: 'absolute',
-    top: 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingTop: 20,
+    paddingLeft: 10,
+    flexDirection: "row",
   },
   contentContainer: {
     backgroundColor: '#fff',
@@ -523,17 +503,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  pickerContainer: {
-    marginBottom: 16,
-  },
-  pickerLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  picker: {
-    height: 50,
-    width: '100%',
   },
   separator: {
     height: 1,
