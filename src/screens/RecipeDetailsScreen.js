@@ -7,6 +7,7 @@ import axios from 'axios';
 import Loading from '../components/Loading';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { FontAwesome } from '@expo/vector-icons';
+import { capitalizeFirstLetter } from '../helpers/utils';
 
 const RecipeDetailsScreen = (props) => {
     const [isFavourite, setFavourite] = useState(false);
@@ -142,7 +143,7 @@ const IngredientItem = ({ ingredient }) => {
                 style={styles.ingredientImage}
             />
             <View>
-              <Text style={styles.ingredientName}>{ingredient.name}</Text>
+              <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.name)}</Text>
               <Text style={styles.ingredientAmount}>{ingredient.measure}</Text>
             </View>
         </View>

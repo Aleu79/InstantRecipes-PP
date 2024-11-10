@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../../firebase/firebase-config'; 
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { capitalizeFirstLetter } from '../helpers/utils';
+import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 
 const RecipeScreen = ({ route }) => {
   const { recipe } = route.params;
@@ -61,7 +63,6 @@ const RecipeScreen = ({ route }) => {
           return newSet;
         });
       } else {
-        // Si la receta no está guardada, guardarla
         const recipeData = {
           id: recipe.id,
           name: recipe.name,
@@ -113,12 +114,13 @@ const RecipeScreen = ({ route }) => {
     <>
       {/* Header fijo */}
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={30} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bookmarkButton} onPress={handleRecipeSaveToggle}>
-          <FontAwesome name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"} size={24} color="#fff" />
-        </TouchableOpacity>
+                <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
+                    <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.bookmarkButton} onPress={() => setFavourite(!isFavourite)}>
+                    <FontAwesome name="bookmark-o" size={28} strokeWidth={2.5} color="#fff" />
+                </TouchableOpacity>
       </View>
 
       <Animated.ScrollView
@@ -131,6 +133,7 @@ const RecipeScreen = ({ route }) => {
       >
         <Animated.View style={[styles.imageContainer, { opacity: imageOpacity, transform: [{ translateY: imageTranslateY }] }]}>
           <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
+          <View style={styles.ondulatedBackground}></View>
         </Animated.View>
 
         <View style={styles.contentContainer}>
@@ -235,6 +238,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+
+  ondulatedBackground: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 30,
+    backgroundColor: '#fdfdfd',
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+  },
+
+  headerContainer: {
+    position: 'absolute',
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: 20,
+    flexDirection: "row",
+},
   imageContainer: {
     height: 400,
     overflow: 'hidden',
@@ -254,12 +277,15 @@ const styles = StyleSheet.create({
   },
   recipeDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: 10,
   },
   infoContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center', 
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 10,
   },
   infoText: {
     marginLeft: 5,
@@ -269,6 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 10,
   },
+  
   dietDetail: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -286,25 +313,33 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 40,
+    width: '95%', 
+    alignSelf: 'center',
+    marginBottom: 10,
   },
   tabButton: {
-    paddingVertical: 10,
-    flex: 1,
-    alignItems: 'center',
+      paddingVertical: 10,
+      flex: 1,
+      alignItems: 'center',
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#000',
+      borderBottomWidth: 2,
+      borderBottomColor: '#ddd',
+      borderBottomStartRadius: 25,
+      borderBottomEndRadius: 25,
   },
   inactiveTab: {
-    borderBottomWidth: 0,
+      borderBottomWidth: 0,
   },
   tabText: {
-    fontSize: 16,
-    color: '#888',
+      fontSize: 16,
+      color: '#888',
   },
   activeTabText: {
-    color: '#000',
+      color: '#000',
+      fontWeight: 'bold',
   },
   ingredientsContainer: {
     marginTop: 10,
@@ -313,12 +348,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 25,
   },
   ingredientImage: {
     width: 50,
     height: 50,
-    borderRadius: 25,
     marginRight: 10,
+    resizeMode: 'contain',
   },
   ingredientName: {
     fontSize: 16,
