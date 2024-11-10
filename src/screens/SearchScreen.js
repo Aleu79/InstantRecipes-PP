@@ -9,16 +9,53 @@ const SearchScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const apiKeys = [
+    '69694db3792e4c4387992d79c64eb073',
+    '0eb0cec32c98d0df795f8c12a544f510f42f24e1',
+    'b9103835aeb7ae98a97a6e29351c294a7f0ded16',
+    '52afdb46498d5e9f8a8ed0639de3492cceeb271f',
+    '0345a5adffdd0c47575a635a5d50b4aa76a64c0e'
+  ];
 
-  const apiKey = '69694db3792e4c4387992d79c64eb073';
-
+  const attemptRequest = async (url) => {
+    let validKeys = [...apiKeys]; 
+  
+    for (let i = 0; i < validKeys.length; i++) {
+      const key = validKeys[i];
+      try {
+        const response = await axios.get(url.replace('{apiKey}', key));
+        return response; 
+      } catch (error) {
+        if (error.response) {
+          const status = error.response.status;
+          if (status === 402) {
+            console.warn(`Límite alcanzado para la API key ${key}. Intentando la siguiente clave...`);
+            validKeys.splice(i, 1); 
+            i--; 
+          } else if (status === 401) {
+            console.error(`API key inválida: ${key}. Removiéndola de la lista.`);
+            validKeys.splice(i, 1);
+            i--; 
+          } else {
+            console.error('Error en la solicitud:', error);
+            throw error;
+          }
+        } else {
+          console.error('Error en la solicitud:', error);
+          throw error; 
+        }
+      }
+    }
+    throw new Error('No hay API keys disponibles o todas alcanzaron el límite');
+  };
+  
   useEffect(() => {
     const fetchCategories = async () => {
       const exampleCategories = ['Vegano', 'Vegetariano', 'Panadería', 'Sin Tacc'];
       const categoriesData = await Promise.all(
         exampleCategories.map(async (category) => {
-          const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey=${apiKey}&addRecipeInformation=true`;
-          const response = await axios.get(url);
+          const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
+          const response = await attemptRequest(url);
           return { category, recipes: response.data.results };
         })
       );
@@ -32,7 +69,8 @@ const SearchScreen = ({ navigation }) => {
     if (query.length > 2) {
       setLoading(true);
       try {
-        const response = await axios.get(`https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey=${apiKey}`);
+        const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
+        const response = await attemptRequest(url);
         setRecipes(response.data.results);
       } catch (error) {
         console.error('Error al buscar recetas:', error);
@@ -100,6 +138,8 @@ const SearchScreen = ({ navigation }) => {
                 renderItem={renderRecipeItem}
                 horizontal
                 keyExtractor={(item) => item.id.toString()}
+                showsHorizontalScrollIndicator={false}
+                style={styles.recipeList}
               />
             </View>
           ))}
@@ -144,20 +184,21 @@ const styles = StyleSheet.create({
   recipeItem: {
     padding: 10,
     backgroundColor: '#FFF',
-    borderBottomColor: '#EEE',
-    borderBottomWidth: 1,
-    flexDirection: 'row',
+    borderRadius: 10,
+    marginRight: 10,
+    width: 150,
     alignItems: 'center',
   },
   recipeImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginBottom: 5,
   },
   recipeName: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
+    textAlign: 'center',
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -170,6 +211,9 @@ const styles = StyleSheet.create({
   },
   viewMoreText: {
     color: '#1E90FF',
+  },
+  recipeList: {
+    paddingLeft: 16,
   },
 });
 
