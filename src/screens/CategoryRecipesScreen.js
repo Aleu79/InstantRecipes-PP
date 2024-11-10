@@ -4,23 +4,21 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
-import { useTheme } from '../context/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CategoryRecipesScreen = ({ route }) => {
-  const { category } = route.params; 
-  const { isDarkTheme } = useTheme(); 
+  const { category } = route.params;
   const navigation = useNavigation();
-  const [allRecipes, setAllRecipes] = useState([]); 
+  const [allRecipes, setAllRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filteredRecipes, setFilteredRecipes] = useState([]); 
+  const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [savedRecipes, setSavedRecipes] = useState(new Set());
   const [error, setError] = useState('');
 
   // Función para obtener recetas de la API
   const fetchRecipes = async () => {
     try {
-      const apiKey = '47cb148e73e74414829f9dd8c38a0c7e'; 
+      const apiKey = '47cb148e73e74414829f9dd8c38a0c7e';
       const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
 
       const response = await axios.get(url);
@@ -28,8 +26,8 @@ const CategoryRecipesScreen = ({ route }) => {
         id: recipe.id,
         name: recipe.title,
         image: recipe.image,
-        instructions: recipe.analyzedInstructions.length > 0 
-          ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ') 
+        instructions: recipe.analyzedInstructions.length > 0
+          ? recipe.analyzedInstructions[0].steps.map(step => step.step).join(' ')
           : 'No hay instrucciones disponibles',
         ingredients: recipe.extendedIngredients?.map(ingredient => ({
           originalName: ingredient.originalName,
@@ -40,7 +38,7 @@ const CategoryRecipesScreen = ({ route }) => {
         })) || [],
         glutenFree: recipe.glutenFree,
         vegan: recipe.vegan,
-        vegetarian: recipe.vegetarian, 
+        vegetarian: recipe.vegetarian,
         dairyFree: recipe.dairyFree,
         preparationMinutes: recipe.readyInMinutes,
         servings: recipe.servings,
@@ -49,7 +47,7 @@ const CategoryRecipesScreen = ({ route }) => {
       })) || [];
 
       setAllRecipes(allRecipesData);
-      setFilteredRecipes(allRecipesData); 
+      setFilteredRecipes(allRecipesData);
       setError('');
 
     } catch (error) {
@@ -64,15 +62,15 @@ const CategoryRecipesScreen = ({ route }) => {
     const filtered = allRecipes.filter(recipe => {
       switch (category) {
         case "Vegano":
-          return recipe.vegan; 
+          return recipe.vegan;
         case "Vegetariano":
-          return recipe.vegetarian && !recipe.meat; 
+          return recipe.vegetarian && !recipe.meat;
         case "Sin gluten":
-          return recipe.glutenFree; 
+          return recipe.glutenFree;
         case "Sin Lacteos":
-          return recipe.dairyFree; 
+          return recipe.dairyFree;
         default:
-          return true; 
+          return true;
       }
     });
 
@@ -95,13 +93,13 @@ const CategoryRecipesScreen = ({ route }) => {
   // Cargar recetas al iniciar el componente
   useEffect(() => {
     fetchRecipes();
-    loadSavedRecipes(); 
+    loadSavedRecipes();
   }, []);
 
   // Filtrar recetas cada vez que se cargan nuevas recetas o cambia la categoría
   useEffect(() => {
     if (allRecipes.length > 0) {
-      filterRecipesByCategory(); 
+      filterRecipesByCategory();
     }
   }, [allRecipes, category, filterRecipesByCategory]);
 
@@ -110,9 +108,9 @@ const CategoryRecipesScreen = ({ route }) => {
     setSavedRecipes(prevSavedRecipes => {
       const newSavedRecipes = new Set(prevSavedRecipes);
       if (newSavedRecipes.has(recipe.id)) {
-        newSavedRecipes.delete(recipe.id); 
+        newSavedRecipes.delete(recipe.id);
       } else {
-        newSavedRecipes.add(recipe.id); 
+        newSavedRecipes.add(recipe.id);
       }
       AsyncStorage.setItem('savedRecipes', JSON.stringify(Array.from(newSavedRecipes)))
         .catch(error => console.error('Error al guardar recetas en AsyncStorage:', error));
@@ -136,42 +134,42 @@ const CategoryRecipesScreen = ({ route }) => {
   }
 
   return (
-    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+    <View style={styles.container}>
       <Header />
-      <Text style={[styles.title, isDarkTheme && styles.darkTitle]}>{category}</Text>
+      <Text style={styles.title}>{category}</Text>
       {error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollView}>
           {filteredRecipes.length > 0 ? (
             filteredRecipes.map((recipe) => (
-              <TouchableOpacity 
-                key={recipe.id} 
-                onPress={() => navigation.navigate('RecipeScreen', { recipe })} 
-                style={[styles.recipeContainer, isDarkTheme && styles.darkRecipeContainer]}
+              <TouchableOpacity
+                key={recipe.id}
+                onPress={() => navigation.navigate('RecipeScreen', { recipe })}
+                style={styles.recipeContainer}
               >
                 <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
                 <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleRecipeSaveToggle(recipe)}>
-                  <FontAwesome 
-                    name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"} 
-                    size={24} 
-                    color="#fff" 
+                  <FontAwesome
+                    name={savedRecipes.has(recipe.id) ? "bookmark" : "bookmark-o"}
+                    size={24}
+                    color="#fff"
                   />
                 </TouchableOpacity>
-                <Text style={[styles.detalles, isDarkTheme && styles.darkDetalles]}>
+                <Text style={styles.detalles}>
                   {recipe.preparationMinutes} min • {recipe.servings} porciones
                 </Text>
-                <Text style={[styles.recipeName, isDarkTheme && styles.darkRecipeName]}>
+                <Text style={styles.recipeName}>
                   {recipe.name}
                 </Text>
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={isDarkTheme ? styles.darkText : styles.lightText}>No hay recetas disponibles para esta categoría.</Text>
+            <Text style={styles.lightText}>No hay recetas disponibles para esta categoría.</Text>
           )}
         </ScrollView>
       )}
-    </View> 
+    </View>
   );
 };
 
@@ -180,18 +178,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  darkContainer: {
-    backgroundColor: '#1e1e1e',
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
     color: '#000',
-  },
-  darkTitle: {
-    color: '#fff',
   },
   scrollView: {
     flexDirection: 'row',
@@ -239,12 +231,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  darkText: {
-    color: '#ccc',
-    fontSize: 16,
-    textAlign: 'center',
-  },
 });
-
 
 export default CategoryRecipesScreen;

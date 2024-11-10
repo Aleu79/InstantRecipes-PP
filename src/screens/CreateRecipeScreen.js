@@ -9,8 +9,11 @@ import { Picker } from '@react-native-picker/picker';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase-config'; 
 import { auth } from '../../firebase/firebase-config'; 
+import { useNavigation } from '@react-navigation/native';
+
 
 const CreateRecipeScreen = () => {
+  const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('ingredients');
   const [recipeName, setRecipeName] = useState('');
   const [recipeImage, setRecipeImage] = useState(null);
@@ -86,6 +89,24 @@ const CreateRecipeScreen = () => {
     }
   };
 
+  const handleNavigateToRecipe = () => {
+    navigation.navigate('MyRecipeScreen', {
+      recipe: {
+        name: recipeName,
+        image: recipeImage,
+        ingredients,
+        instructions: preparation,
+        glutenFree,
+        vegan: dietType === 'vegan',
+        vegetarian: dietType === 'vegetarian',
+        dairyFree: dietType === 'dairyFree',
+        preparationMinutes: prepTime,
+        servings,
+      },
+    });
+  };
+
+
   const saveRecipe = async () => {
     const user = auth.currentUser; 
     if (!user) {
@@ -126,6 +147,9 @@ const CreateRecipeScreen = () => {
         }, { merge: true }); 
   
         Alert.alert(`Receta "${recipeName}" guardada con éxito.`);
+
+        handleNavigateToRecipe();
+
       } catch (error) {
         console.error('Error al guardar la receta:', error);
         Alert.alert('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');

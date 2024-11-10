@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from '../../firebase/firebase-config';
+import { capitalizeFirstLetter } from '../helpers/utils';
 
 const MyRecipes = () => {
   const navigation = useNavigation();
@@ -85,7 +86,6 @@ const MyRecipes = () => {
     }
   };
   
-  
   const confirmDelete = (recipeId) => {
     Alert.alert(
       'Confirmar eliminación',
@@ -99,33 +99,29 @@ const MyRecipes = () => {
   };
 
   const renderRecipe = ({ item }) => (
-    <View style={styles.recipeCard}>
+    <TouchableOpacity style={styles.recipeContainer}>
       {item.recipeImage ? (
         <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
       ) : (
         <View style={styles.placeholderImage}>
-          <Text style={styles.placeholderText}>Sin Imagen</Text>
+          <Text style={styles.placeholderText}>Sin Imágen</Text>
         </View>
       )}
-       <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.recipeName || 'Receta sin nombre'}</Text>
-        <Text style={styles.recipeCategory}>{item.category || 'Sin categoría'}</Text>
-        <Text style={styles.recipeDetail}>Porciones: <Text style={styles.detailText}>{item.servings || 'No especificado'}</Text></Text>
-        <Text style={styles.recipeDetail}>Tiempo de preparación: <Text style={styles.detailText}>{item.prepTime || 'No especificado'} minutos</Text></Text>
-        <TouchableOpacity 
-          style={styles.deleteButton}
-          onPress={() => confirmDelete(item.id)}
-        >
-          <Text style={styles.deleteButtonText}>Eliminar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <TouchableOpacity onPress={() => navigation.navigate('MyRecipeScreen', { recipe: item })}>
+        <Text style={styles.detalles}>
+          {item.prepTime} min • {item.servings} porciones
+        </Text>
+        <Text style={styles.recipeName}>
+          {capitalizeFirstLetter(item.recipeName)}
+        </Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
-  
 
   return (
     <View style={styles.container}>
       <Header />
+      <Text style={styles.title}>Mis recetas</Text>
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -136,9 +132,12 @@ const MyRecipes = () => {
         <FlatList
           data={myRecipes}
           renderItem={renderRecipe}
-          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()} 
+          keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
           contentContainerStyle={styles.flatListContainer}
+          numColumns={2} 
+          columnWrapperStyle={styles.columnWrapper}
         />
+
       ) : (
         <View style={styles.emptyContainer}>
           <Icon name="cafe-outline" size={60} color="#aaa" />
@@ -159,86 +158,45 @@ const MyRecipes = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#f5f5f5',
   },
-  recipeCard: {
-    width: '48%', // Ocupa un 48% de la pantalla
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 10,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#000',
+  },
+  flatListContainer: {
+    justifyContent: 'center',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    marginHorizontal: 10,
+  },  
+  recipeContainer: {
+    width: '48%', 
+    marginBottom: 10,
+    borderRadius: 20,
+    overflow: 'hidden',
     backgroundColor: '#fff',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3.84,
+    padding: 15,
   },
   recipeImage: {
     width: '100%',
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 10,
+    height: 250,
+    borderRadius: 20,
+    resizeMode: 'contain',
   },
-  recipeInfo: {
-    flex: 1,
+  detalles: {
+    color: '#adadad',
   },
   recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  recipeCategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  recipeDetail: {
-    fontSize: 12,
-    color: '#aaa', // Letras grises
-  },
-  detailText: {
-    fontWeight: 'normal',
-  },
-  deleteButton: {
-    marginTop: 10,
-    backgroundColor: '#f77f00',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  placeholderImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-  },
-  placeholderText: {
-    color: '#aaa',
-    fontSize: 12,
-  },
-  recipeCategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  deleteButton: {
-    marginTop: 10,
-    backgroundColor: '#f77f00',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    textAlign: 'left',
+    color: '#000',
+    marginVertical: 5,
+    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -247,8 +205,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+    color: '#f77f00',
   },
   emptyContainer: {
     flex: 1,
@@ -257,8 +214,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     marginTop: 10,
+    color: '#aaa',
     fontSize: 16,
-    color: '#666',
   },
   fab: {
     position: 'absolute',
@@ -270,14 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3.84,
-  },
-  flatListContainer: {
-    paddingBottom: 80,
   },
 });
 

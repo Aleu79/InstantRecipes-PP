@@ -23,6 +23,7 @@ import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoadingScreen from './src/screens/LoadingScreen'; 
 import { LanguageProvider } from './src/context/LanguajeContext';
+import MyRecipeScreen from './src/screens/MyRecipeScreen';
 
 const Stack = createStackNavigator();
 
@@ -76,6 +77,7 @@ function AppNavigation() {
       <Stack.Screen name="Notifications" component={Notifications} options={{headerShown:false}} />
       <Stack.Screen name="DevelopersScreen" component={DevelopersScreen} options={{headerShown:false}} />
       <Stack.Screen name="RecipeDetailsScreen" component={RecipeDetailsScreen} options={{headerShown:false}}/>
+      <Stack.Screen name="MyRecipeScreen" component={MyRecipeScreen} options={{headerShown:false}}/>
     </Stack.Navigator>
   );
 }
