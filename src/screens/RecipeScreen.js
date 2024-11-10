@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -8,12 +8,14 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { capitalizeFirstLetter } from '../helpers/utils';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import DietDetails from '../helpers/DietDetails';
+import { UserContext } from '../context/UserContext';
 
 const RecipeScreen = ({ route }) => {
+  const { addNotification } = useContext(UserContext); 
   const { recipe } = route.params;
   const [activeTab, setActiveTab] = useState('ingredients');
   const [scrollY] = useState(new Animated.Value(0));
-  const [savedRecipes, setSavedRecipes] = useState(new Set());
+  const [isSaved, setIsSaved] = useState(false); 
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -26,8 +28,8 @@ const RecipeScreen = ({ route }) => {
 
       if (userDocData.exists()) {
         const misRecetas = userDocData.data().misRecetas || [];
-        const isSaved = misRecetas.some((rec) => rec.id === recipe.id);
-        setSavedRecipes((prev) => new Set(prev).add(isSaved ? recipe.id : null));
+        const isAlreadySaved = misRecetas.some((rec) => rec.id === recipe.id);
+        setIsSaved(isAlreadySaved); 
       }
     };
 
@@ -58,11 +60,8 @@ const RecipeScreen = ({ route }) => {
         misRecetas.splice(recipeIndex, 1);
         await updateDoc(userDoc, { misRecetas });
         Alert.alert('Receta eliminada con éxito!');
-        setSavedRecipes((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(recipe.id);
-          return newSet;
-        });
+        addNotification('Receta Eliminada', 'Has eliminado receta.');   
+        setIsSaved(false); 
       } else {
         const recipeData = {
           id: recipe.id,
@@ -81,13 +80,14 @@ const RecipeScreen = ({ route }) => {
         misRecetas.push(recipeData);
         await updateDoc(userDoc, { misRecetas });
         Alert.alert('Receta guardada con éxito!');
-        setSavedRecipes((prev) => new Set(prev).add(recipe.id));
+        addNotification('Receta Guardada', 'Has guardado una receta.');      
+        setIsSaved(true); 
       }
     } catch (error) {
       Alert.alert('Error', 'No se pudo guardar o eliminar la receta.');
+      addNotification('Error', 'No se pudo guardar o eliminar la receta.');
     }
   };
-
 
   if (!recipe) {
     return (
@@ -115,13 +115,13 @@ const RecipeScreen = ({ route }) => {
     <>
       {/* Header fijo */}
       <View style={styles.headerContainer}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
-                </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
+        </TouchableOpacity>
 
-                <TouchableOpacity style={styles.bookmarkButton} onPress={() => setFavourite(!isFavourite)}>
-                    <FontAwesome name="bookmark-o" size={28} strokeWidth={2.5} color="#fff" />
-                </TouchableOpacity>
+        <TouchableOpacity style={styles.bookmarkButton} onPress={handleRecipeSaveToggle}>
+          <FontAwesome name={isSaved ? "bookmark" : "bookmark-o"} size={28} strokeWidth={2.5} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <Animated.ScrollView
@@ -165,7 +165,6 @@ const RecipeScreen = ({ route }) => {
               <DietDetails iconName="glass-pint-outline" color="grey" text="Sin lácteos" />
             )}
           </View>
-
 
           <View style={styles.separator}></View>
 
