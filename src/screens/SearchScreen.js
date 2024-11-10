@@ -9,6 +9,7 @@ const SearchScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]); // Nuevo estado para recetas de la categoría seleccionada
   const apiKeys = [
     '69694db3792e4c4387992d79c64eb073',
     '0eb0cec32c98d0df795f8c12a544f510f42f24e1',
@@ -19,7 +20,6 @@ const SearchScreen = ({ navigation }) => {
 
   const attemptRequest = async (url) => {
     let validKeys = [...apiKeys]; 
-  
     for (let i = 0; i < validKeys.length; i++) {
       const key = validKeys[i];
       try {
@@ -29,11 +29,9 @@ const SearchScreen = ({ navigation }) => {
         if (error.response) {
           const status = error.response.status;
           if (status === 402) {
-            console.warn(`Límite alcanzado para la API key ${key}. Intentando la siguiente clave...`);
             validKeys.splice(i, 1); 
             i--; 
           } else if (status === 401) {
-            console.error(`API key inválida: ${key}. Removiéndola de la lista.`);
             validKeys.splice(i, 1);
             i--; 
           } else {
@@ -48,15 +46,22 @@ const SearchScreen = ({ navigation }) => {
     }
     throw new Error('No hay API keys disponibles o todas alcanzaron el límite');
   };
-  
+
   useEffect(() => {
     const fetchCategories = async () => {
       const exampleCategories = ['Vegano', 'Vegetariano', 'Panadería', 'Sin Tacc'];
       const categoriesData = await Promise.all(
         exampleCategories.map(async (category) => {
           const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
-          const response = await attemptRequest(url);
-          return { category, recipes: response.data.results };
+          try {
+            const response = await attemptRequest(url);
+            console.log(`Categorías recibidas para ${category}:`, response.data.results); 
+            console.log('URL de la API:', url);
+
+            return { category, recipes: response.data.results };
+          } catch (error) {
+            console.error(`Error al obtener recetas para ${category}:`, error);
+          }
         })
       );
       setCategories(categoriesData);
@@ -71,7 +76,9 @@ const SearchScreen = ({ navigation }) => {
       try {
         const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
         const response = await attemptRequest(url);
+        console.log('Recetas encontradas para la búsqueda:', response.data.results); 
         setRecipes(response.data.results);
+        console.log('Recetas establecidas:', response.data.results);
       } catch (error) {
         console.error('Error al buscar recetas:', error);
       } finally {
@@ -82,9 +89,23 @@ const SearchScreen = ({ navigation }) => {
     }
   };
 
+  const handleCategoryPress = async (category) => {
+    const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
+    try {
+      const response = await attemptRequest(url);
+      setSelectedCategoryRecipes(response.data.results); // Guardar recetas de la categoría seleccionada
+      navigation.navigate('CategoryRecipesScreen', { category }); // Navegar a la pantalla de recetas de la categoría
+    } catch (error) {
+      console.error(`Error al obtener recetas para ${category}:`, error);
+    }
+  };
+
   const renderRecipeItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('RecipeScreen', { recipe: item })}
+      onPress={() => {
+        console.log('Receta seleccionada:', item); 
+        navigation.navigate('RecipeScreen', { recipe: item });
+      }}
       style={styles.recipeItem}
     >
       <Image source={{ uri: item.image }} style={styles.recipeImage} />
@@ -125,25 +146,39 @@ const SearchScreen = ({ navigation }) => {
 
       {searchQuery.length <= 2 && (
         <ScrollView>
-          {categories.map((categoryData) => (
-            <View key={categoryData.category}>
-              <View style={styles.categoryHeader}>
-                <Text style={styles.categoryTitle}>{categoryData.category}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('CategoryRecipesScreen', { category: categoryData.category })}>
-                  <Text style={styles.viewMoreText}>Ver más</Text>
-                </TouchableOpacity>
-              </View>
-              <FlatList
-                data={categoryData.recipes}
-                renderItem={renderRecipeItem}
-                horizontal
-                keyExtractor={(item) => item.id.toString()}
-                showsHorizontalScrollIndicator={false}
-                style={styles.recipeList}
-              />
-            </View>
-          ))}
-        </ScrollView>
+  {categories.map((categoryData) => (
+    <View key={categoryData.category}>
+      <View style={styles.categoryHeader}>
+        <Text style={styles.categoryTitle}>{categoryData.category}</Text>
+        <TouchableOpacity onPress={() => handleCategoryPress(categoryData.category)}>
+          <Text style={styles.viewMoreText}>Ver más</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Aquí muevo el FlatList de las recetas de la categoría debajo del botón "Ver más" */}
+      <FlatList
+        data={categoryData.recipes}
+        renderItem={renderRecipeItem}
+        horizontal={false} // Cambié esto para que las recetas se muestren verticalmente
+        keyExtractor={(item) => item.id.toString()}
+        showsHorizontalScrollIndicator={false}
+      />
+    </View>
+  ))}
+  
+  {/* Mostrar recetas de la categoría seleccionada */}
+  {selectedCategoryRecipes.length > 0 && (
+    <View>
+      <Text style={styles.categoryTitle}>Recetas de la categoría seleccionada:</Text>
+      <FlatList
+        data={selectedCategoryRecipes}
+        renderItem={renderRecipeItem}
+        keyExtractor={(item) => item.id.toString()}
+      />
+    </View>
+  )}
+</ScrollView>
+
       )}
 
       <BottomNavBar navigation={navigation} />

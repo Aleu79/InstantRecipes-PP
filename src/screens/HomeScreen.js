@@ -7,20 +7,33 @@ import { auth } from '../../firebase/firebase-config';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import Categories from '../components/Categories';
 import Recipes from '../components/Recipes';
-
+import TranslateButton from './TranslateButton';
+import { useLanguage } from '../context/LanguajeContext';
 import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
 
 const HomeScreen = ({ navigation }) => {
+  const { translateText } = useLanguage();
+  const [translatedText, setTranslatedText] = useState("");
   const { isDarkTheme } = useTheme();  
   const categoriesScrollRef = useRef(); 
   const [menuVisible, setMenuVisible] = useState(false);
   const { user } = useContext(UserContext);
-  const [profileImage, setProfileImage] = useState(null); 
+  const [profileImage, setProfileImage] = useState(null);  
   const [activeCategory, setActiveCategory] = useState('Beef');
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
   const db = getFirestore();
+
+  useEffect(() => {
+    const fetchTranslation = async () => {
+      const text = "Welcome to the recipe app!";
+      const translation = await translateText(text);
+      setTranslatedText(translation);
+    };
+
+    fetchTranslation();
+  }, [translateText]);
 
   useEffect(() => {
     handleUpdateProfile();
@@ -108,7 +121,10 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>{translatedText}</Text>
+      <TranslateButton />
+    </View>
 
         {/* Search bar  */}
         <TouchableOpacity 
