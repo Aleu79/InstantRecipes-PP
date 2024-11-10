@@ -41,14 +41,13 @@ const RecipeCard = ({ item, index, navigation }) => {
                     />
                 )}
                 <Text style={styles.recipeName}>
-                    {item.strMeal.length > 20 ? item.strMeal.slice(0, 20) + '...' : item.strMeal}
+                    {item.strMeal.length > 30 ? item.strMeal.slice(0, 30) + '...' : item.strMeal}
                 </Text>
             </Pressable>
         </Animated.View>
     );
 };
 
-// Recipes Component
 const Recipes = ({ meals, categories }) => {
     const navigation = useNavigation();
 
@@ -75,8 +74,6 @@ const Recipes = ({ meals, categories }) => {
     );
 };
 
-export default Recipes;
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -87,7 +84,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'left',
         marginVertical: 10,
-        marginBottom: 10,
         color: '#000',
     },
     loading: {
@@ -95,10 +91,8 @@ const styles = StyleSheet.create({
     },
     pressableContainer: {
         backgroundColor: '#fff',
-        borderRadius: 10,
-        marginVertical: 10,
+        marginRight: 10,
         padding: 15,
-        justifyContent: 'space-around',
     },
     evenPadding: {
         paddingLeft: 0,
@@ -110,8 +104,7 @@ const styles = StyleSheet.create({
     },
     recipeImage: {
         width: '100%',
-        height: 200,
-        borderRadius: 20,
+        height: 250,
     },
     smallImage: {
         height: hp(25),
@@ -124,9 +117,11 @@ const styles = StyleSheet.create({
         color: '#808080',
     },
     recipeName: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginTop: 5,
-      color: '#000',
+        fontSize: 18,
+        marginTop: 5,
+        color: '#333',
     },
 });
+
+
+export default Recipes;

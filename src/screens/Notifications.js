@@ -92,7 +92,7 @@ const Notifications = ({ navigation }) => {
       ) : (
         <View style={styles.noNotificationsContainer}>
           <Icon name="notifications-off" size={50} color="#888" />
-          <Text style={styles.noNotificationsText}>No hay notificaciones disponibles</Text>
+          <Text style={styles.noNotificationsText}>No hay notificaciones</Text>
         </View>
       )}
       {readNotifications && readNotifications.length > 0 && (

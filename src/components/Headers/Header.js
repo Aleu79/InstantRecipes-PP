@@ -21,15 +21,11 @@ const Header = () =>  {
 const styles = StyleSheet.create({
 container: {
     flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 16,
 },
 backIcon: {
     position: 'static',
-    top: 10,
     left: 10,
     marginBottom: '5%',
-    marginTop: '5%',
 },
 });
 

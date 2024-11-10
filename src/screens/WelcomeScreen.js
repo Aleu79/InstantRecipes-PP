@@ -34,7 +34,7 @@ const WelcomeScreen = () => {
           </Animated.View>
           <View style={styles.textContainer}>
             <Text style={styles.text}>
-                Cocina
+                Instant Recipes
             </Text>
             <Text style={[styles.text,{fontSize:hp(2)}]}>
                 Cocinar es el mejor ingrediente para la felicidad
@@ -81,7 +81,8 @@ const styles = StyleSheet.create({
     },
     text:{
         fontWeight:"bold",
-        fontSize:hp(7),
-        color:"#FFF"
+        fontSize:hp(4),
+        color:"#FFF",
+        textAlign: 'center',
     }
 })
