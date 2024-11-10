@@ -7,6 +7,7 @@ import { db } from '../../firebase/firebase-config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { capitalizeFirstLetter } from '../helpers/utils';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import DietDetails from '../helpers/DietDetails';
 
 const RecipeScreen = ({ route }) => {
   const { recipe } = route.params;
@@ -152,18 +153,19 @@ const RecipeScreen = ({ route }) => {
 
           <View style={styles.dietContainer}>
             {recipe.vegan && (
-              <DietDetail iconName="leaf" color="green" text="Vegano" />
+              <DietDetails iconName="leaf" color="green" text="Vegano"/>
             )}
             {recipe.glutenFree && (
-              <DietDetail iconName="bread-slice" color="orange" text="Sin Gluten" />
+              <DietDetails iconName="bread-slice" color="orange" text="Libre de Gluten" />
             )}
             {recipe.vegetarian && (
-              <DietDetail iconName="food-apple" color="red" text="Vegetariano" />
+              <DietDetails iconName="food-apple" color="red" text="Vegetariano" />
             )}
             {recipe.dairyFree && (
-              <DietDetail iconName="glass-pint-outline" color="grey" text="Sin lácteos" />
+              <DietDetails iconName="glass-pint-outline" color="grey" text="Sin lácteos" />
             )}
           </View>
+
 
           <View style={styles.separator}></View>
 
@@ -182,13 +184,6 @@ const RecipeScreen = ({ route }) => {
     </>
   );
 };
-
-const DietDetail = ({ iconName, color, text }) => (
-  <View style={styles.dietDetail}>
-    <MaterialCommunityIcons name={iconName} size={24} color={color} />
-    <Text style={styles.dietText}>{text}</Text>
-  </View>
-);
 
 const TabButton = ({ isActive, onPress, text }) => (
   <TouchableOpacity
@@ -225,7 +220,10 @@ const PreparationList = ({ preparationSteps }) => (
   <View style={styles.preparationContainer}>
     {preparationSteps.length > 0 ? (
       preparationSteps.map((step, index) => (
-        <Text key={index} style={styles.preparationStep}>{step}</Text>
+        <View key={index} style={styles.preparationItem}>
+          <Text style={styles.stepNumber}>{index + 1}</Text>
+          <Text style={styles.preparationStep}>{step}</Text>
+        </View>
       ))
     ) : (
       <Text>No hay instrucciones disponibles.</Text>
@@ -294,16 +292,8 @@ const styles = StyleSheet.create({
   dietContainer: {
     flexDirection: 'row',
     marginBottom: 10,
-  },
-  
-  dietDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  dietText: {
-    marginLeft: 5,
-    color: '#888',
+    alignContent: 'center',
+    justifyContent: 'center',
   },
   separator: {
     height: 1,
@@ -386,7 +376,33 @@ const styles = StyleSheet.create({
   },
   bookmarkButton: {
     padding: 10,
-  },
+  },preparationContainer: {
+    marginTop: 10,
+    padding: 15,
+    width: '90%',
+},
+preparationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'left',
+    marginBottom: 10,
+    paddingHorizontal: 20,
+},
+stepNumber: {
+    backgroundColor: '#fbbf24', 
+    color: 'white',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginRight: 15,
+},
+preparationStep: {
+    fontSize: 16,
+},
 });
 
 export default RecipeScreen;

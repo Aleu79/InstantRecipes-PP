@@ -109,9 +109,6 @@ const HomeScreen = ({ navigation }) => {
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
           </Text>
           <View style={styles.containernot}>
-            <TouchableOpacity onPress={() => console.log('Notificaciones')}>
-              <Icon name="notifications" size={30} color={isDarkTheme ? '#fff' : 'orange'} style={styles.notificacion}/> 
-            </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
               {profileImage ? (
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
