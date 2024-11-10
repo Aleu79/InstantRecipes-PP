@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text, ScrollView, FlatList } from 'react-native';
+import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 import axios from 'axios';
@@ -9,13 +9,15 @@ const SearchScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]); // Nuevo estado para recetas de la categoría seleccionada
+  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]); 
   const apiKeys = [
+    'bf56d31f34f7dc25e10b85c38ebeb50f7feda90f',
     '69694db3792e4c4387992d79c64eb073',
     '0eb0cec32c98d0df795f8c12a544f510f42f24e1',
     'b9103835aeb7ae98a97a6e29351c294a7f0ded16',
     '52afdb46498d5e9f8a8ed0639de3492cceeb271f',
-    '0345a5adffdd0c47575a635a5d50b4aa76a64c0e'
+    '0345a5adffdd0c47575a635a5d50b4aa76a64c0e',
+    'b8abaf0eebd246cba6e1bfb6d2987257',
   ];
 
   const attemptRequest = async (url) => {
@@ -23,16 +25,15 @@ const SearchScreen = ({ navigation }) => {
     for (let i = 0; i < validKeys.length; i++) {
       const key = validKeys[i];
       try {
-        const response = await axios.get(url.replace('{apiKey}', key));
+        const apiUrl = url.replace('{apiKey}', key);
+        const response = await axios.get(apiUrl); 
         return response; 
       } catch (error) {
         if (error.response) {
           const status = error.response.status;
-          if (status === 402) {
+          if (status === 402 || status === 401) {
+            console.warn(`API Key ${key} no válida, probando con otra.`);
             validKeys.splice(i, 1); 
-            i--; 
-          } else if (status === 401) {
-            validKeys.splice(i, 1);
             i--; 
           } else {
             console.error('Error en la solicitud:', error);
@@ -113,6 +114,24 @@ const SearchScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  const renderCategoryItem = ({ item }) => (
+    <View style={styles.categoryContainer}>
+      <View style={styles.categoryHeader}>
+        <Text style={styles.categoryTitle}>{item.category}</Text>
+        <TouchableOpacity onPress={() => handleCategoryPress(item.category)}>
+          <Text style={styles.viewMoreText}>Ver más</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={item.recipes}
+        renderItem={renderRecipeItem}
+        horizontal={false} 
+        keyExtractor={(item) => item.id.toString()}
+        showsHorizontalScrollIndicator={false}
+      />
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.searchBar}>
@@ -145,40 +164,11 @@ const SearchScreen = ({ navigation }) => {
       )}
 
       {searchQuery.length <= 2 && (
-        <ScrollView>
-  {categories.map((categoryData) => (
-    <View key={categoryData.category}>
-      <View style={styles.categoryHeader}>
-        <Text style={styles.categoryTitle}>{categoryData.category}</Text>
-        <TouchableOpacity onPress={() => handleCategoryPress(categoryData.category)}>
-          <Text style={styles.viewMoreText}>Ver más</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Aquí muevo el FlatList de las recetas de la categoría debajo del botón "Ver más" */}
-      <FlatList
-        data={categoryData.recipes}
-        renderItem={renderRecipeItem}
-        horizontal={false} // Cambié esto para que las recetas se muestren verticalmente
-        keyExtractor={(item) => item.id.toString()}
-        showsHorizontalScrollIndicator={false}
-      />
-    </View>
-  ))}
-  
-  {/* Mostrar recetas de la categoría seleccionada */}
-  {selectedCategoryRecipes.length > 0 && (
-    <View>
-      <Text style={styles.categoryTitle}>Recetas de la categoría seleccionada:</Text>
-      <FlatList
-        data={selectedCategoryRecipes}
-        renderItem={renderRecipeItem}
-        keyExtractor={(item) => item.id.toString()}
-      />
-    </View>
-  )}
-</ScrollView>
-
+        <FlatList
+          data={categories}
+          renderItem={renderCategoryItem}
+          keyExtractor={(item) => item.category}
+        />
       )}
 
       <BottomNavBar navigation={navigation} />
@@ -235,6 +225,9 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
+  categoryContainer: {
+    marginBottom: 20,
+  },
   categoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -245,10 +238,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   viewMoreText: {
-    color: '#1E90FF',
-  },
-  recipeList: {
-    paddingLeft: 16,
+    color: '#00f',
+    fontSize: 16,
   },
 });
 
