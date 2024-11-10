@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text, ScrollView, FlatList } from 'react-native';
+import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 import axios from 'axios';
@@ -9,7 +9,8 @@ const SearchScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]); // Nuevo estado para recetas de la categoría seleccionada
+  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]);
+  
   const apiKeys = [
     '69694db3792e4c4387992d79c64eb073',
     '0eb0cec32c98d0df795f8c12a544f510f42f24e1',
@@ -55,9 +56,6 @@ const SearchScreen = ({ navigation }) => {
           const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
           try {
             const response = await attemptRequest(url);
-            console.log(`Categorías recibidas para ${category}:`, response.data.results); 
-            console.log('URL de la API:', url);
-
             return { category, recipes: response.data.results };
           } catch (error) {
             console.error(`Error al obtener recetas para ${category}:`, error);
@@ -76,9 +74,7 @@ const SearchScreen = ({ navigation }) => {
       try {
         const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
         const response = await attemptRequest(url);
-        console.log('Recetas encontradas para la búsqueda:', response.data.results); 
         setRecipes(response.data.results);
-        console.log('Recetas establecidas:', response.data.results);
       } catch (error) {
         console.error('Error al buscar recetas:', error);
       } finally {
@@ -93,8 +89,8 @@ const SearchScreen = ({ navigation }) => {
     const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
     try {
       const response = await attemptRequest(url);
-      setSelectedCategoryRecipes(response.data.results); // Guardar recetas de la categoría seleccionada
-      navigation.navigate('CategoryRecipesScreen', { category }); // Navegar a la pantalla de recetas de la categoría
+      setSelectedCategoryRecipes(response.data.results);
+      navigation.navigate('CategoryRecipesScreen', { category });
     } catch (error) {
       console.error(`Error al obtener recetas para ${category}:`, error);
     }
@@ -103,7 +99,6 @@ const SearchScreen = ({ navigation }) => {
   const renderRecipeItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
-        console.log('Receta seleccionada:', item); 
         navigation.navigate('RecipeScreen', { recipe: item });
       }}
       style={styles.recipeItem}
@@ -111,6 +106,24 @@ const SearchScreen = ({ navigation }) => {
       <Image source={{ uri: item.image }} style={styles.recipeImage} />
       <Text style={styles.recipeName}>{item.title}</Text>
     </TouchableOpacity>
+  );
+
+  const renderCategoryItem = ({ item }) => (
+    <View key={item.category}>
+      <View style={styles.categoryHeader}>
+        <Text style={styles.categoryTitle}>{item.category}</Text>
+        <TouchableOpacity onPress={() => handleCategoryPress(item.category)}>
+          <Text style={styles.viewMoreText}>Ver más</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={item.recipes}
+        renderItem={renderRecipeItem}
+        horizontal={false}
+        keyExtractor={(recipe) => recipe.id.toString()}
+        showsHorizontalScrollIndicator={false}
+      />
+    </View>
   );
 
   return (
@@ -130,56 +143,14 @@ const SearchScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {searchQuery.length > 2 && recipes.length > 0 && (
-        <View style={styles.resultsContainer}>
-          {loading ? (
-            <Text>Cargando...</Text>
-          ) : (
-            <FlatList
-              data={recipes}
-              renderItem={renderRecipeItem}
-              keyExtractor={(item) => item.id.toString()}
-            />
-          )}
-        </View>
-      )}
-
-      {searchQuery.length <= 2 && (
-        <ScrollView>
-  {categories.map((categoryData) => (
-    <View key={categoryData.category}>
-      <View style={styles.categoryHeader}>
-        <Text style={styles.categoryTitle}>{categoryData.category}</Text>
-        <TouchableOpacity onPress={() => handleCategoryPress(categoryData.category)}>
-          <Text style={styles.viewMoreText}>Ver más</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Aquí muevo el FlatList de las recetas de la categoría debajo del botón "Ver más" */}
       <FlatList
-        data={categoryData.recipes}
-        renderItem={renderRecipeItem}
-        horizontal={false} // Cambié esto para que las recetas se muestren verticalmente
-        keyExtractor={(item) => item.id.toString()}
-        showsHorizontalScrollIndicator={false}
+        data={searchQuery.length > 2 && recipes.length > 0 ? recipes : categories}
+        renderItem={searchQuery.length > 2 && recipes.length > 0 ? renderRecipeItem : renderCategoryItem}
+        keyExtractor={(item) => item.id?.toString() || item.category}
+        ListFooterComponent={
+          loading && searchQuery.length > 2 ? <Text>Cargando...</Text> : null
+        }
       />
-    </View>
-  ))}
-  
-  {/* Mostrar recetas de la categoría seleccionada */}
-  {selectedCategoryRecipes.length > 0 && (
-    <View>
-      <Text style={styles.categoryTitle}>Recetas de la categoría seleccionada:</Text>
-      <FlatList
-        data={selectedCategoryRecipes}
-        renderItem={renderRecipeItem}
-        keyExtractor={(item) => item.id.toString()}
-      />
-    </View>
-  )}
-</ScrollView>
-
-      )}
 
       <BottomNavBar navigation={navigation} />
     </View>
@@ -213,9 +184,6 @@ const styles = StyleSheet.create({
   filterButton: {
     marginLeft: 10,
   },
-  resultsContainer: {
-    marginVertical: 10,
-  },
   recipeItem: {
     padding: 10,
     backgroundColor: '#FFF',
@@ -246,9 +214,6 @@ const styles = StyleSheet.create({
   },
   viewMoreText: {
     color: '#1E90FF',
-  },
-  recipeList: {
-    paddingLeft: 16,
   },
 });
 
