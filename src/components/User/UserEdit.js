@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
 import { getFirestore, doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import BottomNavBar from '../BottomNavbar';
+import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 const UserEdit = () => {
   const { user, setUser, addNotification } = useContext(UserContext); 
@@ -159,50 +160,62 @@ const UserEdit = () => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
-  const handleDeleteProfile = async () => {
+  const handleDeleteProfile = () => {
+    setModalVisible(true);  // Activar modal
+  };
+  
+  const confirmDeleteProfile = async () => {
     const user = auth.currentUser;
-  
+    
     if (user) {
-      Alert.alert(
-        'Confirmar Eliminación',
-        '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Eliminar',
-            onPress: async () => {
-              try {
-                // Eliminar el documento del usuario en Firestore usando su email
-                const userRef = doc(db, 'users', user.email);
-                await deleteDoc(userRef);
+      if (!currentPassword) {
+        Alert.alert('Error', 'Por favor ingresa tu contraseña actual.');
+        return;
+      }
   
-                // Eliminar el usuario de Firebase Authentication
-                await user.delete();
+      try {
+        // Reautenticar al usuario antes de eliminar el perfil
+        const credential = EmailAuthProvider.credential(
+          user.email,
+          currentPassword
+        );
+        await reauthenticateWithCredential(user, credential);
   
-                Alert.alert('Perfil eliminado con éxito');
-                navigation.navigate('Login');
-              } catch (error) {
-                console.error('Error al eliminar perfil:', error);
-                Alert.alert('Error', 'No se pudo eliminar el perfil. Inténtalo más tarde.');
-              }
-            },
-          },
-        ],
-        { cancelable: false } 
-      );
+        // Eliminar el documento del usuario en Firestore
+        const userRef = doc(db, 'users', user.email);
+        await deleteDoc(userRef);
+  
+        // Eliminar el usuario de Firebase Authentication
+        await user.delete();
+  
+        Alert.alert('Perfil eliminado con éxito');
+        navigation.navigate('Login');
+      } catch (error) {
+        console.error('Error al eliminar perfil:', error);
+        let errorMessage;
+  
+        if (error.code === 'auth/wrong-password') {
+          errorMessage = 'La contraseña actual es incorrecta. Inténtalo nuevamente.';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = 'Demasiados intentos fallidos. Intenta más tarde.';
+        } else {
+          errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
+        }
+  
+        Alert.alert('Error', errorMessage);
+      }
     } else {
       Alert.alert('Error', 'No hay usuario autenticado');
     }
   };
   
   
-
+  
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Header />
+  
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>
@@ -217,7 +230,7 @@ const UserEdit = () => {
           )}
         </View>
       </View>
-
+  
       <View style={styles.camposcontainer}>
         <Text style={styles.sectionTitle}>Nuevo nombre de usuario</Text>
         <TextInput
@@ -226,7 +239,7 @@ const UserEdit = () => {
           value={username}
           onChangeText={setUsername}
         />
-
+  
         <Text style={styles.sectionTitle}>Nueva contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
@@ -240,7 +253,7 @@ const UserEdit = () => {
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} />
           </TouchableOpacity>
         </View>
-
+  
         <Text style={styles.sectionTitle}>Repetir nueva contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
@@ -254,20 +267,19 @@ const UserEdit = () => {
             <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} />
           </TouchableOpacity>
           <View style={styles.passwordStrengthContainer}>
-            {password ? (
-              <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
-            ) : null}
+            {password && <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>}
           </View>
         </View>
-
+  
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
           <Text style={styles.saveButtonText}>Guardar cambios</Text>
         </TouchableOpacity>
       </View>
-
+  
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
+  
       <Modal
         animationType="slide"
         transparent={true}
@@ -287,8 +299,8 @@ const UserEdit = () => {
             <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
               <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
+  
+            <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteProfile}>
               <Text style={styles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
@@ -297,9 +309,11 @@ const UserEdit = () => {
           </View>
         </View>
       </Modal>
+  
       <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
+  
 };
 
 const styles = StyleSheet.create({
