@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNavBar from '../components/BottomNavbar';
+import { ScrollView } from 'react-native-web';
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
@@ -15,102 +16,87 @@ const SavedRecipes = () => {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      try {
-        setLoading(true);
-        const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
-        console.log('Recetas guardadas desde AsyncStorage:', savedRecipesJSON);
+        try {
+            setLoading(true);
+            const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
+            console.log('Recetas guardadas desde AsyncStorage:', savedRecipesJSON);
 
-        if (savedRecipesJSON) {
-          const recipeIds = JSON.parse(savedRecipesJSON);
-          const cachedRecipes = recipeIds.map(id => cache[id]).filter(Boolean);
-          
-          if (cachedRecipes.length === recipeIds.length) {
-            setSavedRecipes(cachedRecipes);
-          } else {
-            const recipes = await Promise.all(recipeIds.map(fetchRecipeDetails));
-            setSavedRecipes(recipes);
-          }
-        } else {
-          setSavedRecipes([]);
+            if (savedRecipesJSON) {
+                const recipeIds = JSON.parse(savedRecipesJSON);
+                const cachedRecipes = recipeIds.map(id => cache[id]).filter(Boolean);
+                
+                if (cachedRecipes.length === recipeIds.length) {
+                    setSavedRecipes(cachedRecipes);
+                } else {
+                    const recipes = await Promise.all(recipeIds.map(fetchRecipeDetails));
+                    setSavedRecipes(recipes);
+                }
+            } else {
+                setSavedRecipes([]);
+            }
+        } catch (error) {
+            console.error('Error al obtener las recetas guardadas:', error);
+            Alert.alert('Error', 'Hubo un problema al cargar las recetas guardadas.');
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
-      } catch (error) {
-        console.error('Error al obtener las recetas guardadas:', error);
-        Alert.alert('Error', 'Hubo un problema al cargar las recetas guardadas.');
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
     };
 
     fetchRecipes();
-  }, [cache]);
+}, [cache]);
 
-  const fetchRecipeDetails = async (id) => {
+const fetchRecipeDetails = async (id) => {
     if (cache[id]) {
-      return cache[id];
+        return cache[id];
     }
     try {
-      const response = await fetch(`https://api.spoonacular.com/recipes/${id}/information?apiKey=47cb148e73e74414829f9dd8c38a0c7e`);
-      if (!response.ok) throw new Error('Error al obtener los detalles de la receta');
+        const response = await fetch(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+        if (!response.ok) throw new Error('Error al obtener los detalles de la receta');
 
-      const recipe = await response.json();
-      const recipeData = {
-        id: recipe.id,
-        name: recipe.title,
-        image: recipe.image,
-        servings: recipe.servings,
-        ingredients: recipe.extendedIngredients,
-        isRemoved: false,
-      };
-      setCache((prevCache) => ({ ...prevCache, [id]: recipeData }));
-      return recipeData;
+        const recipe = await response.json();
+        const recipeData = {
+            id: recipe.idMeal,
+            name: recipe.strMeal,
+            image: recipe.strMealThumb,
+            servings: recipe.servings || 1,
+            ingredients: recipe.extendedIngredients || [],
+        };
+        setCache((prevCache) => ({ ...prevCache, [id]: recipeData }));
+        return recipeData;
     } catch (error) {
-      console.error('Error en fetchRecipeDetails:', error);
-      throw error;
+        console.error('Error en fetchRecipeDetails:', error);
+        throw error;
     }
-  };
+};
 
-  const renderIngredients = (ingredients) => {
-    if (!Array.isArray(ingredients)) {
-      return <Text style={styles.recipeCategory}>Ingredientes no disponibles</Text>;
-    }
-    return (
-      <FlatList
-        data={ingredients}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <Text style={styles.ingredientText}>
-            {item.amount} {item.unit} {item.name}
-          </Text>
-        )}
-      />
-    );
-  };
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.recipeCard} 
-      onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}
-    >
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
-      <View style={styles.recipeInfo}>
-        <Text style={styles.recipeName}>{item.name}</Text>
-        <Text style={styles.recipeCategory}>Porciones: {item.servings}</Text>
-        <Text style={styles.recipeCategory}>Ingredientes:</Text>
-        {renderIngredients(item.ingredients)}
-      </View>
-      <TouchableOpacity 
-        style={styles.saveIcon} 
-        onPress={() => handleRemoveRecipe(item.id)}
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}
+        style={styles.recipeContainer}
       >
-        <Icon 
-          name="bookmark" 
-          size={24} 
-          color="#ff6347" 
-          style={{ textDecorationLine: item.isRemoved ? 'line-through' : 'none' }} 
-        />
+        <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
+        <TouchableOpacity 
+          style={styles.bookmarkButton} 
+          onPress={() => handleRemoveRecipe(item.id)}
+        >
+          <Icon 
+            name="bookmark" 
+            size={24} 
+            color="#fff" 
+            style={{ textDecorationLine: item.isRemoved ? 'line-through' : 'none' }} 
+          />
+        </TouchableOpacity>
+        <Text style={styles.detalles}>
+          {item.servings} porciones
+        </Text>
+        <Text style={styles.recipeName}>
+          {item.recipeName}
+        </Text>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </ScrollView>
   );
 
   const handleRemoveRecipe = async (id) => {
@@ -146,7 +132,7 @@ const SavedRecipes = () => {
           <FlatList
             data={savedRecipes}
             renderItem={renderRecipe}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -166,44 +152,47 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fafafa',
   },
-  recipeCard: {
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+  scrollView: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  recipeContainer: {
+    width: '45%',
+    marginBottom: 15,
+    borderRadius: 15,
+    overflow: 'hidden',
+    position: 'relative',
+    paddingBottom: 10,
+    marginRight: 10,
   },
   recipeImage: {
     width: '100%',
-    height: 150,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    height: 250,
+    borderRadius: 20,
+    resizeMode: 'cover',
   },
-  recipeInfo: {
-    padding: 10,
+  detalles: {
+    color: '#adadad',
+    
   },
   recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    textAlign: 'left',
+    color: '#000',
+    fontSize: 16,
   },
-  recipeCategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  ingredientText: {
-    fontSize: 14,
-    color: '#444',
-  },
-  saveIcon: {
+  bookmarkButton: {
     position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 5,
     top: 10,
     right: 10,
+    padding: 5,
   },
   emptyContainer: {
     flex: 1,

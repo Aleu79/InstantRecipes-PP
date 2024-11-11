@@ -53,9 +53,7 @@ const RecipeDetailsScreen = (props) => {
 
     // Guardar o eliminar receta en el array de recetas guardadas
     const handleRecipeSaveToggle = async (recipe) => {
-        if (!validarReceta(recipe)) {
-            return;
-        }
+        if (!validarReceta(recipe)) return;
     
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -64,12 +62,11 @@ const RecipeDetailsScreen = (props) => {
             }
     
             const userEmail = user.email;
-    
             const isSaved = await checkIfRecipeIsSaved(recipe.idMeal, userEmail);
             const userDocRef = doc(db, 'users', userEmail);
     
-            if (isSaved) {
-                try {
+            try {
+                if (isSaved) {
                     await updateDoc(userDocRef, {
                         savedRecipes: arrayRemove({
                             id: recipe.idMeal,
@@ -79,15 +76,15 @@ const RecipeDetailsScreen = (props) => {
                     });
                     setFavourite(false);
                     Alert.alert('Receta eliminada con éxito!');
-                    addNotification('Receta Eliminada', 'Has eliminado receta.');
-                    console.log("Receta eliminada de favoritos."); 
-                } catch (error) {
-                    Alert.alert('Error', 'No se pudo eliminar la receta.');
-                    addNotification('Error', 'No se pudo eliminar la receta.');
-                    console.error("Error al eliminar la receta de los favoritos:", error);
-                }
-            } else {
-                try {
+                    addNotification('Receta Eliminada', 'Has eliminado una receta.');
+    
+                    // Actualizamos AsyncStorage
+                    const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
+                    const savedRecipes = savedRecipesJSON ? JSON.parse(savedRecipesJSON) : [];
+                    const updatedRecipes = savedRecipes.filter(id => id !== recipe.idMeal);
+                    await AsyncStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes));
+    
+                } else {
                     await updateDoc(userDocRef, {
                         savedRecipes: arrayUnion({
                             id: recipe.idMeal,
@@ -98,15 +95,20 @@ const RecipeDetailsScreen = (props) => {
                     setFavourite(true);
                     Alert.alert('Receta guardada con éxito!');
                     addNotification('Receta Guardada', 'Has guardado una receta.');
-                    console.log("Receta guardada correctamente.");
-                } catch (error) {
-                    Alert.alert('Error', 'No se pudo guardar la receta.');
-                    addNotification('Error', 'No se pudo guardar la receta.');
-                    console.error("Error al guardar la receta en los favoritos:", error);
+    
+                    // Guardamos en AsyncStorage
+                    const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
+                    const savedRecipes = savedRecipesJSON ? JSON.parse(savedRecipesJSON) : [];
+                    savedRecipes.push(recipe.idMeal);
+                    await AsyncStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
                 }
+            } catch (error) {
+                console.error("Error en la actualización de favoritos:", error);
+                Alert.alert('Error', 'Hubo un problema al actualizar tus recetas guardadas.');
             }
         });
     };
+    
     
     const getMealData = async (id) => {
         try {

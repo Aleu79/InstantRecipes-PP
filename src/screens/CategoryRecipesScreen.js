@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
   },
   detalles: {
     color: '#adadad',
+    
   },
   recipeName: {
     textAlign: 'left',
