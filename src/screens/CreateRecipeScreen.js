@@ -98,16 +98,16 @@ const CreateRecipeScreen = () => {
         image: recipeImage,
         ingredients,
         instructions: preparation,
-        glutenFree,
-        vegan: dietType === 'vegan',
-        vegetarian: dietType === 'vegetarian',
-        dairyFree: dietType === 'dairyFree',
+        glutenFree: isGlutenFree,
+        vegan: isVegan,
+        vegetarian: isVegetarian,
+        dairyFree: isDairyFree,
         preparationMinutes: prepTime,
         servings,
       },
     });
   };
-
+  
 
   const saveRecipe = async () => {
     const user = auth.currentUser; 
@@ -135,9 +135,10 @@ const CreateRecipeScreen = () => {
         recipeImage,
         ingredients,
         preparation,
-        dietType,
-        glutenFree,
-        vegetarian,
+        glutenFree: isGlutenFree,
+        vegan: isVegan,
+        vegetarian: isVegetarian,
+        dairyFree: isDairyFree,
         prepTime,
         servings,
         category: selectedCategory,

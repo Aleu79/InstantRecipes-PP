@@ -244,7 +244,7 @@ const IngredientItem = ({ ingredient }) => {
                 style={styles.ingredientImage}
             />
             <View>
-                <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.name)}</Text>
+                <Text style={styles.ingredientName}>{ingredient.name}</Text>
                 <Text style={styles.ingredientAmount}>{ingredient.measure}</Text>
             </View>
         </View>

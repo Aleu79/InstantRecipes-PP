@@ -67,7 +67,7 @@ const MyRecipeScreen = ({ route }) => {
         </Animated.View>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.recipeName}>{capitalizeFirstLetter(recipe.recipeName)}</Text>
+          <Text style={styles.recipeName}>{recipe.recipeName}</Text>
 
           <View style={styles.recipeDetails}>
             <View style={styles.infoContainer}>
@@ -127,7 +127,7 @@ const IngredientsList = ({ ingredients }) => (
   <View style={styles.ingredientsContainer}>
     {ingredients.length > 0 ? (
       ingredients.map((ingredient, index) => (
-        <Text key={index} style={styles.ingredientText}>{capitalizeFirstLetter(ingredient)}</Text>
+        <Text key={index} style={styles.ingredientText}>{ingredient}</Text>
       ))
     ) : (
       <Text>No hay ingredientes disponibles.</Text>
@@ -141,7 +141,7 @@ const PreparationList = ({ preparationSteps }) => (
       preparationSteps.map((step, index) => (
         <View key={index} style={styles.preparationItem}>
           <Text style={styles.stepNumber}>{index + 1}</Text>
-          <Text style={styles.preparationStep}>{capitalizeFirstLetter(step)}</Text>
+          <Text style={styles.preparationStep}>{step}</Text>
         </View>
       ))
     ) : (
