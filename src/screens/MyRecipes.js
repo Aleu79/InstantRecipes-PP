@@ -103,9 +103,8 @@ const MyRecipes = () => {
       {item.recipeImage ? (
         <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
       ) : (
-        <View style={styles.placeholderImage}>
-          <Text style={styles.placeholderText}>Sin Imágen</Text>
-        </View>
+        <Image source={require('../../assets/placeholder.png')} style={styles.recipeImage} />
+
       )}
       <TouchableOpacity onPress={() => navigation.navigate('MyRecipeScreen', { recipe: item })}>
         <Text style={styles.detalles}>
@@ -176,18 +175,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },  
   recipeContainer: {
-    width: '48%', 
-    marginBottom: 10,
-    borderRadius: 20,
+    width: '45%',
+    marginBottom: 15,
+    borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: '#fff',
-    padding: 15,
+    position: 'relative',
+    paddingBottom: 10,
+    marginRight: 10,
   },
   recipeImage: {
     width: '100%',
     height: 250,
     borderRadius: 20,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
   },
   detalles: {
     color: '#adadad',
@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
   recipeName: {
     textAlign: 'left',
     color: '#000',
-    marginVertical: 5,
     fontSize: 16,
   },
   loadingContainer: {

@@ -5,24 +5,26 @@ import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 import { storage } from '../../firebase/firebase-config';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Picker } from '@react-native-picker/picker';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase-config'; 
 import { auth } from '../../firebase/firebase-config'; 
 import { useNavigation } from '@react-navigation/native';
-
+import { Switch } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 
 const CreateRecipeScreen = () => {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('ingredients');
   const [recipeName, setRecipeName] = useState('');
   const [recipeImage, setRecipeImage] = useState(null);
-  const [ingredients, setIngredients] = useState(['']);
+  const [ingredients, setIngredients] = useState([
+    { name: '', quantity: '', unit: '' }
+  ]);  
   const [preparation, setPreparation] = useState(['']);
-  const [glutenFree, setGlutenFree] = useState(''); 
-  const [vegetarian, setVegetarian] = useState(''); 
-  const [vegan, setVegan] = useState(''); 
-  const [dairyfree, setDairyFree] = useState(''); 
+  const [isVegan, setIsVegan] = useState(false);
+  const [isVegetarian, setIsVegetarian] = useState(false);
+  const [isGlutenFree, setIsGlutenFree] = useState(false);
+  const [isDairyFree, setIsDairyFree] = useState(false);
   const [servings, setServings] = useState(''); 
   const [prepTime, setPrepTime] = useState('');
   const [categories] = useState(['Sin TACC', 'Sin lácteos', 'Vegetariano', 'Vegano']); 
@@ -264,41 +266,59 @@ const CreateRecipeScreen = () => {
 
           {activeTab === 'ingredients' && (
             <View style={styles.ingredientsContainer}>
-            {ingredients.map((ingredient, index) => (
-              <View key={index} style={styles.ingredientRow}>
-                <TextInput
-                  style={styles.ingredientInput}
-                  placeholder="Ingrediente"
-                  value={ingredient}
-                  onChangeText={(text) => handleIngredientChange(text, index)}
-                />
-                <TouchableOpacity onPress={() => handleRemoveIngredient(index)}>
-                  <Icon name="trash-outline" size={24} color="red" />
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
-              <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
-            </TouchableOpacity>
-          </View>
-
+              {ingredients.map((ingredient, index) => (
+                <View key={index} style={styles.ingredientWrapper}>
+                 <View style={styles.ingredientInputContainer}>
+                    <TextInput
+                      style={styles.stepInput}
+                      placeholder="Ingrediente"
+                      value={ingredient.name}
+                      onChangeText={(text) => handleIngredientChange(text, index, 'name')}
+                    />
+                    <TouchableOpacity onPress={() => handleRemoveIngredient(index)} style={styles.ingredientIcon}>
+                      <FontAwesome name="trash" size={20} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.smallInputContainer}>
+                    <View style={styles.subInputRow}>
+                      <TextInput
+                        style={styles.smallInput}
+                        placeholder="Cantidad"
+                        keyboardType="numeric"
+                        value={ingredient.quantity}
+                        onChangeText={(text) => handleIngredientChange(text, index, 'quantity')}
+                      />
+                      <TextInput
+                        style={styles.smallInput}
+                        placeholder="Unidad"
+                        value={ingredient.unit}
+                        onChangeText={(text) => handleIngredientChange(text, index, 'unit')}
+                      />
+                    </View>
+                  </View>
+                </View>
+              ))}
+              <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
+                <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
+              </TouchableOpacity>
+            </View>
           )}
+
 
           {activeTab === 'preparation' && (
             <View style={styles.preparationContainer}>
               {preparation.map((step, index) => (
-               <View key={index} style={styles.stepRow}>
-               <TextInput
-                 style={styles.stepInput}
-                 placeholder="Paso de preparación"
-                 value={step}
-                 onChangeText={(text) => handleStepChange(text, index)}
-               />
-               <TouchableOpacity onPress={() => handleRemoveStep(index)} style={styles.removeStepButton}>
-                 <Text style={styles.removeStepText}>X</Text>
-               </TouchableOpacity>
-             </View>
-             
+                <View key={index} style={styles.stepRow}>
+                  <TextInput
+                    style={styles.inputDetail}
+                    placeholder="Paso de preparación"
+                    value={step}
+                    onChangeText={(text) => handleStepChange(text, index)}
+                  />
+                  <TouchableOpacity onPress={() => handleRemoveStep(index)} style={styles.removeStepButton}>
+                    <FontAwesome name="trash-o" size={26} color="red" />
+                  </TouchableOpacity>
+                </View>
               ))}
               <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
                 <Text style={styles.addButtonText}>Agregar Paso</Text>
@@ -307,25 +327,41 @@ const CreateRecipeScreen = () => {
           )}
 
           {activeTab === 'diettype' && (
-            <View style={styles.dietTypeContainer}>
-              <Text style={styles.dietTypeText}>Tipo de dieta:</Text>
-              <View style={styles.dietTypeOptions}>
-                <TouchableOpacity onPress={() => setDietType('vegan')} style={[styles.dietTypeButton, dietType === 'vegan' && styles.selectedDietType]}>
-                  <Text>Vegano</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setDietType('vegetarian')} style={[styles.dietTypeButton, dietType === 'vegetarian' && styles.selectedDietType]}>
-                  <Text>Vegetariano</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setDietType('glutenFree')} style={[styles.dietTypeButton, dietType === 'glutenFree' && styles.selectedDietType]}>
-                  <Text>Sin TACC</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setDietType('dairyFree')} style={[styles.dietTypeButton, dietType === 'dairyFree' && styles.selectedDietType]}>
-                  <Text>Sin Lácteos</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+                <View style={styles.dietTypeContainer}>
+                  
+                  <View style={styles.dietTypeRow}>
+                    <Text style={styles.dietTypeLabel}>Vegano</Text>
+                    <Switch
+                      value={isVegan}
+                      onValueChange={setIsVegan}
+                    />
+                  </View>
+                  
+                  <View style={styles.dietTypeRow}>
+                    <Text style={styles.dietTypeLabel}>Vegetariano</Text>
+                    <Switch
+                      value={isVegetarian}
+                      onValueChange={setIsVegetarian}
+                    />
+                  </View>
 
+                  <View style={styles.dietTypeRow}>
+                    <Text style={styles.dietTypeLabel}>Sin TACC</Text>
+                    <Switch
+                      value={isGlutenFree}
+                      onValueChange={setIsGlutenFree}
+                    />
+                  </View>
+
+                  <View style={styles.dietTypeRow}>
+                    <Text style={styles.dietTypeLabel}>Sin Lácteos</Text>
+                    <Switch
+                      value={isDairyFree}
+                      onValueChange={setIsDairyFree}
+                    />
+                  </View>
+                </View>
+              )}
           <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
             <Text style={styles.saveButtonText}>Guardar Receta</Text>
           </TouchableOpacity>
@@ -369,30 +405,6 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     paddingHorizontal: 15,
   },
-  input: {
-    backgroundColor: '#f1f1f1',
-    borderRadius: 30,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 16,
-    height: 50,
-    paddingLeft: 20,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  iconInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    flex: 1,
-    marginHorizontal: 35,
-    paddingBottom: 5,
-    borderRadius: 30,
-    height: 50,
-  },
   inputDetail: {
     flex: 1,
     width: '45%',
@@ -407,6 +419,49 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     paddingHorizontal: 10,
   },
+  ingredientsContainer: {
+    marginBottom: 20,
+  },
+  ingredientWrapper: {
+    marginBottom: 15,
+  },
+  ingredientInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginBottom: 10,
+    alignSelf: 'center',
+  }, 
+  removeStepButton: {
+    marginRight: 10,
+  },
+  stepInput: {
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginHorizontal: 5,
+    width: '80%',
+  },
+  smallInputContainer: {
+    marginTop: 10,
+    width: '85%',
+    margin: 'auto',
+  },
+  subInputRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  smallInput: {
+    width: '48%',  
+    height: 45,
+    paddingHorizontal: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+  },
   detailscontainer:{
     width: '45%',
     height: 50,
@@ -419,19 +474,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 16,
   },
-  tabsDietas: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-    borderRadius: 25,
-    backgroundColor: '#f5f5f5',
-    padding: 5,
-    width: '',
+  dietTypeContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
   },
-  ButtonDieta: {
-    flex: 1,
-    paddingVertical: 10,
+  dietTypeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  dietTypeRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 5,
+  },
+  dietTypeLabel: {
+    fontSize: 16,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -440,6 +500,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: '#f5f5f5',
     padding: 5,
+    width: '95%',
+    margin: 'auto',
   },
   tabButton: {
     flex: 1,
@@ -462,11 +524,40 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
   },
-  ingredientsContainer: {
-    marginBottom: 20,
+  ingredientWrapper: {
+    marginBottom: 15,
   },
   preparationContainer: {
-    marginBottom: 20,
+    width: '90%',
+    margin: 'auto',
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stepInput: {
+    flex: 1,
+    width: '45%',
+    height: 50,
+    marginLeft: 10,
+    fontSize: 15,
+    lineHeight: 20,
+    textAlignVertical: 'top',
+    borderBottomColor: '#999',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 40,
+    paddingHorizontal: 20,
+    textAlignVertical: 'center',
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    alignItems: 'center',
+    borderRadius: 4,
+  },
+  addButtonText: {
+    color: 'white',
   },
   ingredientRow: {
     flexDirection: 'row',
