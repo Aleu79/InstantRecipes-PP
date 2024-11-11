@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useContext} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import Header from '../components/Headers/Header';
 import * as ImagePicker from 'expo-image-picker'; 
@@ -11,8 +11,10 @@ import { auth } from '../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
 import { Switch } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { UserContext } from '../context/UserContext';
 
 const CreateRecipeScreen = () => {
+  const { addNotification } = useContext(UserContext); 
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('ingredients');
   const [recipeName, setRecipeName] = useState('');
@@ -126,6 +128,8 @@ const CreateRecipeScreen = () => {
       // Verificar cuántas recetas tiene el usuario
       if (currentRecipes.length >= 10) {
         Alert.alert('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');
+        addNotification('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');   
+
         return;
       }
   
@@ -150,12 +154,15 @@ const CreateRecipeScreen = () => {
         }, { merge: true }); 
   
         Alert.alert(`Receta "${recipeName}" guardada con éxito.`);
+        addNotification(`Receta "${recipeName}" guardada con éxito.`);   
 
         handleNavigateToRecipe();
 
       } catch (error) {
         console.error('Error al guardar la receta:', error);
         Alert.alert('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');
+        addNotification('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');   
+
       }
     } else {
       Alert.alert('Error', 'No se encontraron datos para este usuario.');

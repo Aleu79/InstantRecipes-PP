@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -6,11 +6,14 @@ import Header from '../components/Headers/Header';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from '../../firebase/firebase-config';
 import { capitalizeFirstLetter } from '../helpers/utils';
+import { UserContext } from '../context/UserContext';
 
 const MyRecipes = () => {
+  const { addNotification } = useContext(UserContext); 
   const navigation = useNavigation();
   const [myRecipes, setMyRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [longPressId, setLongPressId] = useState(null);
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -53,36 +56,24 @@ const MyRecipes = () => {
   
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          const updatedRecipes = userData.misRecetas.map((recipe) =>
-            recipe.id === recipeId
-              ? {
-                  ...recipe,
-                  category: "", 
-                  dietType: "", 
-                  glutenFree: "", 
-                  prepTime: "", 
-                  servings: "", 
-                  vegetarian: "", 
-                  recipeName: "",
-                  ingredients: [],
-                  preparation: [],
-                }
-              : recipe
-          );
+          const updatedRecipes = userData.misRecetas.filter((recipe) => recipe.id !== recipeId);
   
           await setDoc(userDocRef, { misRecetas: updatedRecipes });
   
           setMyRecipes(updatedRecipes);
-          Alert.alert('Éxito', 'Los campos específicos se han eliminado correctamente.');
+          Alert.alert('Éxito', 'La receta ha sido eliminada correctamente.');
+          addNotification('Éxito', 'La receta ha sido eliminada correctamente.');   
         } else {
           Alert.alert('Error', 'No se encontraron datos para este usuario.');
+          addNotification('Error', 'No se encontraron datos para este usuario.');   
         }
       } catch (error) {
-        console.error('Error al eliminar campos:', error);
-        Alert.alert('Error', 'No se pudieron eliminar los campos. Inténtalo de nuevo más tarde.');
+        console.error('Error al eliminar receta:', error);
+        Alert.alert('Error', 'No se pudo eliminar la receta. Inténtalo de nuevo más tarde.');
+        addNotification('Error', 'No se pudo eliminar la receta. Inténtalo de nuevo más tarde.');   
       }
     } else {
-      Alert.alert('Error', 'Debes estar autenticado para realizar esta acción.');
+      Alert.alert('Error', 'Debes estar autenticado para realizar esta acción.'); 
     }
   };
   
@@ -99,21 +90,31 @@ const MyRecipes = () => {
   };
 
   const renderRecipe = ({ item }) => (
-    <TouchableOpacity style={styles.recipeContainer}>
+    <TouchableOpacity 
+      style={styles.recipeContainer} 
+      onLongPress={() => setLongPressId(item.id)} 
+      onPress={() => navigation.navigate('MyRecipeScreen', { recipe: item })}
+    >
       {item.recipeImage ? (
         <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
       ) : (
         <Image source={require('../../assets/placeholder.png')} style={styles.recipeImage} />
-
       )}
-      <TouchableOpacity onPress={() => navigation.navigate('MyRecipeScreen', { recipe: item })}>
-        <Text style={styles.detalles}>
-          {item.prepTime} min • {item.servings} porciones
-        </Text>
-        <Text style={styles.recipeName}>
-          {capitalizeFirstLetter(item.recipeName)}
-        </Text>
-      </TouchableOpacity>
+      <Text style={styles.recipeName}>
+        {capitalizeFirstLetter(item.recipeName)}
+      </Text>
+      <Text style={styles.detalles}>
+        {item.prepTime} min • {item.servings} porciones
+      </Text>
+      
+      {longPressId === item.id && (
+        <TouchableOpacity 
+          style={[styles.deleteIcon, { backgroundColor: 'red' }]} 
+          onPress={() => confirmDelete(item.id)}
+        >
+          <Icon name="trash" size={30} color="white" />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 
@@ -136,7 +137,6 @@ const MyRecipes = () => {
           numColumns={2} 
           columnWrapperStyle={styles.columnWrapper}
         />
-
       ) : (
         <View style={styles.emptyContainer}>
           <Icon name="cafe-outline" size={60} color="#aaa" />
@@ -226,6 +226,15 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  deleteIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 50,
+    elevation: 10,
   },
 });
 
