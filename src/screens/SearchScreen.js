@@ -6,10 +6,8 @@ import axios from 'axios';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categories, setCategories] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCategoryRecipes, setSelectedCategoryRecipes] = useState([]); 
   const apiKeys = [
     'bf56d31f34f7dc25e10b85c38ebeb50f7feda90f',
     '69694db3792e4c4387992d79c64eb073',
@@ -21,27 +19,27 @@ const SearchScreen = ({ navigation }) => {
   ];
 
   const attemptRequest = async (url) => {
-    let validKeys = [...apiKeys]; 
+    let validKeys = [...apiKeys];
     for (let i = 0; i < validKeys.length; i++) {
       const key = validKeys[i];
       try {
         const apiUrl = url.replace('{apiKey}', key);
-        const response = await axios.get(apiUrl); 
-        return response; 
+        const response = await axios.get(apiUrl);
+        return response;
       } catch (error) {
         if (error.response) {
           const status = error.response.status;
           if (status === 402 || status === 401) {
             console.warn(`API Key ${key} no válida, probando con otra.`);
-            validKeys.splice(i, 1); 
-            i--; 
+            validKeys.splice(i, 1);
+            i--;
           } else {
             console.error('Error en la solicitud:', error);
             throw error;
           }
         } else {
           console.error('Error en la solicitud:', error);
-          throw error; 
+          throw error;
         }
       }
     }
@@ -49,22 +47,16 @@ const SearchScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const exampleCategories = ['Vegano', 'Vegetariano', 'Panadería', 'Sin Tacc'];
-      const categoriesData = await Promise.all(
-        exampleCategories.map(async (category) => {
-          const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
-          try {
-            const response = await attemptRequest(url);
-            return { category, recipes: response.data.results };
-          } catch (error) {
-            console.error(`Error al obtener recetas para ${category}:`, error);
-          }
-        })
-      );
-      setCategories(categoriesData);
+    const fetchRecipes = async () => {
+      const url = `https://api.spoonacular.com/recipes/complexSearch?number=20&apiKey={apiKey}&addRecipeInformation=true`;
+      try {
+        const response = await attemptRequest(url);
+        setRecipes(response.data.results);
+      } catch (error) {
+        console.error('Error al obtener recetas:', error);
+      }
     };
-    fetchCategories();
+    fetchRecipes();
   }, []);
 
   const handleSearch = async (query) => {
@@ -85,15 +77,14 @@ const SearchScreen = ({ navigation }) => {
     }
   };
 
-  const handleCategoryPress = async (category) => {
-    const url = `https://api.spoonacular.com/recipes/complexSearch?query=${category}&number=5&apiKey={apiKey}&addRecipeInformation=true`;
-    try {
-      const response = await attemptRequest(url);
-      setSelectedCategoryRecipes(response.data.results);
-      navigation.navigate('CategoryRecipesScreen', { category });
-    } catch (error) {
-      console.error(`Error al obtener recetas para ${category}:`, error);
-    }
+  const filterRecipes = (criteria) => {
+    return recipes.filter((recipe) => {
+      if (criteria === 'vegano' && recipe.dietLabels?.includes('Vegan')) return true;
+      if (criteria === 'vegetariano' && recipe.dietLabels?.includes('Vegetarian')) return true;
+      if (criteria === 'sinTACC' && recipe.glutenFree) return true;
+      if (criteria === 'sinLacteos' && recipe.dietLabels?.includes('Dairy-Free')) return true;
+      return false;
+    });
   };
 
   const renderRecipeItem = ({ item }) => (
@@ -106,24 +97,6 @@ const SearchScreen = ({ navigation }) => {
       <Image source={{ uri: item.image }} style={styles.recipeImage} />
       <Text style={styles.recipeName}>{item.title}</Text>
     </TouchableOpacity>
-  );
-
-  const renderCategoryItem = ({ item }) => (
-    <View style={styles.categoryContainer}>
-      <View style={styles.categoryHeader}>
-        <Text style={styles.categoryTitle}>{item.category}</Text>
-        <TouchableOpacity onPress={() => handleCategoryPress(item.category)}>
-          <Text style={styles.viewMoreText}>Ver más</Text>
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        data={item.recipes}
-        renderItem={renderRecipeItem}
-        horizontal={false} 
-        keyExtractor={(item) => item.id.toString()}
-        showsHorizontalScrollIndicator={false}
-      />
-    </View>
   );
 
   return (
@@ -143,26 +116,23 @@ const SearchScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {searchQuery.length > 2 && recipes.length > 0 && (
-        <View style={styles.resultsContainer}>
-          {loading ? (
-            <Text>Cargando...</Text>
-          ) : (
-            <FlatList
-              data={recipes}
-              renderItem={renderRecipeItem}
-              keyExtractor={(item) => item.id.toString()}
-            />
-          )}
+      {loading ? (
+        <Text>Cargando...</Text>
+      ) : (
+        <View style={styles.recipeList}>
+          {['vegano', 'vegetariano', 'sinTACC', 'sinLacteos'].map((category) => (
+            <View key={category} style={styles.categoryContainer}>
+              <Text style={styles.categoryTitle}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+              <FlatList
+                data={filterRecipes(category)}
+                renderItem={renderRecipeItem}
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              />
+            </View>
+          ))}
         </View>
-      )}
-
-      {searchQuery.length <= 2 && (
-        <FlatList
-          data={categories}
-          renderItem={renderCategoryItem}
-          keyExtractor={(item) => item.category}
-        />
       )}
 
       <BottomNavBar navigation={navigation} />
@@ -174,14 +144,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fafafa',
-    paddingTop: 50,
     paddingHorizontal: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
-  },
+    paddingTop: 5,
+  }, 
   backButton: {
     marginRight: 10,
   },
@@ -196,6 +166,17 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     marginLeft: 10,
+  },
+  recipeList: {
+    marginTop: 20,
+  },
+  categoryContainer: {
+    marginBottom: 30,
+  },
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   recipeItem: {
     padding: 10,
@@ -215,22 +196,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
-  },
-  categoryContainer: {
-    marginBottom: 20,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-  },
-  categoryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  viewMoreText: {
-    color: '#00f',
-    fontSize: 16,
   },
 });
 

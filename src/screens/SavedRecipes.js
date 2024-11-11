@@ -5,7 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNavBar from '../components/BottomNavbar';
-import { ScrollView } from 'react-native-web';
 
 const SavedRecipes = () => {
   const navigation = useNavigation();
@@ -16,88 +15,63 @@ const SavedRecipes = () => {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-        try {
-            setLoading(true);
-            const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
-            console.log('Recetas guardadas desde AsyncStorage:', savedRecipesJSON);
+      try {
+        setLoading(true);
+        const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
+        console.log('Recetas guardadas desde AsyncStorage:', savedRecipesJSON);
 
-            if (savedRecipesJSON) {
-                const recipeIds = JSON.parse(savedRecipesJSON);
-                const cachedRecipes = recipeIds.map(id => cache[id]).filter(Boolean);
-                
-                if (cachedRecipes.length === recipeIds.length) {
-                    setSavedRecipes(cachedRecipes);
-                } else {
-                    const recipes = await Promise.all(recipeIds.map(fetchRecipeDetails));
-                    setSavedRecipes(recipes);
-                }
-            } else {
-                setSavedRecipes([]);
-            }
-        } catch (error) {
-            console.error('Error al obtener las recetas guardadas:', error);
-            Alert.alert('Error', 'Hubo un problema al cargar las recetas guardadas.');
-            setError(error.message);
-        } finally {
-            setLoading(false);
+        if (savedRecipesJSON) {
+          const recipeIds = JSON.parse(savedRecipesJSON);
+          const cachedRecipes = recipeIds.map(id => cache[id]).filter(Boolean);
+
+          if (cachedRecipes.length === recipeIds.length) {
+            setSavedRecipes(cachedRecipes);
+          } else {
+            const recipes = await Promise.all(recipeIds.map(id => fetchRecipeDetails(id)));
+            setSavedRecipes(recipes);
+          }
+        } else {
+          setSavedRecipes([]);
         }
+      } catch (error) {
+        console.error('Error al obtener las recetas guardadas:', error);
+        Alert.alert('Error', 'Hubo un problema al cargar las recetas guardadas.');
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchRecipes();
-}, [cache]);
+  }, []); // Eliminar `cache` como dependencia para evitar bucles infinitos
 
-const fetchRecipeDetails = async (id) => {
+  const fetchRecipeDetails = async (id) => {
     if (cache[id]) {
-        return cache[id];
+      return cache[id];
     }
     try {
-        const response = await fetch(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
-        if (!response.ok) throw new Error('Error al obtener los detalles de la receta');
+      const response = await fetch(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+      if (!response.ok) throw new Error('Error al obtener los detalles de la receta');
 
-        const recipe = await response.json();
+      const data = await response.json();
+      const recipe = data.meals ? data.meals[0] : null;
+      if (recipe) {
         const recipeData = {
-            id: recipe.idMeal,
-            name: recipe.strMeal,
-            image: recipe.strMealThumb,
-            servings: recipe.servings || 1,
-            ingredients: recipe.extendedIngredients || [],
+          id: recipe.idMeal,
+          name: recipe.strMeal,
+          image: recipe.strMealThumb,
+          servings: recipe.servings || 1,
         };
         setCache((prevCache) => ({ ...prevCache, [id]: recipeData }));
         return recipeData;
+      } else {
+        throw new Error('Receta no encontrada');
+      }
     } catch (error) {
-        console.error('Error en fetchRecipeDetails:', error);
-        throw error;
+      console.error('Error en fetchRecipeDetails:', error);
+      throw error;
     }
-};
-
-
-  const renderRecipe = ({ item }) => (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}
-        style={styles.recipeContainer}
-      >
-        <Image source={{ uri: item.recipeImage }} style={styles.recipeImage} />
-        <TouchableOpacity 
-          style={styles.bookmarkButton} 
-          onPress={() => handleRemoveRecipe(item.id)}
-        >
-          <Icon 
-            name="bookmark" 
-            size={24} 
-            color="#fff" 
-            style={{ textDecorationLine: item.isRemoved ? 'line-through' : 'none' }} 
-          />
-        </TouchableOpacity>
-        <Text style={styles.detalles}>
-          {item.servings} porciones
-        </Text>
-        <Text style={styles.recipeName}>
-          {item.recipeName}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
+  };
 
   const handleRemoveRecipe = async (id) => {
     try {
@@ -120,6 +94,27 @@ const fetchRecipeDetails = async (id) => {
       Alert.alert('Error', 'Hubo un problema al eliminar la receta.');
     }
   };
+
+  const renderRecipe = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('RecipeScreen', { recipeId: item.id })}
+      style={styles.recipeContainer}
+    >
+      <Image source={{ uri: item.image }} style={styles.recipeImage} />
+      <TouchableOpacity 
+        style={styles.bookmarkButton} 
+        onPress={() => handleRemoveRecipe(item.id)}
+      >
+        <Icon name="bookmark" size={24} color="#fff" />
+      </TouchableOpacity>
+      <Text style={styles.detalles}>
+        {item.servings} porciones
+      </Text>
+      <Text style={styles.recipeName}>
+        {item.name}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -152,16 +147,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fafafa',
   },
-  scrollView: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
   recipeContainer: {
     width: '45%',
     marginBottom: 15,
@@ -179,7 +164,6 @@ const styles = StyleSheet.create({
   },
   detalles: {
     color: '#adadad',
-    
   },
   recipeName: {
     textAlign: 'left',
