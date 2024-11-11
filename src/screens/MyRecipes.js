@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from '../../firebase/firebase-config';
-// import { capitalizeFirstLetter } from '../helpers/utils';
+import { capitalizeFirstLetter } from '../helpers/utils';
 
 const MyRecipes = () => {
   const navigation = useNavigation();
@@ -111,7 +111,7 @@ const MyRecipes = () => {
           {item.prepTime} min • {item.servings} porciones
         </Text>
         <Text style={styles.recipeName}>
-          {item.recipeName}
+          {capitalizeFirstLetter(item.recipeName)}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>

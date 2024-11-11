@@ -92,7 +92,7 @@ const CreateRecipeScreen = () => {
   };
 
   const handleNavigateToRecipe = () => {
-    navigation.navigate('MyRecipeScreen', {
+    navigation.navigate('MyRecipes', {
       recipe: {
         name: recipeName,
         image: recipeImage,
