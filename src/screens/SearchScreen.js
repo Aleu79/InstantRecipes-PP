@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Image, StyleSheet, Text, FlatList } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 import axios from 'axios';
+import SearchScreenCateg from './SearchScreenCateg';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,9 +49,12 @@ const SearchScreen = ({ navigation }) => {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      const url = `https://api.spoonacular.com/recipes/complexSearch?number=20&apiKey={apiKey}&addRecipeInformation=true`;
+      const apiKey = '47cb148e73e74414829f9dd8c38a0c7e';
+      const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+      
       try {
         const response = await attemptRequest(url);
+        console.log(response.data.results);
         setRecipes(response.data.results);
       } catch (error) {
         console.error('Error al obtener recetas:', error);
@@ -79,25 +83,15 @@ const SearchScreen = ({ navigation }) => {
 
   const filterRecipes = (criteria) => {
     return recipes.filter((recipe) => {
-      if (criteria === 'vegano' && recipe.dietLabels?.includes('Vegan')) return true;
-      if (criteria === 'vegetariano' && recipe.dietLabels?.includes('Vegetarian')) return true;
+      const diets = recipe.diets ? recipe.diets.map((diet) => diet.toLowerCase()) : [];
+  
+      if (criteria === 'vegano' && diets.includes('vegan')) return true;
+      if (criteria === 'vegetariano' && diets.includes('lacto ovo vegetarian')) return true;
       if (criteria === 'sinTACC' && recipe.glutenFree) return true;
-      if (criteria === 'sinLacteos' && recipe.dietLabels?.includes('Dairy-Free')) return true;
+      if (criteria === 'sinLacteos' && diets.includes('dairy free')) return true;
       return false;
     });
   };
-
-  const renderRecipeItem = ({ item }) => (
-    <TouchableOpacity
-      onPress={() => {
-        navigation.navigate('RecipeScreen', { recipe: item });
-      }}
-      style={styles.recipeItem}
-    >
-      <Image source={{ uri: item.image }} style={styles.recipeImage} />
-      <Text style={styles.recipeName}>{item.title}</Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
@@ -119,20 +113,13 @@ const SearchScreen = ({ navigation }) => {
       {loading ? (
         <Text>Cargando...</Text>
       ) : (
-        <View style={styles.recipeList}>
-          {['vegano', 'vegetariano', 'sinTACC', 'sinLacteos'].map((category) => (
-            <View key={category} style={styles.categoryContainer}>
-              <Text style={styles.categoryTitle}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
-              <FlatList
-                data={filterRecipes(category)}
-                renderItem={renderRecipeItem}
-                keyExtractor={(item) => item.id.toString()}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-              />
-            </View>
-          ))}
-        </View>
+        <ScrollView contentContainerStyle={styles.recipeList}>
+          <SearchScreenCateg
+            categories={['vegano', 'vegetariano', 'sinTACC', 'sinLacteos']}
+            filterRecipes={filterRecipes}
+            navigation={navigation}
+          />
+        </ScrollView>
       )}
 
       <BottomNavBar navigation={navigation} />
@@ -149,53 +136,30 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingTop: 5,
-  }, 
+    marginTop: 20,
+    marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
   backButton: {
-    marginRight: 10,
+    padding: 5,
   },
   searchInput: {
     flex: 1,
-    backgroundColor: '#f1f1f1',
-    borderRadius: 30,
+    marginLeft: 10,
     fontSize: 16,
-    padding: 15,
-    height: 50,
-    paddingLeft: 30,
   },
   filterButton: {
-    marginLeft: 10,
+    padding: 5,
   },
   recipeList: {
     marginTop: 20,
-  },
-  categoryContainer: {
-    marginBottom: 30,
-  },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  recipeItem: {
-    padding: 10,
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    marginRight: 10,
-    width: 150,
-    alignItems: 'center',
-  },
-  recipeImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 5,
-  },
-  recipeName: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
   },
 });
 

@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { capitalizeFirstLetter } from '../helpers/utils';
 
 const CategoryRecipesScreen = ({ route }) => {
   const { category } = route.params;
@@ -136,7 +137,7 @@ const CategoryRecipesScreen = ({ route }) => {
   return (
     <View style={styles.container}>
       <Header />
-      <Text style={styles.title}>{category}</Text>
+      <Text style={styles.title}>{capitalizeFirstLetter(category)}</Text>
       {error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
