@@ -34,7 +34,7 @@ const RecipeCard = ({ item, index, navigation }) => {
                     <Image
                         source={{ uri: item.strMealThumb }}
                         style={[
-                            styles.image,
+                            styles.recipeImage, // Asegurándote de usar recipeImage
                             index % 3 === 0 ? styles.smallImage : styles.largeImage,
                         ]}
                         sharedTransitionTag={item.strMeal}
@@ -93,6 +93,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         marginRight: 10,
         padding: 15,
+        borderRadius: 30, 
+        marginBottom: 15,
     },
     evenPadding: {
         paddingLeft: 0,
@@ -103,25 +105,27 @@ const styles = StyleSheet.create({
         paddingRight: 0,
     },
     recipeImage: {
-        width: '100%',
+        width: '95%',
         height: 250,
+        borderRadius: 20, 
     },
     smallImage: {
-        height: hp(25),
+        height: 250,
     },
     largeImage: {
-        height: hp(35),
+        height: 250, 
     },
     mealText: {
         fontSize: hp(2),
         color: '#808080',
     },
     recipeName: {
-        fontSize: 18,
+        textAlign: 'left',
+        color: '#000',
+        fontSize: 16,
+        marginBottom: 5,
         marginTop: 5,
-        color: '#333',
     },
 });
-
 
 export default Recipes;

@@ -253,12 +253,17 @@ const IngredientItem = ({ ingredient }) => {
 
 const PreparationList = ({ preparationSteps }) => (
     <View style={styles.preparationContainer}>
-        {preparationSteps.map((step, index) => (
-            <Text key={index} style={styles.preparationStep}>
-                {capitalizeFirstLetter(step)}
-            </Text>
-        ))}
-    </View>
+    {preparationSteps.length > 0 ? (
+      preparationSteps.map((step, index) => (
+        <View key={index} style={styles.preparationItem}>
+          <Text style={styles.stepNumber}>{index + 1}</Text>
+          <Text style={styles.preparationStep}>{step}</Text>
+        </View>
+      ))
+    ) : (
+      <Text>No hay instrucciones disponibles.</Text>
+    )}
+  </View>
 );
 
 const styles = StyleSheet.create({
@@ -383,32 +388,32 @@ const styles = StyleSheet.create({
       color: '#888',
     },
     preparationContainer: {
-        marginTop: 10,
-        padding: 15,
-        width: '90%',
-    },
-    preparationItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'left',
-        marginBottom: 10,
-        paddingHorizontal: 20,
-    },
-    stepNumber: {
-        backgroundColor: '#fbbf24', 
-        color: 'white',
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center',
-        fontWeight: 'bold',
-        marginRight: 15,
-    },
-    preparationStep: {
-        fontSize: 16,
-    },
+      marginTop: 10,
+      padding: 15,
+      width: '90%',
+  },
+  preparationItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'left',
+      marginBottom: 10,
+      paddingHorizontal: 20,
+  },
+  stepNumber: {
+      backgroundColor: '#fbbf24', 
+      color: 'white',
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      justifyContent: 'center',
+      alignItems: 'center',
+      textAlign: 'center',
+      fontWeight: 'bold',
+      marginRight: 15,
+  },
+  preparationStep: {
+      fontSize: 16,
+  },
 });
 
 export default RecipeDetailsScreen;
