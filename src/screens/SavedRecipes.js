@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, Activ
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Headers/Header';
-import AsyncStorage from '@react-native-async-storage/async-storage';  
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNavBar from '../components/BottomNavbar';
 
 const SavedRecipes = () => {
@@ -19,20 +19,19 @@ const SavedRecipes = () => {
         setLoading(true);
         const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
         console.log('Recetas guardadas desde AsyncStorage:', savedRecipesJSON);
+
         if (savedRecipesJSON) {
           const recipeIds = JSON.parse(savedRecipesJSON);
           const cachedRecipes = recipeIds.map(id => cache[id]).filter(Boolean);
+          
           if (cachedRecipes.length === recipeIds.length) {
-            console.log('Recetas obtenidas de la caché:', cachedRecipes);
             setSavedRecipes(cachedRecipes);
           } else {
             const recipes = await Promise.all(recipeIds.map(fetchRecipeDetails));
-            console.log('Recetas traídas de la API:', recipes);
             setSavedRecipes(recipes);
           }
         } else {
           setSavedRecipes([]);
-          console.log('No hay recetas guardadas');
         }
       } catch (error) {
         console.error('Error al obtener las recetas guardadas:', error);
@@ -44,22 +43,16 @@ const SavedRecipes = () => {
     };
 
     fetchRecipes();
-  }, []);
+  }, [cache]);
 
   const fetchRecipeDetails = async (id) => {
     if (cache[id]) {
-      console.log(`Receta ${id} encontrada en caché:`, cache[id]);
       return cache[id];
     }
-
     try {
-      console.log(`Recuperando detalles de la receta ${id} de la API...`);
       const response = await fetch(`https://api.spoonacular.com/recipes/${id}/information?apiKey=47cb148e73e74414829f9dd8c38a0c7e`);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error de la API: ${errorText}`);
-        throw new Error('Error al obtener los detalles de la receta');
-      }
+      if (!response.ok) throw new Error('Error al obtener los detalles de la receta');
+
       const recipe = await response.json();
       const recipeData = {
         id: recipe.id,
@@ -67,9 +60,8 @@ const SavedRecipes = () => {
         image: recipe.image,
         servings: recipe.servings,
         ingredients: recipe.extendedIngredients,
-        isRemoved: false, 
+        isRemoved: false,
       };
-      console.log(`Receta ${id} obtenida de la API:`, recipeData);
       setCache((prevCache) => ({ ...prevCache, [id]: recipeData }));
       return recipeData;
     } catch (error) {
@@ -105,7 +97,7 @@ const SavedRecipes = () => {
         <Text style={styles.recipeName}>{item.name}</Text>
         <Text style={styles.recipeCategory}>Porciones: {item.servings}</Text>
         <Text style={styles.recipeCategory}>Ingredientes:</Text>
-        {renderIngredients(item.ingredients)} 
+        {renderIngredients(item.ingredients)}
       </View>
       <TouchableOpacity 
         style={styles.saveIcon} 
@@ -126,19 +118,14 @@ const SavedRecipes = () => {
       const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
       if (savedRecipesJSON) {
         const recipeIds = JSON.parse(savedRecipesJSON);
-        // Filtra el ID de la receta que deseas eliminar
         const updatedIds = recipeIds.filter(recipeId => recipeId !== id);
-        
-        // Actualiza AsyncStorage con la nueva lista
+
         await AsyncStorage.setItem('savedRecipes', JSON.stringify(updatedIds));
-        console.log('Recetas actualizadas después de eliminar:', updatedIds);
-  
-        // Aquí eliminamos la receta del estado y de la caché
         const updatedRecipes = savedRecipes.filter(recipe => recipe.id !== id);
         setSavedRecipes(updatedRecipes);
         setCache((prevCache) => {
           const newCache = { ...prevCache };
-          delete newCache[id]; 
+          delete newCache[id];
           return newCache;
         });
       }
@@ -147,12 +134,11 @@ const SavedRecipes = () => {
       Alert.alert('Error', 'Hubo un problema al eliminar la receta.');
     }
   };
-  
 
   return (
     <View style={styles.container}>
       <Header />
-      {error && <Text style={styles.errorText}>{error}</Text>} 
+      {error && <Text style={styles.errorText}>{error}</Text>}
       {loading ? (
         <ActivityIndicator size="large" color="#ff6347" />
       ) : (
@@ -160,7 +146,7 @@ const SavedRecipes = () => {
           <FlatList
             data={savedRecipes}
             renderItem={renderRecipe}
-            keyExtractor={(item) => item.id.toString()} 
+            keyExtractor={(item) => item.id.toString()}
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -186,14 +172,14 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 10,
     backgroundColor: '#fff',
-    elevation: 3, 
-    shadowColor: '#000', 
+    elevation: 3,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   recipeImage: {
-    width: '100%', 
+    width: '100%',
     height: 150,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,

@@ -1,5 +1,5 @@
-import { Platform, ScrollView, StatusBar, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { Platform, ScrollView, StatusBar, StyleSheet, Text, Alert, View, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
 import { CachedImage } from '../helpers/image';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
@@ -8,29 +8,129 @@ import Loading from '../components/Loading';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { FontAwesome } from '@expo/vector-icons';
 import { capitalizeFirstLetter } from '../helpers/utils';
+import { db } from '../../firebase/firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebase/firebase-config';
+import { UserContext } from '../context/UserContext';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 const RecipeDetailsScreen = (props) => {
+    const { addNotification } = useContext(UserContext); 
     const [isFavourite, setFavourite] = useState(false);
     const [meals, setMeals] = useState(null);
     const [loading, setLoading] = useState(true);
     const item = props.route.params;
     const [activeTab, setActiveTab] = useState('ingredients');
-    
+
     useEffect(() => {
         getMealData(item.idMeal);
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                checkIfRecipeIsSaved(item.idMeal, user.email).then(setFavourite);
+            }
+        });
     }, []);
 
+    const validarReceta = (receta) => {
+        if (!receta || !receta.strMeal || !receta.strMealThumb) {
+            console.error('Receta inválida');
+            return false;
+        }
+        return true;
+    };
+
+    // Verificar si la receta está guardada
+    const checkIfRecipeIsSaved = async (recipeId, userEmail) => {
+        try {
+            const userDoc = await getDoc(doc(db, 'users', userEmail));
+            const savedRecipes = userDoc.data().savedRecipes || [];
+            return savedRecipes.some(recipe => recipe.id === recipeId);
+        } catch (error) {
+            console.error("Error al verificar si la receta está guardada:", error);
+            return false;
+        }
+    };
+
+    // Guardar o eliminar receta en el array de recetas guardadas
+    const handleRecipeSaveToggle = async (recipe) => {
+        if (!validarReceta(recipe)) {
+            return;
+        }
+    
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                console.error("Usuario no autenticado");
+                return;
+            }
+    
+            const userEmail = user.email;
+    
+            const isSaved = await checkIfRecipeIsSaved(recipe.idMeal, userEmail);
+            const userDocRef = doc(db, 'users', userEmail);
+    
+            if (isSaved) {
+                try {
+                    await updateDoc(userDocRef, {
+                        savedRecipes: arrayRemove({
+                            id: recipe.idMeal,
+                            name: recipe.strMeal,
+                            image: recipe.strMealThumb
+                        })
+                    });
+                    setFavourite(false);
+                    Alert.alert('Receta eliminada con éxito!');
+                    addNotification('Receta Eliminada', 'Has eliminado receta.');
+                    console.log("Receta eliminada de favoritos."); 
+                } catch (error) {
+                    Alert.alert('Error', 'No se pudo eliminar la receta.');
+                    addNotification('Error', 'No se pudo eliminar la receta.');
+                    console.error("Error al eliminar la receta de los favoritos:", error);
+                }
+            } else {
+                try {
+                    await updateDoc(userDocRef, {
+                        savedRecipes: arrayUnion({
+                            id: recipe.idMeal,
+                            name: recipe.strMeal,
+                            image: recipe.strMealThumb
+                        })
+                    });
+                    setFavourite(true);
+                    Alert.alert('Receta guardada con éxito!');
+                    addNotification('Receta Guardada', 'Has guardado una receta.');
+                    console.log("Receta guardada correctamente.");
+                } catch (error) {
+                    Alert.alert('Error', 'No se pudo guardar la receta.');
+                    addNotification('Error', 'No se pudo guardar la receta.');
+                    console.error("Error al guardar la receta en los favoritos:", error);
+                }
+            }
+        });
+    };
+    
     const getMealData = async (id) => {
         try {
-            const response = await axios.get(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
-            if (response && response.data) {
-                setMeals(response.data.meals[0]);
+            const cachedRecipe = await AsyncStorage.getItem(id);
+            if (cachedRecipe) {
+                console.log("Receta cargada desde cache:", cachedRecipe);  
+                setMeals(JSON.parse(cachedRecipe)); 
                 setLoading(false);
+            } else {
+                // Si no está en cache, obtenemos los datos de la API
+                const response = await axios.get(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+                if (response && response.data) {
+                    setMeals(response.data.meals[0]);
+                    await AsyncStorage.setItem(id, JSON.stringify(response.data.meals[0])); 
+                    console.log("Receta guardada en cache:", response.data.meals[0]);
+                    setLoading(false);
+                }
             }
         } catch (error) {
             console.log("Error fetching meal data:", error.message);
         }
     };
+    
 
     const ingredientsIndexes = (meals) => {
         let indexes = [];
@@ -52,7 +152,6 @@ const RecipeDetailsScreen = (props) => {
         >
             <StatusBar style='light' />
 
-            {/* Recipe Image */}
             <View style={styles.imageContainer}>
                 {Platform.OS === 'ios' ? (
                     <CachedImage
@@ -75,38 +174,41 @@ const RecipeDetailsScreen = (props) => {
                     <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.bookmarkButton} onPress={() => setFavourite(!isFavourite)}>
-                    <FontAwesome name="bookmark-o" size={28} strokeWidth={2.5} color="#fff" />
+                <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleRecipeSaveToggle(meals)}>
+                    <FontAwesome 
+                        name={isFavourite ? "bookmark" : "bookmark-o"} 
+                        size={28} 
+                        color={isFavourite ? "#FFD700" : "#fff"} 
+                    />
                 </TouchableOpacity>
             </Animated.View>
 
             {loading ? (
                 <Loading size="large" style={styles.loading} />
             ) : (
-               <ScrollView style={styles.container}>
-                 <View style={styles.detailsContainer}>
-                    <View style={styles.contentContainer}>
-                        <Text style={styles.recipeName}>{meals?.strMeal}</Text>
+                <ScrollView style={styles.container}>
+                    <View style={styles.detailsContainer}>
+                        <View style={styles.contentContainer}>
+                            <Text style={styles.recipeName}>{meals?.strMeal}</Text>
+                        </View>
+
+                        <View style={styles.separator}></View>
+
+                        <View style={styles.tabsContainer}>
+                            <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
+                            <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
+                        </View>
+
+                        {activeTab === 'ingredients' ? (
+                            <IngredientsList ingredients={ingredientsIndexes(meals).map(i => ({
+                                name: meals['strIngredient' + i],
+                                measure: meals['strMeasure' + i]
+                            }))} />
+                        ) : (
+                            <PreparationList preparationSteps={preparationSteps} />
+                        )}
                     </View>
-
-                    <View style={styles.separator}></View>
-
-                    {/* Tabs */}
-                    <View style={styles.tabsContainer}>
-                        <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
-                        <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
-                    </View>
-
-                    {activeTab === 'ingredients' ? (
-                        <IngredientsList ingredients={ingredientsIndexes(meals).map(i => ({
-                            name: meals['strIngredient' + i],
-                            measure: meals['strMeasure' + i]
-                        }))} />
-                    ) : (
-                        <PreparationList preparationSteps={preparationSteps} />
-                    )}
-                 </View>
-               </ScrollView>
+                </ScrollView>
             )}
         </ScrollView>
     );
@@ -143,8 +245,8 @@ const IngredientItem = ({ ingredient }) => {
                 style={styles.ingredientImage}
             />
             <View>
-              <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.name)}</Text>
-              <Text style={styles.ingredientAmount}>{ingredient.measure}</Text>
+                <Text style={styles.ingredientName}>{capitalizeFirstLetter(ingredient.name)}</Text>
+                <Text style={styles.ingredientAmount}>{ingredient.measure}</Text>
             </View>
         </View>
     );
@@ -152,20 +254,13 @@ const IngredientItem = ({ ingredient }) => {
 
 const PreparationList = ({ preparationSteps }) => (
     <View style={styles.preparationContainer}>
-        {preparationSteps.length > 0 ? (
-            preparationSteps.map((step, index) => (
-                <View key={index} style={styles.preparationItem}>
-                    <Text style={styles.stepNumber}>{index + 1}</Text>
-                    <Text style={styles.preparationStep}>{step}</Text>
-                </View>
-            ))
-        ) : (
-            <Text>No hay instrucciones disponibles.</Text>
-        )}
+        {preparationSteps.map((step, index) => (
+            <Text key={index} style={styles.preparationStep}>
+                {capitalizeFirstLetter(step)}
+            </Text>
+        ))}
     </View>
-  );
-  
-
+);
 
 const styles = StyleSheet.create({
     container: {
@@ -175,7 +270,9 @@ const styles = StyleSheet.create({
     scrollContainer: {
         paddingBottom: 30,
     },
-
+    bookmarkButton: {
+        paddingHorizontal: 10,
+    },
     imageContainer: {
         flexDirection: "row",
         justifyContent: "center",
@@ -226,6 +323,9 @@ const styles = StyleSheet.create({
       fontSize: 24,
       fontWeight: 'bold',
       marginBottom: 10,
+    },
+    loading: {
+        marginTop: 50,
     },
     separator: {
       height: 1,
