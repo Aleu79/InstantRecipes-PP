@@ -267,8 +267,8 @@ const CreateRecipeScreen = () => {
           {activeTab === 'ingredients' && (
             <View style={styles.ingredientsContainer}>
               {ingredients.map((ingredient, index) => (
-                <View style={styles.mainContainer}>
-                <View key={index} style={styles.ingredientWrapper}>
+                <View key={index} style={styles.mainContainer}>
+                <View style={styles.ingredientWrapper}>
                   <View style={styles.ingredientInputContainer}>
                     <TextInput
                       style={styles.stepInput}
