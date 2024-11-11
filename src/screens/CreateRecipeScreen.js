@@ -214,8 +214,8 @@ const CreateRecipeScreen = () => {
             onChangeText={setRecipeName}
           />
 
-          <View>
-            <View style={styles.detailscontainer}>
+          <View style={styles.detailscontainer}>
+              <View style={styles.detailssubcontainer}>
                 <TouchableOpacity>
                   <Icon name={'people-outline'} size={24} color="#999" />
                 </TouchableOpacity>
@@ -226,7 +226,7 @@ const CreateRecipeScreen = () => {
                   onChangeText={setServings}
                 />
               </View>
-              <View style={styles.detailscontainer}>
+              <View style={styles.detailssubcontainer}>
                 <TouchableOpacity>
                   <Icon name={'time-outline'} size={24} color="#999" />
                 </TouchableOpacity>
@@ -267,17 +267,15 @@ const CreateRecipeScreen = () => {
           {activeTab === 'ingredients' && (
             <View style={styles.ingredientsContainer}>
               {ingredients.map((ingredient, index) => (
+                <View style={styles.mainContainer}>
                 <View key={index} style={styles.ingredientWrapper}>
-                 <View style={styles.ingredientInputContainer}>
+                  <View style={styles.ingredientInputContainer}>
                     <TextInput
                       style={styles.stepInput}
                       placeholder="Ingrediente"
                       value={ingredient.name}
                       onChangeText={(text) => handleIngredientChange(text, index, 'name')}
                     />
-                    <TouchableOpacity onPress={() => handleRemoveIngredient(index)} style={styles.ingredientIcon}>
-                      <FontAwesome name="trash" size={20} color="red" />
-                    </TouchableOpacity>
                   </View>
                   <View style={styles.smallInputContainer}>
                     <View style={styles.subInputRow}>
@@ -297,6 +295,11 @@ const CreateRecipeScreen = () => {
                     </View>
                   </View>
                 </View>
+                
+                <TouchableOpacity onPress={() => handleRemoveIngredient(index)} style={styles.removeStepButton}>
+                  <FontAwesome name="trash-o" size={26} color="red" />
+                </TouchableOpacity>  
+              </View>              
               ))}
               <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
                 <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
@@ -422,19 +425,25 @@ const styles = StyleSheet.create({
   ingredientsContainer: {
     marginBottom: 20,
   },
+  mainContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+  },
   ingredientWrapper: {
-    marginBottom: 15,
+    width: '85%',
   },
   ingredientInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '80%',
+    width: '100%',
     marginBottom: 10,
     alignSelf: 'center',
   }, 
   removeStepButton: {
-    marginRight: 10,
+    marginHorizontal: 10,
   },
   stepInput: {
     flex: 1,
@@ -447,7 +456,7 @@ const styles = StyleSheet.create({
   },
   smallInputContainer: {
     marginTop: 10,
-    width: '85%',
+    width: '95%',
     margin: 'auto',
   },
   subInputRow: {
@@ -463,6 +472,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   detailscontainer:{
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignSelf: 'center',
+  },
+  detailssubcontainer:{
     width: '45%',
     height: 50,
     flexDirection: 'row',
@@ -473,6 +487,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     paddingHorizontal: 16,
     marginBottom: 16,
+    marginHorizontal: 10,
   },
   dietTypeContainer: {
     padding: 20,
@@ -489,6 +504,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginVertical: 5,
+
   },
   dietTypeLabel: {
     fontSize: 16,
