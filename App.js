@@ -22,7 +22,6 @@ import { ThemeProvider } from './src/context/ThemeContext';
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoadingScreen from './src/screens/LoadingScreen'; 
-import { LanguageProvider } from './src/context/LanguajeContext';
 import MyRecipeScreen from './src/screens/MyRecipeScreen';
 
 const Stack = createStackNavigator();
@@ -86,11 +85,9 @@ export default function App() {
   return (
     <UserProvider>
       <ThemeProvider>
-        <LanguageProvider>
           <NavigationContainer>
             <AppNavigation /> 
           </NavigationContainer>
-        </LanguageProvider>  
       </ThemeProvider>
     </UserProvider>
   );
