@@ -32,7 +32,6 @@ const Alert = ({ type, title, text, onClose }) => {
   return (
     <AlertNotificationRoot>
       <View>
-        {/* Tu lógica del contenido del componente aquí */}
       </View>
     </AlertNotificationRoot>
   );

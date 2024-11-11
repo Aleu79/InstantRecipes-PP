@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, TextInput, StatusBar } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,  StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext'; 
@@ -7,7 +7,6 @@ import { auth } from '../../firebase/firebase-config';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import Categories from '../components/Categories';
 import Recipes from '../components/Recipes';
-import { useLanguage } from '../context/LanguajeContext';
 import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
 

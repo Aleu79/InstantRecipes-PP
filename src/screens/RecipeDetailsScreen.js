@@ -1,7 +1,6 @@
 import { Platform, ScrollView, StatusBar, StyleSheet, Text, Alert, View, Image, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState, useContext } from 'react';
 import { CachedImage } from '../helpers/image';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import axios from 'axios';
 import Loading from '../components/Loading';
