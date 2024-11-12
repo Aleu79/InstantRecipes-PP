@@ -19,7 +19,7 @@ const SearchScreen = ({ navigation }) => {
     for (let i = 0; i < validKeys.length; i++) {
       const key = validKeys[i];
       try {
-        const apiUrl = url.replace('{apiKey}', key); // Ensure API Key is replaced correctly
+        const apiUrl = url.replace('{apiKey}', key); 
         const response = await axios.get(apiUrl);
         return response;
       } catch (error) {
@@ -27,7 +27,7 @@ const SearchScreen = ({ navigation }) => {
           const status = error.response.status;
           if (status === 402 || status === 401) {
             console.warn(`API Key ${key} no válida, probando con otra.`);
-            validKeys.splice(i, 1); // Remove failed key and try next one
+            validKeys.splice(i, 1); 
             i--;
           } else {
             console.error('Error in request:', error);
@@ -101,7 +101,6 @@ const SearchScreen = ({ navigation }) => {
         <Text>Cargando...</Text>
       ) : (
         <>
-          {/* Render recipes only when there is a search query */}
           {searchQuery.length > 2 ? (
             <FlatList
               data={recipes}

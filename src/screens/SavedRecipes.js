@@ -43,7 +43,7 @@ const SavedRecipes = () => {
     };
 
     fetchRecipes();
-  }, []); // Eliminar `cache` como dependencia para evitar bucles infinitos
+  }, []); 
 
   const fetchRecipeDetails = async (id) => {
     if (cache[id]) {

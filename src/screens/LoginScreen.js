@@ -64,7 +64,7 @@ const LoginScreen = () => {
       }
   
     } catch (error) {
-      // Manejo de errores comunes
+      // Manejo de errores 
       switch (error.code) {
         case 'auth/wrong-password':
           showAlert(ALERT_TYPE.DANGER, 'Error', 'La contraseña es incorrecta. Inténtalo de nuevo.');

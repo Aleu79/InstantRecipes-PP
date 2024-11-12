@@ -121,9 +121,9 @@ const SignUpScreen = ({ navigation }) => {
       // Obtener el token y guardarlo en AsyncStorage
       const token = await user.getIdToken();
       console.log("El token es: ", token);
-      await AsyncStorage.setItem('userToken', token);  // Guardar el token en el dispositivo
+      await AsyncStorage.setItem('userToken', token);  
   
-      setUser({ email: user.email, username, phone, token });  // Pasar el token al contexto
+      setUser({ email: user.email, username, phone, token });  
   
       const checkVerificationInterval = setInterval(async () => {
         await auth.currentUser.reload();
