@@ -8,7 +8,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
 import { getFirestore, doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import BottomNavBar from '../BottomNavbar';
-import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+
 
 const UserEdit = () => {
   const { user, setUser, addNotification } = useContext(UserContext); 
@@ -50,7 +51,6 @@ const UserEdit = () => {
   }, [initialLoad, db]);
 
   const handleSaveChanges = async () => {
-    // Mostrar modal para confirmar los cambios
     setModalVisible(true);
   };
 
@@ -160,54 +160,53 @@ const UserEdit = () => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
-  const handleDeleteProfile = () => {
-    setModalVisible(true);  // Activar modal
+  
+  const handleDeleteProfile = async () => {
+    Alert.alert(
+      'Confirmar Eliminación',
+      '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            try {
+              const user = auth.currentUser;
+  
+              if (user) {
+                // Intentar eliminar el documento del usuario en Firestore
+                const userRef = doc(db, 'users', user.email);
+                await deleteDoc(userRef);
+  
+                // Intentar eliminar el usuario de Firebase Authentication
+                await user.delete();
+                Alert.alert('Perfil eliminado con éxito');
+                navigation.navigate('Login');
+              } else {
+                Alert.alert('Error', 'No se pudo encontrar al usuario.');
+              }
+            } catch (error) {
+              console.error('Error al eliminar perfil:', error);
+  
+              let errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
+              
+              if (error.code === 'auth/requires-recent-login') {
+                errorMessage = 'Por favor, inicia sesión nuevamente para eliminar tu perfil.';
+              }
+  
+              Alert.alert('Error', errorMessage);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
   
-  const confirmDeleteProfile = async () => {
-    const user = auth.currentUser;
-    
-    if (user) {
-      if (!currentPassword) {
-        Alert.alert('Error', 'Por favor ingresa tu contraseña actual.');
-        return;
-      }
   
-      try {
-        // Reautenticar al usuario antes de eliminar el perfil
-        const credential = EmailAuthProvider.credential(
-          user.email,
-          currentPassword
-        );
-        await reauthenticateWithCredential(user, credential);
-  
-        // Eliminar el documento del usuario en Firestore
-        const userRef = doc(db, 'users', user.email);
-        await deleteDoc(userRef);
-  
-        // Eliminar el usuario de Firebase Authentication
-        await user.delete();
-  
-        Alert.alert('Perfil eliminado con éxito');
-        navigation.navigate('Login');
-      } catch (error) {
-        console.error('Error al eliminar perfil:', error);
-        let errorMessage;
-  
-        if (error.code === 'auth/wrong-password') {
-          errorMessage = 'La contraseña actual es incorrecta. Inténtalo nuevamente.';
-        } else if (error.code === 'auth/too-many-requests') {
-          errorMessage = 'Demasiados intentos fallidos. Intenta más tarde.';
-        } else {
-          errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
-        }
-  
-        Alert.alert('Error', errorMessage);
-      }
-    } else {
-      Alert.alert('Error', 'No hay usuario autenticado');
-    }
-  };
   
   
   
@@ -215,7 +214,6 @@ const UserEdit = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Header />
-  
       <View style={styles.titulocontainer}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>
@@ -230,7 +228,7 @@ const UserEdit = () => {
           )}
         </View>
       </View>
-  
+
       <View style={styles.camposcontainer}>
         <Text style={styles.sectionTitle}>Nuevo nombre de usuario</Text>
         <TextInput
@@ -239,7 +237,7 @@ const UserEdit = () => {
           value={username}
           onChangeText={setUsername}
         />
-  
+
         <Text style={styles.sectionTitle}>Nueva contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
@@ -253,7 +251,7 @@ const UserEdit = () => {
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} />
           </TouchableOpacity>
         </View>
-  
+
         <Text style={styles.sectionTitle}>Repetir nueva contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
@@ -267,19 +265,20 @@ const UserEdit = () => {
             <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} />
           </TouchableOpacity>
           <View style={styles.passwordStrengthContainer}>
-            {password && <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>}
+            {password ? (
+              <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
+            ) : null}
           </View>
         </View>
-  
+
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
           <Text style={styles.saveButtonText}>Guardar cambios</Text>
         </TouchableOpacity>
       </View>
-  
+
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
         <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
       </TouchableOpacity>
-  
       <Modal
         animationType="slide"
         transparent={true}
@@ -299,8 +298,8 @@ const UserEdit = () => {
             <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
               <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
             </TouchableOpacity>
-  
-            <TouchableOpacity style={styles.confirmButton} onPress={confirmDeleteProfile}>
+
+            <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
               <Text style={styles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
@@ -309,11 +308,9 @@ const UserEdit = () => {
           </View>
         </View>
       </Modal>
-  
       <BottomNavBar navigation={navigation} />
     </ScrollView>
   );
-  
 };
 
 const styles = StyleSheet.create({
