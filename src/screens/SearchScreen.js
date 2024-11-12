@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text, ScrollView } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 import axios from 'axios';
@@ -9,14 +9,9 @@ const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  
   const apiKeys = [
-    'bf56d31f34f7dc25e10b85c38ebeb50f7feda90f',
-    '69694db3792e4c4387992d79c64eb073',
-    '0eb0cec32c98d0df795f8c12a544f510f42f24e1',
-    'b9103835aeb7ae98a97a6e29351c294a7f0ded16',
-    '52afdb46498d5e9f8a8ed0639de3492cceeb271f',
-    '0345a5adffdd0c47575a635a5d50b4aa76a64c0e',
-    'b8abaf0eebd246cba6e1bfb6d2987257',
+    '7049b3cba3134fb090258c4f100093ff',
   ];
 
   const attemptRequest = async (url) => {
@@ -24,7 +19,7 @@ const SearchScreen = ({ navigation }) => {
     for (let i = 0; i < validKeys.length; i++) {
       const key = validKeys[i];
       try {
-        const apiUrl = url.replace('{apiKey}', key);
+        const apiUrl = url.replace('{apiKey}', key); // Ensure API Key is replaced correctly
         const response = await axios.get(apiUrl);
         return response;
       } catch (error) {
@@ -32,32 +27,29 @@ const SearchScreen = ({ navigation }) => {
           const status = error.response.status;
           if (status === 402 || status === 401) {
             console.warn(`API Key ${key} no válida, probando con otra.`);
-            validKeys.splice(i, 1);
+            validKeys.splice(i, 1); // Remove failed key and try next one
             i--;
           } else {
-            console.error('Error en la solicitud:', error);
+            console.error('Error in request:', error);
             throw error;
           }
         } else {
-          console.error('Error en la solicitud:', error);
+          console.error('Error in request:', error);
           throw error;
         }
       }
     }
-    throw new Error('No hay API keys disponibles o todas alcanzaron el límite');
+    throw new Error('No API keys available or all reached the limit');
   };
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      const apiKey = '47cb148e73e74414829f9dd8c38a0c7e';
-      const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey=${apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
-      
+      const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey={apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
       try {
         const response = await attemptRequest(url);
-        console.log(response.data.results);
         setRecipes(response.data.results);
       } catch (error) {
-        console.error('Error al obtener recetas:', error);
+        console.error('Error fetching recipes:', error);
       }
     };
     fetchRecipes();
@@ -72,7 +64,7 @@ const SearchScreen = ({ navigation }) => {
         const response = await attemptRequest(url);
         setRecipes(response.data.results);
       } catch (error) {
-        console.error('Error al buscar recetas:', error);
+        console.error('Error searching recipes:', error);
       } finally {
         setLoading(false);
       }
@@ -81,17 +73,12 @@ const SearchScreen = ({ navigation }) => {
     }
   };
 
-  const filterRecipes = (criteria) => {
-    return recipes.filter((recipe) => {
-      const diets = recipe.diets ? recipe.diets.map((diet) => diet.toLowerCase()) : [];
-  
-      if (criteria === 'vegano' && diets.includes('vegan')) return true;
-      if (criteria === 'vegetariano' && diets.includes('lacto ovo vegetarian')) return true;
-      if (criteria === 'sinTACC' && recipe.glutenFree) return true;
-      if (criteria === 'sinLacteos' && diets.includes('dairy free')) return true;
-      return false;
-    });
-  };
+  const renderRecipeItem = ({ item }) => (
+    <View style={styles.recipeItem}>
+      <Image source={{ uri: item.image }} style={styles.recipeImage} />
+      <Text style={styles.recipeName}>{item.title}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -113,13 +100,19 @@ const SearchScreen = ({ navigation }) => {
       {loading ? (
         <Text>Cargando...</Text>
       ) : (
-        <ScrollView contentContainerStyle={styles.recipeList}>
-          <SearchScreenCateg
-            categories={['vegano', 'vegetariano', 'sinTACC', 'sinLacteos']}
-            filterRecipes={filterRecipes}
-            navigation={navigation}
-          />
-        </ScrollView>
+        <>
+          {/* Render recipes only when there is a search query */}
+          {searchQuery.length > 2 ? (
+            <FlatList
+              data={recipes}
+              renderItem={renderRecipeItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.recipeList}
+            />
+          ) : (
+            <SearchScreenCateg />
+         )}
+        </>
       )}
 
       <BottomNavBar navigation={navigation} />
@@ -160,6 +153,29 @@ const styles = StyleSheet.create({
   },
   recipeList: {
     marginTop: 20,
+  },
+  recipeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  recipeImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+  },
+  recipeName: {
+    marginLeft: 12,
+    fontSize: 16,
+    flex: 1,
+    textAlign: 'center',
   },
 });
 

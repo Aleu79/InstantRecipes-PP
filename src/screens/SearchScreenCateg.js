@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image } from 'react-native';
+import { View, TouchableOpacity, Text, FlatList, Image, ScrollView, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
-const SearchScreenCateg = ({ categories, filterRecipes, navigation }) => {
+const SearchScreenCateg = ({ categories = [], filterRecipes, navigation }) => {
   const renderRecipeItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('RecipeScreen', { recipe: item })}
@@ -19,8 +19,12 @@ const SearchScreenCateg = ({ categories, filterRecipes, navigation }) => {
     </TouchableOpacity>
   );
 
+  if (!categories || categories.length === 0) {
+    return <Text>No hay categorías disponibles.</Text>;
+  }
+
   return (
-    <View style={styles.recipeList}>
+    <ScrollView style={styles.recipeList}>
       {categories.map((category) => (
         <View key={category} style={styles.categoryContainer}>
           <View style={styles.categoryHeader}>
@@ -40,64 +44,63 @@ const SearchScreenCateg = ({ categories, filterRecipes, navigation }) => {
           />
         </View>
       ))}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   recipeList: {
-    marginTop: 20,
+    flex: 1,
   },
   categoryContainer: {
-    marginBottom: 30,
+    marginBottom: 20,
   },
   categoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   verMasButton: {
+    color: 'blue',
     fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
   },
   recipeContainer: {
-    width: 200,
-    marginBottom: 15,
-    marginRight: 5,
-    borderRadius: 15,
-    overflow: 'hidden',
-    paddingBottom: 10,
+    width: 150,
+    marginRight: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   recipeImage: {
-    width: '90%',
-    height: 250,
-    borderRadius: 15,
-    resizeMode: 'cover',
-  },
-  detalles: {
-    color: '#adadad',
-    fontSize: 14,
-    marginTop: 5,
-  },
-  recipeName: {
-    textAlign: 'left',
-    color: '#000',
-    fontSize: 16,
-    fontWeight: 'bold',
+    width: '100%',
+    height: 100,
+    borderRadius: 5,
   },
   bookmarkButton: {
     position: 'absolute',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 5,
-    top: 10,
-    right: 10,
+    top: 5,
+    right: 5,
+    backgroundColor: '#000',
+    borderRadius: 50,
     padding: 5,
+  },
+  detalles: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 5,
+  },
+  recipeName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
 });
 

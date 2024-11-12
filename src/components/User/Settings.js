@@ -4,32 +4,26 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
 import BottomNavBar from '../BottomNavbar';
 import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../../context/ThemeContext';
 
 const Settings = () => {
   const navigation = useNavigation();
-  const { isDarkTheme, toggleTheme } = useTheme();
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, isDarkTheme && styles.darkContainer]}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Header />
 
       <View style={styles.separator} />
 
-      <Text style={[styles.text, isDarkTheme && styles.darkText]}>Ajustes</Text>
+      <Text style={styles.text}>Ajustes</Text>
 
       <View style={styles.menuContainer}>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Terminos')}>
-          <Icon name="document-text-outline" size={24} color={isDarkTheme ? '#fff' : '#333'} />
-          <Text style={[styles.menuText, isDarkTheme && styles.darkText]}>Términos y Condiciones</Text>
+          <Icon name="document-text-outline" size={24} color="#333" />
+          <Text style={styles.menuText}>Términos y Condiciones</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('DevelopersScreen')}>
-          <Icon name="desktop-outline" size={24} color={isDarkTheme ? '#fff' : '#333'} />
-          <Text style={[styles.menuText, isDarkTheme && styles.darkText]}>Desarrolladores</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={toggleTheme}>
-          <Icon name="sunny-outline" size={24} color={isDarkTheme ? '#fff' : '#333'} />
-          <Text style={[styles.menuText, isDarkTheme && styles.darkText]}>Tema</Text>
+          <Icon name="desktop-outline" size={24} color="#333" />
+          <Text style={styles.menuText}>Desarrolladores</Text>
         </TouchableOpacity>
       </View>
 
@@ -44,9 +38,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
     padding: 20,
   },
-  darkContainer: {
-    backgroundColor: '#222',
-  },
   menuContainer: {
     marginVertical: 20,
   },
@@ -59,9 +50,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 18,
     color: '#333',
-  },
-  darkText: {
-    color: '#fff',
   },
   text: {
     fontSize: 24,
