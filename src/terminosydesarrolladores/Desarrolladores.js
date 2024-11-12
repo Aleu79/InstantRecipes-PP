@@ -6,23 +6,23 @@ import Header from '../components/Headers/Header';
 const DevelopersScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.customHeader}>
+      <View style={styles.headerContainer}>
         <Header title="Desarrolladores" goBack={() => navigation.goBack()} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Icon name="code-slash-outline" size={40} color="#4CAF50" /> 
-          <Text style={styles.title}>Desarrolladores</Text>
+      <View style={styles.contentContainer}>
+        <View style={styles.iconTextContainer}>
+          <Icon name="code-slash-outline" size={40} color="#4CAF50" />
+          <Text style={styles.titleText}>Desarrolladores</Text>
         </View>
 
-        <Icon name="construct-outline" size={150} color="#4CAF50" style={styles.icon} />  
+        <Icon name="construct-outline" size={150} color="#4CAF50" style={styles.icon} />
 
-        <Text style={styles.message}>
+        <Text style={styles.infoText}>
           Aún no tenemos información sobre desarrolladores en esta sección.
         </Text>
 
-        <Text style={styles.subMessage}>
+        <Text style={styles.footerText}>
           ¡Estén atentos! Pronto actualizaremos esta sección con más detalles.
         </Text>
       </View>
@@ -33,42 +33,42 @@ const DevelopersScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',  
+    backgroundColor: '#f3f4f6',
   },
-  customHeader: {
-    marginTop: 30, 
-    marginBottom: 10,
+  headerContainer: {
+    marginTop: 32,
+    marginBottom: 16,
   },
-  content: {
+  contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
   },
-  header: {
+  iconTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-  title: {
+  titleText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333', 
-    marginLeft: 10,
+    color: '#333',
+    marginLeft: 8,
   },
   icon: {
     marginBottom: 20,
   },
-  message: {
+  infoText: {
     fontSize: 18,
     textAlign: 'center',
-    color: '#555',  
-    marginBottom: 10,
+    color: '#4b5563',
+    marginBottom: 8,
   },
-  subMessage: {
+  footerText: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#777',  
+    color: '#6b7280',
   },
 });
 

@@ -17,7 +17,7 @@ import TerminosyCondiciones from './src/terminosydesarrolladores/Terminosycondic
 import FilterByIngredients from './src/screens/FilterByIngredients';
 import Settings from './src/components/User/Settings';
 import Notifications from './src/screens/Notifications';
-import DevelopersScreen from './src/terminosydesarrolladores/Desarroladores';
+import DevelopersScreen from './src/terminosydesarrolladores/Desarrolladores';
 import { ThemeProvider } from './src/context/ThemeContext'; 
 import RecipeDetailsScreen from './src/screens/RecipeDetailsScreen';
 import WelcomeScreen from './src/screens/WelcomeScreen';

@@ -5,7 +5,6 @@ import { View, Button } from 'react-native';
 const Alert = ({ type, title, text, onClose }) => {
 
   useEffect(() => {
-    // Mostrar Dialog o Toast solo cuando el componente se ha montado o los props cambian
     if (type === ALERT_TYPE.SUCCESS || type === ALERT_TYPE.DANGER || type === ALERT_TYPE.WARNING) {
       Dialog.show({
         type: type,

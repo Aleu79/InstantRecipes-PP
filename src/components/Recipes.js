@@ -34,7 +34,7 @@ const RecipeCard = ({ item, index, navigation }) => {
                     <Image
                         source={{ uri: item.strMealThumb }}
                         style={[
-                            styles.recipeImage, // Asegurándote de usar recipeImage
+                            styles.recipeImage, 
                             index % 3 === 0 ? styles.smallImage : styles.largeImage,
                         ]}
                         sharedTransitionTag={item.strMeal}

@@ -78,13 +78,10 @@ const UserEdit = () => {
               if (username && username !== currentUser.displayName) {
                 const userRef = doc(db, 'users', currentUser.email);
 
-                // Actualiza el nombre en Firestore
                 await updateDoc(userRef, { username });
 
-                // Actualiza el displayName en Firebase Authentication
                 await updateProfile(currentUser, { displayName: username });
 
-                // Actualiza el contexto del usuario
                 setUser((prevUser) => ({
                   ...prevUser,
                   username,
@@ -95,25 +92,20 @@ const UserEdit = () => {
               }
 
               if (password) {
-                // Actualiza la contraseña
                 await updatePassword(currentUser, password);
                 addNotification('Cambio de contraseña', 'Has cambiado tu contraseña.');
                 Alert.alert('Éxito', 'Contraseña actualizada');
               }
-
-              // Restablecer los campos
               setUsername('');
               setPassword('');
               setConfirmPassword('');
               setModalVisible(false);
 
-              // Navegar a la pantalla de perfil
               navigation.navigate('UserProfile');
             } catch (error) {
               console.error('Error al actualizar perfil:', error);
               let errorMessage;
 
-              // Manejo de errores más específico
               switch (error.code) {
                 case 'auth/weak-password':
                   errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
@@ -137,13 +129,12 @@ const UserEdit = () => {
   const calculatePasswordStrength = (password) => {
     let strength = 0;
   
-    if (password.length >= 8) strength++; // Longitud
-    if (/[A-Z]/.test(password)) strength++; // Mayúsculas
-    if (/[a-z]/.test(password)) strength++; // Minúsculas
-    if (/[0-9]/.test(password)) strength++; // Números
-    if (/[^A-Za-z0-9]/.test(password)) strength++; // Caracteres especiales
+    if (password.length >= 8) strength++; 
+    if (/[A-Z]/.test(password)) strength++; 
+    if (/[a-z]/.test(password)) strength++; 
+    if (/[0-9]/.test(password)) strength++; 
+    if (/[^A-Za-z0-9]/.test(password)) strength++; 
   
-    // Definir la fortaleza de la contraseña
     if (strength === 5) {
       return 'Muy fuerte';
     } else if (strength >= 3) {
@@ -155,11 +146,11 @@ const UserEdit = () => {
     }
   };
   
-  // Efecto para actualizar la fortaleza de la contraseña
   useEffect(() => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
+<<<<<<< HEAD
   
   const handleDeleteProfile = async () => {
     Alert.alert(
@@ -204,9 +195,48 @@ const UserEdit = () => {
       ],
       { cancelable: false }
     );
+=======
+  const handleDeleteProfile = () => {
+    setModalVisible(true);
+>>>>>>> 16cc9bd6 (Correcciones y limpieza de código)
   };
   
   
+<<<<<<< HEAD
+=======
+      try {
+        const credential = EmailAuthProvider.credential(
+          user.email,
+          currentPassword
+        );
+        await reauthenticateWithCredential(user, credential);
+  
+        const userRef = doc(db, 'users', user.email);
+        await deleteDoc(userRef);
+  
+        await user.delete();
+  
+        Alert.alert('Perfil eliminado con éxito');
+        navigation.navigate('Login');
+      } catch (error) {
+        console.error('Error al eliminar perfil:', error);
+        let errorMessage;
+  
+        if (error.code === 'auth/wrong-password') {
+          errorMessage = 'La contraseña actual es incorrecta. Inténtalo nuevamente.';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = 'Demasiados intentos fallidos. Intenta más tarde.';
+        } else {
+          errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
+        }
+  
+        Alert.alert('Error', errorMessage);
+      }
+    } else {
+      Alert.alert('Error', 'No hay usuario autenticado');
+    }
+  };
+>>>>>>> 16cc9bd6 (Correcciones y limpieza de código)
   
   
   

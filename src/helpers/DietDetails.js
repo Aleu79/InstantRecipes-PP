@@ -14,8 +14,7 @@ const DietDetails = ({ iconName, color, text }) => {
       <TouchableOpacity onPress={handlePress}>
         <MaterialCommunityIcons name={iconName} size={24} color={color} />
       </TouchableOpacity>
-
-      {/* Tooltip solo debajo */}
+      
       {showTooltip && (
         <View style={styles.tooltip}>
           <Text style={styles.tooltipText}>{text}</Text>
