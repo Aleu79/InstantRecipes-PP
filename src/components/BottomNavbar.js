@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext'; 
+import { UserContext } from '../context/UserContext';
 
 const BottomNavBar = ({ navigation }) => {
   const { isDarkTheme } = useTheme(); 
+  const { notifications } = useContext(UserContext);
+  const unreadNotifications = notifications.filter(notification => !notification.read).length;
 
   return (
     <View style={[styles.navbar, isDarkTheme ? styles.darkNavbar : styles.lightNavbar]}>
@@ -12,7 +15,12 @@ const BottomNavBar = ({ navigation }) => {
         <Icon name="home-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Notifications')}>
-        <Icon name="mail-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+        <View style={styles.iconWrapper}>
+          <Icon name="mail-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+          {unreadNotifications > 0 && (
+            <View style={styles.notificationDot}></View>
+          )}
+        </View>
       </TouchableOpacity>
       <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('SavedRecipes')}>
         <Icon name="bookmark-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
@@ -43,6 +51,21 @@ const styles = StyleSheet.create({
   lightNavbar: {
     backgroundColor: '#fff',
     borderTopColor: '#ccc',
+  },
+  iconWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'red',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   navButton: {
     flex: 1,

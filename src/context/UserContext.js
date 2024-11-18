@@ -13,6 +13,8 @@ export const UserProvider = ({ children, navigation }) => {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [readNotifications, setReadNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
 
   useEffect(() => {
     const loadToken = async () => {
@@ -83,6 +85,14 @@ export const UserProvider = ({ children, navigation }) => {
     };
     setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
   };
+  // Función para contar las notificaciones no leídas
+  const countUnreadNotifications = () => {
+    setUnreadNotifications(notifications.filter(notification => !notification.read).length);
+  };
+
+  useEffect(() => {
+    countUnreadNotifications();
+  }, [notifications]);
   
 
   const removeNotification = (id) => {
@@ -95,7 +105,7 @@ export const UserProvider = ({ children, navigation }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, notifications, addNotification, removeNotification, clearNotifications, handleLogout }}>
+    <UserContext.Provider value={{ user, setUser, notifications, addNotification, removeNotification, clearNotifications, handleLogout, setNotifications }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
@@ -7,17 +7,24 @@ import BottomNavBar from '../components/BottomNavbar';
 import { useNavigation } from '@react-navigation/native';
 
 const Notifications = ({ navigation }) => {
-  const { notifications, removeNotification, clearNotifications, readNotifications } = useContext(UserContext);
-  const [selectedNotification, setSelectedNotification] = useState(null); 
+  const { notifications, removeNotification, clearNotifications, readNotifications, setNotifications } = useContext(UserContext);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
-  if (!notifications) {
-    return <Text>Cargando...</Text>; 
-  }
+  // Marcar todas las notificaciones como leídas cuando la pantalla se monta
+  useEffect(() => {
+    if (notifications && notifications.length > 0) {
+      notifications.forEach(notification => {
+        if (!notification.read) {
+          handleReadNotification(notification.id); 
+        }
+      });
+    }
+  }, [notifications]);
 
   const renderNotification = ({ item }) => (
     <TouchableOpacity
       style={styles.notificationItem}
-      onLongPress={() => handleLongPress(item)} 
+      onLongPress={() => handleLongPress(item)}
     >
       <Icon name="notifications-outline" size={28} color="#4CAF50" style={styles.icon} />
       <View style={styles.notificationContent}>
@@ -31,7 +38,7 @@ const Notifications = ({ navigation }) => {
             name="trash-outline"
             size={20}
             color="#FF0000"
-            onPress={() => handleRemoveNotification(item.id)} 
+            onPress={() => handleRemoveNotification(item.id)}
           />
         </View>
       )}
@@ -39,7 +46,7 @@ const Notifications = ({ navigation }) => {
   );
 
   const handleLongPress = (item) => {
-    setSelectedNotification(item.id === selectedNotification ? null : item.id); 
+    setSelectedNotification(item.id === selectedNotification ? null : item.id);
   };
 
   const handleRemoveNotification = (id) => {
@@ -51,7 +58,15 @@ const Notifications = ({ navigation }) => {
         { text: 'Eliminar', onPress: () => removeNotification(id) }
       ]
     );
-    setSelectedNotification(null); 
+    setSelectedNotification(null);
+  };
+
+  const handleReadNotification = (id) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.map(notification =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
   };
 
   const handleClearNotifications = () => {
@@ -62,62 +77,62 @@ const Notifications = ({ navigation }) => {
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Limpiar', onPress: () => {
           clearNotifications();
-          setSelectedNotification(null); 
+          setSelectedNotification(null);
         }}
       ]
     );
   };
 
   return (
-   <>
-     <View style={styles.container}>
-      <Header
-        title="Notificaciones"
-        leftIcon={
-          <Icon
-            name="arrow-back"
-            size={28}
-            color="#333"
-            onPress={() => navigation.goBack()}
-          />
-        }
-      />
-      {notifications && notifications.length > 0 ? (
-        <FlatList
-          data={notifications}
-          renderItem={renderNotification}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
+    <>
+      <View style={styles.container}>
+        <Header
+          title="Notificaciones"
+          leftIcon={
+            <Icon
+              name="arrow-back"
+              size={28}
+              color="#333"
+              onPress={() => navigation.goBack()}
+            />
+          }
         />
-      ) : (
-        <View style={styles.noNotificationsContainer}>
-          <Icon name="notifications-off" size={50} color="#888" />
-          <Text style={styles.noNotificationsText}>No hay notificaciones</Text>
-        </View>
-      )}
-      {readNotifications && readNotifications.length > 0 && (
-        <View style={styles.readNotificationsContainer}>
-          <Text style={styles.readNotificationsText}>Notificaciones Leídas:</Text>
+        {notifications && notifications.length > 0 ? (
           <FlatList
-            data={readNotifications}
-            renderItem={({ item }) => (
-              <Text style={styles.readNotificationItem}>{item.title}</Text>
-            )}
+            data={notifications}
+            renderItem={renderNotification}
             keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContainer}
           />
-        </View>
-      )}
-      {notifications && notifications.length >= 2 && (
-        <Icon
-          name="trash-outline"
-          size={28}
-          color="#FF0000"
-          onPress={handleClearNotifications}
-        />
-      )}
-    </View>
-    <BottomNavBar navigation={navigation}/>
-   </>
+        ) : (
+          <View style={styles.noNotificationsContainer}>
+            <Icon name="notifications-off" size={50} color="#888" />
+            <Text style={styles.noNotificationsText}>No hay notificaciones</Text>
+          </View>
+        )}
+        {readNotifications && readNotifications.length > 0 && (
+          <View style={styles.readNotificationsContainer}>
+            <Text style={styles.readNotificationsText}>Notificaciones Leídas:</Text>
+            <FlatList
+              data={readNotifications}
+              renderItem={({ item }) => (
+                <Text style={styles.readNotificationItem}>{item.title}</Text>
+              )}
+              keyExtractor={item => item.id}
+            />
+          </View>
+        )}
+        {notifications && notifications.length >= 2 && (
+          <Icon
+            name="trash-outline"
+            size={28}
+            color="#FF0000"
+            onPress={handleClearNotifications}
+          />
+        )}
+      </View>
+      <BottomNavBar navigation={navigation} />
+    </>
   );
 };
 
