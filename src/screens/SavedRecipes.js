@@ -43,7 +43,7 @@ const SavedRecipes = () => {
     };
 
     fetchRecipes();
-  }, []); 
+  }, []);
 
   const fetchRecipeDetails = async (id) => {
     if (cache[id]) {
@@ -128,6 +128,8 @@ const SavedRecipes = () => {
             data={savedRecipes}
             renderItem={renderRecipe}
             keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
+            numColumns={2} 
+            columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 10 }} 
           />
         ) : (
           <View style={styles.emptyContainer}>
