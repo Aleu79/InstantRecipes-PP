@@ -29,7 +29,6 @@ const MyRecipes = () => {
             if (userData && userData.misRecetas) {
               setMyRecipes(userData.misRecetas); 
             } else {
-              Alert.alert('Error', 'No tienes recetas creadas.');
             }
           } else {
             Alert.alert('Error', 'No se encontraron datos para este usuario.');
