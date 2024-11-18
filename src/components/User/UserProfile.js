@@ -13,16 +13,17 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import HeaderUserP from '../Headers/HeaderUserP';
 import BottomNavBar from '../BottomNavbar';
 import { useTheme } from '../../context/ThemeContext';
+import Loading from '../Loading'; 
+import ToastWrapper from '../ToastWrapper';
 
 const UserProfile = () => {
   const { user } = useContext(UserContext);
   const navigation = useNavigation();
   const { isDarkTheme } = useTheme(); 
   const [image, setImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);  
   const [modalVisible, setModalVisible] = useState(false);
   const { handleLogout } = useContext(UserContext);
-
 
   useEffect(() => {
     const fetchUserImage = async () => {
@@ -37,8 +38,6 @@ const UserProfile = () => {
     };
     fetchUserImage();
   }, [user]);
-
-
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,24 +63,20 @@ const UserProfile = () => {
       const imageRef = ref(storage, `users/${userEmailSafe}/${filename}`);
 
       try {
-        console.log("Subiendo imagen...", { uri: selectedImage.uri, blob });
-
-        const userDocRef = doc(db, 'users', user.email);
-        const userDocSnap = await getDoc(userDocRef);
-        
-        if (!userDocSnap.exists()) {
-          await setDoc(userDocRef, { email: user.email }, { merge: true });
-        }
-
+        setIsLoading(true); 
         const uploadTask = await uploadBytes(imageRef, blob);
         const url = await getDownloadURL(uploadTask.ref);
         setImage(url);
+        
+        const userDocRef = doc(db, 'users', user.email);
         await setDoc(userDocRef, { myuserfoto: url }, { merge: true });
-
-        Alert.alert('Éxito', 'Imagen subida correctamente.');
+        ToastWrapper({ text1: 'Imagen subida correctamente.' });
       } catch (error) {
         console.error('Error al subir la imagen:', error);
-        Alert.alert('Error', 'No se pudo subir la imagen.');
+        ToastWrapper({ text1: 'No se pudo subir la imagen.' });
+      } finally {
+        setIsLoading(false);
+        setModalVisible(false); 
       }
     }
   };
@@ -93,7 +88,7 @@ const UserProfile = () => {
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           {isLoading ? (
-            <ActivityIndicator size="large" color={isDarkTheme ? "#fff" : "#333"} />
+            <Loading />  
           ) : image ? (
             <Image source={{ uri: image }} style={styles.profileImage} />
           ) : (
@@ -138,11 +133,11 @@ const UserProfile = () => {
       >
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.modalBackground} onPress={() => setModalVisible(false)} />
-          <View style={[styles.modalContent, { backgroundColor: isDarkTheme ? '#333' : '#fff' }]}>
+          <View style={[styles.modalContent, { backgroundColor: 'transparent'}]}>
             <Image source={{ uri: image }} style={styles.modalImage} />
             <TouchableOpacity style={styles.editIconContainer} onPress={pickImage}>
               <View style={styles.editIconBackground}>
-                <Icon name="pencil" size={24} color="#A9A9A9" /> 
+                <Icon name="pencil" size={24} style={styles.editIcon} />
               </View>
             </TouchableOpacity>
           </View>
@@ -207,13 +202,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
   },
   modalContent: {
     width: 300,
     padding: 10,
     borderRadius: 10,
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   modalImage: {
     width: 250,
@@ -223,13 +219,16 @@ const styles = StyleSheet.create({
   },
   editIconContainer: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 10, 
+    right: 10,  
   },
   editIconBackground: {
     backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    padding: 5,
+    padding: 6,
+    borderRadius: 50,
+  },
+  editIcon: {
+    color: '#333',
   },
 });
 

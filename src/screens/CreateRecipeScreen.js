@@ -86,7 +86,7 @@ const CreateRecipeScreen = () => {
       ToastWrapper({ text1: 'La imagen se subió correctamente.' });
     } catch (error) {
       console.error('Error al subir la imagen:', error);
-      Alert.alert('Error', 'No se pudo subir la imagen.');
+      ToastWrapper({ text1: 'No se pudo subir la imagen.' });
     } finally {
       setIsUploading(false);  
     }
@@ -108,6 +108,18 @@ const CreateRecipeScreen = () => {
         servings,
       },
     });
+  };
+  const generateId = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+    let result = '';
+    const length = 10;  
+    
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters[randomIndex];
+    }
+  
+    return result;
   };
   
 
@@ -152,9 +164,8 @@ const CreateRecipeScreen = () => {
         await setDoc(userDocRef, {
           misRecetas: [...currentRecipes, recipeData],
         }, { merge: true }); 
-  
-        Alert.alert(`Receta "${recipeName}" guardada con éxito.`);
-        addNotification(`Receta "${recipeName}" guardada con éxito.`);   
+        ToastWrapper({ text1: `Receta "${recipeName}" guardada con éxito.` });
+        addNotification(`Receta "${recipeName}" guardada con éxito.`, 'Receta guardada con éxito');   
 
         handleNavigateToRecipe();
 
