@@ -11,7 +11,9 @@ import { auth } from '../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
 import { Switch } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../context/UserContext'
+import ToastWrapper from '../components/ToastWrapper';
+
 
 const CreateRecipeScreen = () => {
   const { addNotification } = useContext(UserContext); 
@@ -31,6 +33,8 @@ const CreateRecipeScreen = () => {
   const [prepTime, setPrepTime] = useState('');
   const [categories] = useState(['Sin TACC', 'Sin lácteos', 'Vegetariano', 'Vegano']); 
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
  
 
   // Solicitar permisos 
@@ -41,15 +45,7 @@ const CreateRecipeScreen = () => {
       return false;
     }
     return true;
-  };
-  let recipeCounter = 0;
-  const generateId = () => {
-    const timestamp = Date.now();
-    const randomNum = Math.floor(Math.random() * 1000); 
-    return `recipe_${timestamp}_${randomNum}`;
-  };
-  
-  
+  };  
   const pickImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -79,19 +75,23 @@ const CreateRecipeScreen = () => {
     const filename = selectedImage.uri.substring(selectedImage.uri.lastIndexOf('/') + 1);
     const imageRef = ref(storage, `recipeImages/${filename}`);
   
+    setIsUploading(true); 
+  
     try {
       await uploadBytes(imageRef, blob);
-      
+  
       const url = await getDownloadURL(imageRef);
-      
+  
       setRecipeImage(url);
-      
-      Alert.alert('Éxito', 'La imagen se subió correctamente.');
+      ToastWrapper({ text1: 'La imagen se subió correctamente.' });
     } catch (error) {
       console.error('Error al subir la imagen:', error);
       Alert.alert('Error', 'No se pudo subir la imagen.');
+    } finally {
+      setIsUploading(false);  
     }
   };
+  
 
   const handleNavigateToRecipe = () => {
     navigation.navigate('MyRecipes', {
@@ -202,80 +202,85 @@ const CreateRecipeScreen = () => {
   return (
     <>
       <View style={styles.imageContainer}>
-        <TouchableOpacity onPress={pickImage}>
-          <Image 
-            source={{ uri: recipeImage || 'https://dummyimage.com/400x200/c4c4c4/787878.png&text=Inserta+tu+im%C3%A1gen' }} 
-            style={styles.recipeImage} 
-          />
-        </TouchableOpacity>
+        {isUploading ? (
+          <Text style={styles.loadingText}>Cargando...</Text>
+        ) : (
+          <TouchableOpacity onPress={pickImage}>
+            <Image
+              source={{ uri: recipeImage || 'https://dummyimage.com/400x200/c4c4c4/787878.png&text=Inserta+tu+imagen' }}
+              style={styles.recipeImage}
+            />
+          </TouchableOpacity>
+        )}
         <View style={styles.headerContainer}>
           <Header />
         </View>
       </View>
-
+  
       <ScrollView style={styles.container}>
         <View style={styles.contentContainer}>
+          {/* Nombre de la receta */}
           <TextInput
             style={styles.recipeName}
             placeholder="Nombre de la receta"
             value={recipeName}
             onChangeText={setRecipeName}
           />
-
+  
+          {/* Porciones y tiempo de preparación */}
           <View style={styles.detailscontainer}>
-              <View style={styles.detailssubcontainer}>
-                <TouchableOpacity>
-                  <Icon name={'people-outline'} size={24} color="#999" />
-                </TouchableOpacity>
-                <TextInput
-                  style={styles.inputDetail}
-                  placeholder="Porciones"
-                  value={servings}
-                  onChangeText={setServings}
-                />
-              </View>
-              <View style={styles.detailssubcontainer}>
-                <TouchableOpacity>
-                  <Icon name={'time-outline'} size={24} color="#999" />
-                </TouchableOpacity>
-                <TextInput
-                  style={styles.inputDetail}
-                  placeholder="Preparación"
-                  value={prepTime}
-                  onChangeText={setPrepTime}
-                  multiline={true}
-                />
-              </View>
+            <View style={styles.detailssubcontainer}>
+              <TouchableOpacity>
+                <Icon name="people-outline" size={24} color="#999" />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.inputDetail}
+                placeholder="Porciones"
+                value={servings}
+                onChangeText={setServings}
+              />
+            </View>
+            <View style={styles.detailssubcontainer}>
+              <TouchableOpacity>
+                <Icon name="time-outline" size={24} color="#999" />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.inputDetail}
+                placeholder="Preparación"
+                value={prepTime}
+                onChangeText={setPrepTime}
+                multiline={true}
+              />
             </View>
           </View>
-
-          <View style={styles.separator} />
-
-          <View style={styles.tabsContainer}>
+        </View>
+  
+        <View style={styles.separator} />
+  
+        {/* Tabs de Ingredientes, Preparación y Dietas */}
+        <View style={styles.tabsContainer}>
+          {['ingredients', 'preparation', 'diettype'].map((tab) => (
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'ingredients' ? styles.activeTab : styles.inactiveTab]}
-              onPress={() => setActiveTab('ingredients')}
+              key={tab}
+              style={[styles.tabButton, activeTab === tab ? styles.activeTab : styles.inactiveTab]}
+              onPress={() => setActiveTab(tab)}
             >
-              <Text style={[styles.tabText, activeTab === 'ingredients' && styles.activeTabText]}>Ingredientes</Text>
+              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                {tab === 'ingredients'
+                  ? 'Ingredientes'
+                  : tab === 'preparation'
+                  ? 'Preparación'
+                  : 'Dietas'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'preparation' ? styles.activeTab : styles.inactiveTab]}
-              onPress={() => setActiveTab('preparation')}
-            >
-              <Text style={[styles.tabText, activeTab === 'preparation' && styles.activeTabText]}>Preparación</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'diettype' ? styles.activeTab : styles.inactiveTab]}
-              onPress={() => setActiveTab('diettype')}
-            >
-              <Text style={[styles.tabText, activeTab === 'diettype' && styles.activeTabText]}>Dietas</Text>
-            </TouchableOpacity>
-          </View>
-
-          {activeTab === 'ingredients' && (
-            <View style={styles.ingredientsContainer}>
-              {ingredients.map((ingredient, index) => (
-                <View key={index} style={styles.mainContainer}>
+          ))}
+        </View>
+  
+        {/* Contenido del Tab Activo */}
+        {activeTab === 'ingredients' && (
+          <View style={styles.ingredientsContainer}>
+            {ingredients.map((ingredient, index) => (
+              <View key={index} style={styles.mainContainer}>
                 <View style={styles.ingredientWrapper}>
                   <View style={styles.ingredientInputContainer}>
                     <TextInput
@@ -303,88 +308,74 @@ const CreateRecipeScreen = () => {
                     </View>
                   </View>
                 </View>
-                
                 <TouchableOpacity onPress={() => handleRemoveIngredient(index)} style={styles.removeStepButton}>
                   <FontAwesome name="trash-o" size={26} color="red" />
-                </TouchableOpacity>  
-              </View>              
-              ))}
-              <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
-                <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-
-          {activeTab === 'preparation' && (
-            <View style={styles.preparationContainer}>
-              {preparation.map((step, index) => (
-                <View key={index} style={styles.stepRow}>
-                  <TextInput
-                    style={styles.inputDetail}
-                    placeholder="Paso de preparación"
-                    value={step}
-                    onChangeText={(text) => handleStepChange(text, index)}
-                  />
-                  <TouchableOpacity onPress={() => handleRemoveStep(index)} style={styles.removeStepButton}>
-                    <FontAwesome name="trash-o" size={26} color="red" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
-                <Text style={styles.addButtonText}>Agregar Paso</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {activeTab === 'diettype' && (
-                <View style={styles.dietTypeContainer}>
-                  
-                  <View style={styles.dietTypeRow}>
-                    <Text style={styles.dietTypeLabel}>Vegano</Text>
-                    <Switch
-                      value={isVegan}
-                      onValueChange={setIsVegan}
-                    />
-                  </View>
-                  
-                  <View style={styles.dietTypeRow}>
-                    <Text style={styles.dietTypeLabel}>Vegetariano</Text>
-                    <Switch
-                      value={isVegetarian}
-                      onValueChange={setIsVegetarian}
-                    />
-                  </View>
-
-                  <View style={styles.dietTypeRow}>
-                    <Text style={styles.dietTypeLabel}>Sin TACC</Text>
-                    <Switch
-                      value={isGlutenFree}
-                      onValueChange={setIsGlutenFree}
-                    />
-                  </View>
-
-                  <View style={styles.dietTypeRow}>
-                    <Text style={styles.dietTypeLabel}>Sin Lácteos</Text>
-                    <Switch
-                      value={isDairyFree}
-                      onValueChange={setIsDairyFree}
-                    />
-                  </View>
-                </View>
-              )}
-          <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
-            <Text style={styles.saveButtonText}>Guardar Receta</Text>
-          </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
+              <Text style={styles.addButtonText}>Agregar Ingrediente</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+  
+        {activeTab === 'preparation' && (
+          <View style={styles.preparationContainer}>
+            {preparation.map((step, index) => (
+              <View key={index} style={styles.stepRow}>
+                <TextInput
+                  style={styles.inputDetail}
+                  placeholder="Paso de preparación"
+                  value={step}
+                  onChangeText={(text) => handleStepChange(text, index)}
+                />
+                <TouchableOpacity onPress={() => handleRemoveStep(index)} style={styles.removeStepButton}>
+                  <FontAwesome name="trash-o" size={26} color="red" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addButton} onPress={handleAddStep}>
+              <Text style={styles.addButtonText}>Agregar Paso</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+  
+        {activeTab === 'diettype' && (
+          <View style={styles.dietTypeContainer}>
+            {[
+              { label: 'Vegano', value: isVegan, setter: setIsVegan },
+              { label: 'Vegetariano', value: isVegetarian, setter: setIsVegetarian },
+              { label: 'Sin TACC', value: isGlutenFree, setter: setIsGlutenFree },
+              { label: 'Sin Lácteos', value: isDairyFree, setter: setIsDairyFree },
+            ].map((diet) => (
+              <View key={diet.label} style={styles.dietTypeRow}>
+                <Text style={styles.dietTypeLabel}>{diet.label}</Text>
+                <Switch value={diet.value} onValueChange={diet.setter} />
+              </View>
+            ))}
+          </View>
+        )}
+  
+        {/* Botón para Guardar */}
+        <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
+          <Text style={styles.saveButtonText}>Guardar Receta</Text>
+        </TouchableOpacity>
       </ScrollView>
     </>
   );
+  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: 'gray',
+    textAlign: 'center',
+    marginVertical: 10,
   },
   recipeImage: {
     width: '100%',

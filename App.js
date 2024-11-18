@@ -24,6 +24,7 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoadingScreen from './src/screens/LoadingScreen'; 
 import MyRecipeScreen from './src/screens/MyRecipeScreen';
 import SearchScreenCateg from './src/screens/SearchScreen';
+import Toast from 'react-native-toast-message'; // Importamos el componente de Toast
 
 const Stack = createStackNavigator();
 
@@ -92,6 +93,7 @@ export default function App() {
       <ThemeProvider>
           <NavigationContainer>
             <AppNavigation /> 
+            <Toast ref={(ref) => Toast.setRef(ref)} /> 
           </NavigationContainer>
       </ThemeProvider>
     </UserProvider>

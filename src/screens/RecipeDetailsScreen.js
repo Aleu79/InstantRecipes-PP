@@ -12,7 +12,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase/firebase-config';
 import { UserContext } from '../context/UserContext';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import ToastWrapper from '../components/ToastWrapper';
+
 
 const RecipeDetailsScreen = (props) => {
     const { addNotification } = useContext(UserContext); 
@@ -55,18 +58,17 @@ const RecipeDetailsScreen = (props) => {
 
     // Guardar o eliminar receta en el array de recetas guardadas
     const handleRecipeSaveToggle = async (recipe) => {
-        // Activar el estado de carga
-        setIsLoading(true);
+        setIsLoading(true); 
     
         if (!validarReceta(recipe)) {
-            setIsLoading(false); // Desactivar carga si la receta no es válida
+            setIsLoading(false);
             return;
         }
     
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 console.error("Usuario no autenticado");
-                setIsLoading(false); // Desactivar carga si el usuario no está autenticado
+                setIsLoading(false); 
                 return;
             }
     
@@ -80,29 +82,34 @@ const RecipeDetailsScreen = (props) => {
                         savedRecipes: arrayRemove({
                             id: recipe.idMeal,
                             name: recipe.strMeal,
-                            image: recipe.strMealThumb
-                        })
+                            image: recipe.strMealThumb,
+                        }),
                     });
                     setFavourite(false);
-                    Alert.alert('Receta eliminada con éxito!');
+    
+                   
+                    ToastWrapper({ text1: 'Receta eliminada con éxito!' });
+    
                     addNotification('Receta Eliminada', 'Has eliminado una receta.');
     
-                    // Actualizamos AsyncStorage
+                   
                     const savedRecipesJSON = await AsyncStorage.getItem('savedRecipes');
                     const savedRecipes = savedRecipesJSON ? JSON.parse(savedRecipesJSON) : [];
-                    const updatedRecipes = savedRecipes.filter(id => id !== recipe.idMeal);
+                    const updatedRecipes = savedRecipes.filter((id) => id !== recipe.idMeal);
                     await AsyncStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes));
-    
                 } else {
                     await updateDoc(userDocRef, {
                         savedRecipes: arrayUnion({
                             id: recipe.idMeal,
                             name: recipe.strMeal,
-                            image: recipe.strMealThumb
-                        })
+                            image: recipe.strMealThumb,
+                        }),
                     });
                     setFavourite(true);
-                    Alert.alert('Receta guardada con éxito!');
+    
+                 
+                    ToastWrapper({ text1: 'Receta guardada con éxito!' });
+    
                     addNotification('Receta Guardada', 'Has guardado una receta.');
     
                     // Guardamos en AsyncStorage
@@ -113,10 +120,11 @@ const RecipeDetailsScreen = (props) => {
                 }
             } catch (error) {
                 console.error("Error en la actualización de favoritos:", error);
-                Alert.alert('Error', 'Hubo un problema al actualizar tus recetas guardadas.');
+    
+               
+                ToastWrapper({ text1: 'Hubo un problema al actualizar tus recetas guardadas.' });
             } finally {
-                // Desactivar el estado de carga después de la operación
-                setIsLoading(false);
+                setIsLoading(false); 
             }
         });
     };
