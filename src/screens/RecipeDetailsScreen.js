@@ -21,6 +21,8 @@ const RecipeDetailsScreen = (props) => {
     const [loading, setLoading] = useState(true);
     const item = props.route.params;
     const [activeTab, setActiveTab] = useState('ingredients');
+    const [isLoading, setIsLoading] = useState(false);
+
 
     useEffect(() => {
         getMealData(item.idMeal);
@@ -53,11 +55,18 @@ const RecipeDetailsScreen = (props) => {
 
     // Guardar o eliminar receta en el array de recetas guardadas
     const handleRecipeSaveToggle = async (recipe) => {
-        if (!validarReceta(recipe)) return;
+        // Activar el estado de carga
+        setIsLoading(true);
+    
+        if (!validarReceta(recipe)) {
+            setIsLoading(false); // Desactivar carga si la receta no es válida
+            return;
+        }
     
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 console.error("Usuario no autenticado");
+                setIsLoading(false); // Desactivar carga si el usuario no está autenticado
                 return;
             }
     
@@ -105,9 +114,13 @@ const RecipeDetailsScreen = (props) => {
             } catch (error) {
                 console.error("Error en la actualización de favoritos:", error);
                 Alert.alert('Error', 'Hubo un problema al actualizar tus recetas guardadas.');
+            } finally {
+                // Desactivar el estado de carga después de la operación
+                setIsLoading(false);
             }
         });
     };
+    
     
     
     const getMealData = async (id) => {
@@ -152,7 +165,7 @@ const RecipeDetailsScreen = (props) => {
             contentContainerStyle={styles.scrollContainer}
         >
             <StatusBar style='light' />
-
+    
             <View style={styles.imageContainer}>
                 {Platform.OS === 'ios' ? (
                     <CachedImage
@@ -169,50 +182,67 @@ const RecipeDetailsScreen = (props) => {
                 )}
                 <View style={styles.ondulatedBackground} />
             </View>
-
+    
             <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.headerContainer}>
                 <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
                     <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
                 </TouchableOpacity>
-
-                <TouchableOpacity style={styles.bookmarkButton} onPress={() => handleRecipeSaveToggle(meals)}>
-                    <FontAwesome 
-                        name={isFavourite ? "bookmark" : "bookmark-o"} 
-                        size={28} 
-                        color={isFavourite ? "#FFD700" : "#fff"} 
-                    />
+    
+                <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={() => handleRecipeSaveToggle(meals)}
+                    disabled={isLoading}  
+                >
+                    {isLoading ? (
+                        <Loading />
+                    ) : (
+                        <FontAwesome 
+                            name={isFavourite ? "bookmark" : "bookmark-o"} 
+                            size={28} 
+                            color={isFavourite ? "#FFD700" : "#fff"} 
+                        />
+                    )}
                 </TouchableOpacity>
             </Animated.View>
-
+    
             {loading ? (
                 <Loading size="large" style={styles.loading} />
             ) : (
-                <ScrollView style={styles.container}>
-                    <View style={styles.detailsContainer}>
-                        <View style={styles.contentContainer}>
-                            <Text style={styles.recipeName}>{meals?.strMeal}</Text>
-                        </View>
-
-                        <View style={styles.separator}></View>
-
-                        <View style={styles.tabsContainer}>
-                            <TabButton isActive={activeTab === 'ingredients'} onPress={() => setActiveTab('ingredients')} text="Ingredientes" />
-                            <TabButton isActive={activeTab === 'preparation'} onPress={() => setActiveTab('preparation')} text="Preparación" />
-                        </View>
-
-                        {activeTab === 'ingredients' ? (
-                            <IngredientsList ingredients={ingredientsIndexes(meals).map(i => ({
+                <View style={styles.detailsContainer}>
+                    <View style={styles.contentContainer}>
+                        <Text style={styles.recipeName}>{meals?.strMeal}</Text>
+                    </View>
+    
+                    <View style={styles.separator} />
+    
+                    <View style={styles.tabsContainer}>
+                        <TabButton 
+                            isActive={activeTab === 'ingredients'} 
+                            onPress={() => setActiveTab('ingredients')} 
+                            text="Ingredientes" 
+                        />
+                        <TabButton 
+                            isActive={activeTab === 'preparation'} 
+                            onPress={() => setActiveTab('preparation')} 
+                            text="Preparación" 
+                        />
+                    </View>
+    
+                    {activeTab === 'ingredients' ? (
+                        <IngredientsList 
+                            ingredients={ingredientsIndexes(meals).map(i => ({
                                 name: meals['strIngredient' + i],
                                 measure: meals['strMeasure' + i]
-                            }))} />
-                        ) : (
-                            <PreparationList preparationSteps={preparationSteps} />
-                        )}
-                    </View>
-                </ScrollView>
+                            }))} 
+                        />
+                    ) : (
+                        <PreparationList preparationSteps={preparationSteps} />
+                    )}
+                </View>
             )}
         </ScrollView>
     );
+    
 };
 
 const TabButton = ({ isActive, onPress, text }) => (
