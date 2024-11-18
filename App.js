@@ -40,9 +40,12 @@ function AppNavigation() {
     } else {
       setIsLoggedIn(false); 
     }
-    
-    setIsVerifying(false); 
-    console.log("Estado de isLoggedIn en useEffect:", isLoggedIn);
+
+    const delay = setTimeout(() => {
+      setIsVerifying(false); 
+    }, 2500); 
+
+    return () => clearTimeout(delay); 
   }, [user]);
 
   if (isVerifying) {

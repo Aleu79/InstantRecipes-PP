@@ -92,9 +92,6 @@ const SearchScreen = ({ navigation }) => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        <TouchableOpacity onPress={() => navigation.navigate('FilterByIngre')} style={styles.filterButton}>
-          <Ionicons name="filter" size={24} color="black" />
-        </TouchableOpacity>
       </View>
 
       {loading ? (

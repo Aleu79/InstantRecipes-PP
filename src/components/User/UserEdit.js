@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,BackHandler, ScrollView, Image, Modal } from 'react-native';
 import { auth } from '../../../firebase/firebase-config';
 import { useNavigation } from '@react-navigation/native';
 import { updatePassword, updateProfile } from 'firebase/auth';
@@ -26,6 +26,8 @@ const UserEdit = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
 
 
   useEffect(() => {
@@ -56,83 +58,47 @@ const UserEdit = () => {
 
   const confirmSaveChanges = async () => {
     const currentUser = auth.currentUser;
-
     if (password && password !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
-
-    Alert.alert(
-      'Confirmación',
-      '¿Estás seguro de continuar?',
-      [
-        {
-          text: 'Cancelar',
-          onPress: () => setModalVisible(false),
-          style: 'cancel',
-        },
-        {
-          text: 'Continuar',
-          onPress: async () => {
-            try {
-              if (username && username !== currentUser.displayName) {
-                const userRef = doc(db, 'users', currentUser.email);
-
-                // Actualiza el nombre en Firestore
-                await updateDoc(userRef, { username });
-
-                // Actualiza el displayName en Firebase Authentication
-                await updateProfile(currentUser, { displayName: username });
-
-                // Actualiza el contexto del usuario
-                setUser((prevUser) => ({
-                  ...prevUser,
-                  username,
-                }));
-                addNotification('Cambio de nombre', 'Has cambiado tu nombre de usuario.');
-                console.log("addNotification funcionas: ", addNotification)
-                Alert.alert('Éxito', 'Nombre de usuario actualizado');
-              }
-
-              if (password) {
-                // Actualiza la contraseña
-                await updatePassword(currentUser, password);
-                addNotification('Cambio de contraseña', 'Has cambiado tu contraseña.');
-                Alert.alert('Éxito', 'Contraseña actualizada');
-              }
-
-              // Restablecer los campos
-              setUsername('');
-              setPassword('');
-              setConfirmPassword('');
-              setModalVisible(false);
-
-              // Navegar a la pantalla de perfil
-              navigation.navigate('UserProfile');
-            } catch (error) {
-              console.error('Error al actualizar perfil:', error);
-              let errorMessage;
-
-              // Manejo de errores más específico
-              switch (error.code) {
-                case 'auth/weak-password':
-                  errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
-                  break;
-                case 'auth/user-not-found':
-                  errorMessage = 'No se encontró ningún usuario con esta información.';
-                  break;
-                default:
-                  errorMessage = 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.';
-              }
-
-              Alert.alert('Error', errorMessage);
-            }
-          },
-        },
-      ],
-      { cancelable: false }
-    );
+    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+    try {
+      await reauthenticateWithCredential(currentUser, credential);
+  
+      if (username && username !== currentUser.displayName) {
+        const userRef = doc(db, 'users', currentUser.email);
+        await updateDoc(userRef, { username });
+        await updateProfile(currentUser, { displayName: username });
+        setUser((prevUser) => ({ ...prevUser, username }));
+        addNotification('Cambio de nombre', 'Has cambiado tu nombre de usuario.');
+        Alert.alert('Éxito', 'Nombre de usuario actualizado');
+      }
+  
+      if (password) {
+        await updatePassword(currentUser, password);
+        addNotification('Cambio de contraseña', 'Has cambiado tu contraseña.');
+        Alert.alert('Éxito', 'Contraseña actualizada');
+      }
+      setUsername('');
+      setPassword('');
+      setConfirmPassword('');
+      setCurrentPassword('');
+      setModalVisible(false);
+      navigation.navigate('UserProfile');
+  
+    } catch (error) {
+      console.error('Error en la autenticación:', error);
+      if (error.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'Contraseña incorrecta. Por favor, inténtalo de nuevo.');
+      } else {
+        Alert.alert('Error', 'Hubo un problema al realizar los cambios. Intenta nuevamente.');
+      }
+    }
   };
+  
+  
+
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -160,145 +126,148 @@ const UserEdit = () => {
     setPasswordStrength(calculatePasswordStrength(password));
   }, [password]);
 
-  
-  const handleDeleteProfile = async () => {
-    Alert.alert(
-      'Confirmar Eliminación',
-      '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Eliminar',
-          onPress: async () => {
-            try {
-              const user = auth.currentUser;
-  
-              if (user) {
-                // Intentar eliminar el documento del usuario en Firestore
-                const userRef = doc(db, 'users', user.email);
-                await deleteDoc(userRef);
-  
-                // Intentar eliminar el usuario de Firebase Authentication
-                await user.delete();
-                Alert.alert('Perfil eliminado con éxito');
-                navigation.navigate('Login');
-              } else {
-                Alert.alert('Error', 'No se pudo encontrar al usuario.');
-              }
-            } catch (error) {
-              console.error('Error al eliminar perfil:', error);
-  
-              let errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
-              
-              if (error.code === 'auth/requires-recent-login') {
-                errorMessage = 'Por favor, inicia sesión nuevamente para eliminar tu perfil.';
-              }
-  
-              Alert.alert('Error', errorMessage);
+
+const handleDeleteProfile = async () => {
+  Alert.alert(
+    'Confirmar Eliminación',
+    '¿Estás seguro de que deseas eliminar tu perfil? Esta acción no se puede deshacer.',
+    [
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+      {
+        text: 'Eliminar',
+        onPress: async () => {
+          try {
+            const user = auth.currentUser;
+
+            if (user) {
+              // Intentar eliminar el documento del usuario en Firestore
+              const userRef = doc(db, 'users', user.email);
+              await deleteDoc(userRef);
+
+              // Intentar eliminar el usuario de Firebase Authentication
+              await user.delete();
+              Alert.alert('Perfil eliminado con éxito');
+              BackHandler.exitApp();
+            } else {
+              Alert.alert('Error', 'No se pudo encontrar al usuario.');
             }
-          },
+          } catch (error) {
+            console.error('Error al eliminar perfil:', error);
+
+            let errorMessage = 'No se pudo eliminar el perfil. Inténtalo más tarde.';
+            
+            if (error.code === 'auth/requires-recent-login') {
+              errorMessage = 'Por favor, inicia sesión nuevamente para eliminar tu perfil.';
+            }
+
+            Alert.alert('Error', errorMessage);
+          }
         },
-      ],
-      { cancelable: false }
-    );
-  };
-  
-  
-  
-  
-  
-  
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Header />
-      <View style={styles.titulocontainer}>
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>
-            Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
-          </Text>
-        </View>
-        <View style={styles.imgprofile}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-          ) : (
-            <Icon name="person-circle-outline" size={80} color="#333" />
-          )}
-        </View>
+      },
+    ],
+    { cancelable: false }
+  );
+};
+
+return (
+  <ScrollView contentContainerStyle={styles.container}>
+    <Header />
+
+    {/* Sección de saludo y perfil */}
+    <View style={styles.titulocontainer}>
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>
+          Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
+        </Text>
       </View>
+      <View style={styles.imgprofile}>
+        {profileImage ? (
+          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+        ) : (
+          <Icon name="person-circle-outline" size={80} color="#333" />
+        )}
+      </View>
+    </View>
 
-      <View style={styles.camposcontainer}>
-        <Text style={styles.sectionTitle}>Nuevo nombre de usuario</Text>
+    {/* Campos de actualización */}
+    <View style={styles.camposcontainer}>
+      <Text style={styles.sectionTitle}>Nuevo nombre de usuario</Text>
+      <TextInput
+        placeholder="Nuevo nombre de usuario"
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
+      />
+
+      <Text style={styles.sectionTitle}>Nueva contraseña</Text>
+      <View style={styles.passwordContainer}>
         <TextInput
-          placeholder="Nuevo nombre de usuario"
+          placeholder="Nueva contraseña"
           style={styles.input}
-          value={username}
-          onChangeText={setUsername}
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
         />
-
-        <Text style={styles.sectionTitle}>Nueva contraseña</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="Nueva contraseña"
-            style={styles.input}
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
-            <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} />
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.sectionTitle}>Repetir nueva contraseña</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            placeholder="Repetir nueva contraseña"
-            style={styles.input}
-            secureTextEntry={!showConfirmPassword}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-            <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} />
-          </TouchableOpacity>
-          <View style={styles.passwordStrengthContainer}>
-            {password ? (
-              <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
-            ) : null}
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-          <Text style={styles.saveButtonText}>Guardar cambios</Text>
+        <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+          <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
-        <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
-      </TouchableOpacity>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Confirma tu contraseña</Text>
-            <TextInput
-              placeholder="Contraseña actual"
-              style={styles.input}
-              secureTextEntry={!showCurrentPassword}
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-            />
-            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
-              <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
-            </TouchableOpacity>
+      <Text style={styles.sectionTitle}>Repetir nueva contraseña</Text>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Repetir nueva contraseña"
+          style={styles.input}
+          secureTextEntry={!showConfirmPassword}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+          <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} />
+        </TouchableOpacity>
+        <View style={styles.passwordStrengthContainer}>
+          {password ? (
+            <Text style={styles.passwordStrengthText}>Fortaleza: {passwordStrength}</Text>
+          ) : null}
+        </View>
+      </View>
 
+      <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+        <Text style={styles.saveButtonText}>Guardar cambios</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Botón para eliminar perfil */}
+    <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
+      <Text style={styles.deleteButtonText}>Eliminar perfil</Text>
+    </TouchableOpacity>
+
+    {/* Modal de confirmación */}
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Confirma tu contraseña</Text>
+          <TextInput
+            placeholder="Contraseña actual"
+            style={styles.input}
+            secureTextEntry={!showCurrentPassword}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+          />
+          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+            <Icon name={showCurrentPassword ? 'eye-off' : 'eye'} size={24} />
+          </TouchableOpacity>
+          
+          {/* Botones de confirmación y cancelación en el modal */}
+          <View style={styles.modalButtons}>
             <TouchableOpacity style={styles.confirmButton} onPress={confirmSaveChanges}>
               <Text style={styles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
@@ -307,10 +276,14 @@ const UserEdit = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-      <BottomNavBar navigation={navigation} />
-    </ScrollView>
-  );
+      </View>
+    </Modal>
+
+    {/* Barra de navegación inferior */}
+    <BottomNavBar navigation={navigation} />
+  </ScrollView>
+);
+
 };
 
 const styles = StyleSheet.create({
@@ -460,7 +433,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 15,
   },
-  modalButtons: {
+  passwordStrengthText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+  },
+   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
@@ -474,14 +452,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
   },
-  confirmButton: {
-    backgroundColor: '#388E3C',
-    borderRadius: 30, 
-    paddingVertical: 12,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
-  },
   cancelButton: {
     backgroundColor: '#FF6F61', 
     borderRadius: 30,
@@ -490,17 +460,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
   },
-
-  cancelButtonText: {
+  confirmButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  passwordStrengthText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
-  },
+  cancelButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },  
 });
 
 export default UserEdit;
