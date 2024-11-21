@@ -171,7 +171,7 @@ const HomeScreen = ({ navigation }) => {
             ¡Bienvenido a la app de recetas instantáneas! La hicimos con mucho esfuerzo y dedicación.
             Espero que te guste.{' '}
             <Text style={styles.emphasizedText}>
-              Es para aprobar las prácticas profesionalizantes, ¡y ya casi está terminada!
+              El objetivo es aprobar las prácticas profesionalizantes, ¡y ya casi está terminada!
             </Text>
           </Text>
           <TouchableOpacity
