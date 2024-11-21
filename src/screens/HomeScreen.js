@@ -11,6 +11,7 @@ import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
+import Loading from '../components/Loading';
 
 const HomeScreen = ({ navigation }) => {
   const { isDarkTheme } = useTheme();  
@@ -21,14 +22,15 @@ const HomeScreen = ({ navigation }) => {
   const [activeCategory, setActiveCategory] = useState('Beef');
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
-  const [isFirstVisit, setIsFirstVisit] = useState(false); 
+  const [isFirstVisit, setIsFirstVisit] = useState(null); 
   const db = getFirestore();
 
   useEffect(() => {
     handleUpdateProfile();
     getCategories();
     getRecipes();
-    checkFirstVisit();  
+    checkFirstVisit();   
+    AsyncStorage.removeItem('isFirstVisit');
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     return () => {
@@ -36,18 +38,7 @@ const HomeScreen = ({ navigation }) => {
     };
   }, []);
   
-  const checkFirstVisit = async () => {
-    try {
-      const firstVisit = await AsyncStorage.getItem('isFirstVisit');
-      if (!firstVisit) {
-        setIsFirstVisit(true);
-        await AsyncStorage.setItem('isFirstVisit', 'false');
-      }
-    } catch (error) {
-      console.error('Error checking first visit:', error);
-    }
-  };
-
+  
   const handleUpdateProfile = async () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -57,12 +48,18 @@ const HomeScreen = ({ navigation }) => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setProfileImage(userData.myuserfoto || null);
+        } else {
+          console.log('No se encontró el documento del usuario');
         }
       } catch (error) {
         console.error('Error al obtener el documento del usuario:', error);
       }
+    } else {
+      console.log('No hay usuario autenticado');
     }
   };
+  
+
 
   const getCategories = async () => {
     try {
@@ -116,11 +113,73 @@ const HomeScreen = ({ navigation }) => {
     }
     return false;
   };
-
+  const checkFirstVisit = async () => {
+    try {
+      const firstVisit = await AsyncStorage.getItem('isFirstVisit');
+      console.log('Valor actual de isFirstVisit en AsyncStorage:', firstVisit);
+  
+      if (!firstVisit) {
+        setIsFirstVisit(true);
+      } else if (firstVisit === 'false') {
+        setIsFirstVisit(false);
+      }
+    } catch (error) {
+      console.error('Error checking first visit:', error);
+    }
+  };
+  
+  const handleCloseWelcomeMessage = async () => {
+    try {
+      setIsFirstVisit(false); 
+      await AsyncStorage.setItem('isFirstVisit', 'false');
+      console.log('Se marcó isFirstVisit como false en AsyncStorage.');
+    } catch (error) {
+      console.error('Error setting isFirstVisit in AsyncStorage:', error);
+    }
+  };
+  
+  if (isFirstVisit === null) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Loading />
+      </View>
+    );
+  }
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
-      <StatusBar barStyle={isDarkTheme ? 'light-content' : 'dark-content'} backgroundColor={isDarkTheme ? '#121212' : '#fafafa'} />
+      <StatusBar 
+        barStyle={isDarkTheme ? 'light-content' : 'dark-content'} 
+        backgroundColor={isDarkTheme ? '#121212' : '#fafafa'} 
+      />
+  
+      {/* Mensaje de bienvenida para la primera visita */}
+      {isFirstVisit && (
+        <View style={styles.welcomeOverlay}>
+          <LottieView
+            source={require('../../assets/celebration.json')}
+            autoPlay
+            loop={false}
+            style={styles.animation}
+          />
+          <Text style={styles.welcomeMessage}>
+            ¡Bienvenido a la app de recetas instantáneas! La hicimos con mucho esfuerzo y dedicación.
+            Espero que te guste.{' '}
+            <Text style={styles.emphasizedText}>
+              Es para aprobar las prácticas profesionalizantes, ¡y ya casi está terminada!
+            </Text>
+          </Text>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={handleCloseWelcomeMessage}
+          >
+            <Text style={styles.closeButtonText}>Cerrar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+  
+      {/* ScrollView principal */}
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        {/* Sección de bienvenida */}
         <View style={styles.bienvenida}>
           <Text style={[styles.greetingText, isDarkTheme ? styles.darkText : styles.lightText]}>
             Hola, <Text style={styles.username}>{user ? user.username || 'Usuario' : 'Invitado'}!</Text>
@@ -135,25 +194,8 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Show de la primera visita */}
-        {isFirstVisit && (
-          <View style={styles.welcomeMessageContainer}>
-            <LottieView 
-              source={require('../assets/celebration.json')} 
-              autoPlay 
-              loop 
-              style={styles.animation} 
-            />
-            <Text style={styles.welcomeMessage}>
-              ¡Bienvenido a la app de recetas instantáneas! La hicimos con mucho esfuerzo y dedicación. 
-              Espero que te guste. 
-              <Text style={styles.emphasizedText}> Es para aprobar las prácticas profesionalizantes, ¡y ya casi está terminada!</Text>
-            </Text>
-          </View>
-        )}
-
-        {/* Search bar */}
+  
+        {/* Barra de búsqueda */}
         <TouchableOpacity 
           style={styles.searchContainer} 
           onPress={() => navigation.navigate('SearchScreen')}
@@ -163,49 +205,72 @@ const HomeScreen = ({ navigation }) => {
             <Icon name="search" size={24} color={"#808080"} />
           </View>
         </TouchableOpacity>
-
-        <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text>
+  
+        {/* Categorías */}
+        <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>
+          Categorías
+        </Text>
         <ScrollView
           ref={categoriesScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.categoriesContainer}
         >
-          {categories.length > 0 && <Categories categories={categories} activeCategory={activeCategory} handleChangesCategory={handleChangeCategory}/>}
+          {categories.length > 0 && (
+            <Categories 
+              categories={categories} 
+              activeCategory={activeCategory} 
+              handleChangesCategory={handleChangeCategory} 
+            />
+          )}
         </ScrollView>
-
-        {/* Recipes */}
+  
+        {/* Recetas */}
         <View>
           <Recipes meals={meals} categories={categories} />
         </View>
       </ScrollView>
-
+  
+      {/* Botón flotante */}
       <TouchableOpacity style={styles.floatingButton} onPress={toggleMenu}>
         <Icon name="add" size={30} color="#fff"/>
       </TouchableOpacity>
-
+  
+      {/* Menú flotante */}
       {menuVisible && (
         <View style={styles.menuContainer}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { 
-            setMenuVisible(false); 
-            navigation.navigate('CreateRecipeScreen'); 
-          }}>
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => { 
+              setMenuVisible(false); 
+              navigation.navigate('CreateRecipeScreen'); 
+            }}
+          >
             <Icon name="book-outline" size={24} color="#333" style={styles.menuicon}/>
-            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>Crear Receta</Text> 
+            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>
+              Crear Receta
+            </Text> 
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { 
-            setMenuVisible(false); 
-            navigation.navigate('MyRecipes'); 
-          }}>
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => { 
+              setMenuVisible(false); 
+              navigation.navigate('MyRecipes'); 
+            }}
+          >
             <Icon name="cafe-outline" size={24} color="#333" style={styles.menuicon}/>
-            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>Mis Recetas</Text> 
+            <Text style={[styles.menuItemText, isDarkTheme ? styles.darkText : styles.lightText]}>
+              Mis Recetas
+            </Text>
           </TouchableOpacity>
         </View>
       )}
-
-      <BottomNavBar navigation={navigation} />
+        <BottomNavBar navigation={navigation}/>
     </View>
+    
   );
+
+  
 };
 
 const styles = StyleSheet.create({
@@ -213,6 +278,43 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 5,
   },
+  welcomeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 10,
+  },
+  animation: {
+    width: 200,
+    height: 200,
+  },
+  welcomeMessage: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#fff',
+    marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  emphasizedText: {
+    fontWeight: 'bold',
+    color: '#f8c291',
+  },
+  closeButton: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 20,
+  },
+  closeButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  
   darkContainer: {
     backgroundColor: '#121212',
   },
@@ -238,109 +340,91 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   lightText: {
-    color: '#333',
+    color: '#000',
   },
   username: {
-    fontSize: 28,
-    color: '#c7254e', 
-  },
-  containernot: {
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingHorizontal: 5,
-  },
-  profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 40 / 2,
-    borderWidth: 1,
-    borderColor: '#666',
-  },
-  welcomeMessageContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  welcomeMessage: {
-    fontSize: 18,
-    marginVertical: 10,
-    textAlign: 'center',
-    color: '#333',
-  },
-  emphasizedText: {
     fontWeight: 'bold',
-    color: '#c7254e',
-  },
-  animation: {
-    width: 150,
-    height: 150,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderWidth: 1,
-    borderRadius: 20,
-    borderColor: '#e0e0e0',
-    marginBottom: 15,
-  },
-  searchPlaceholder: {
-    fontSize: 18,
-    color: '#808080',
-  },
-  searchIcon: {
-    paddingLeft: 10,
+    color: '#FFA500',
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    paddingHorizontal: 10,
-    marginBottom: 10,
+    marginVertical: 16,
+    marginHorizontal: 16,
+  },
+  searchContainer:{
+    flexDirection: "row", 
+    borderRadius: 30, 
+    borderColor: '#e6e6e6',  
+    backgroundColor: "#f5f5f5", 
+    alignItems: "center", 
+    marginVertical: 20,
+    width: '90%',
+    alignSelf: 'center',
+    paddingLeft: 20,
+    justifyContent: 'space-between',
+  },
+  searchInput: {
+    fontSize: 16, 
+    flex: 1, 
+    textAlign: "justify", 
+    paddingLeft: 10
+  },
+  searchPlaceholder: {
+    color: "#aaaaaa",
+    fontSize: 16,
+  },  
+  searchIcon:{
+    alignItems: "center", 
+    justifyContent: "center", 
+    padding: 10, 
+    borderRadius: 20, 
+    marginRight: 5
   },
   categoriesContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
   },
   floatingButton: {
     position: 'absolute',
+    bottom: 90,
     right: 20,
-    bottom: 20,
-    backgroundColor: '#c7254e',
-    padding: 20,
+    backgroundColor: '#ff783b',
     borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
-    elevation: 5,
+    padding: 15,
   },
   menuContainer: {
     position: 'absolute',
+    bottom: 150,
     right: 20,
-    top: 100,
     backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 5,
+    marginBottom: 10,
     width: 200,
-    padding: 10,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingVertical: 10,
+    padding: 15,
   },
   menuItemText: {
-    fontSize: 16,
     marginLeft: 10,
+    fontSize: 16,
   },
-  menuicon: {
-    marginRight: 10,
-  }
+  containernot: {
+    flexDirection: 'row',
+  },
+  notificacion: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: 20,
+  },
 });
 
 export default HomeScreen;
