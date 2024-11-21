@@ -55,7 +55,7 @@ const RecipeDetailsScreen = (props) => {
                 throw new Error('La receta o el item no están definidos.');
             }
     
-            const urlexpo = 'https://expo.dev/accounts/aleu79/projects/InstantRecipes/builds/3afae65c-e1e5-4387-a5f2-9458eb4e8309';
+            const urlexpo = 'https://expo.dev/accounts/aleu79/projects/InstantRecipes/builds/09550098-5109-4086-819c-ddd8acf414ac';
     
             const shareOptions = {
                 title: recipe.strMeal,
