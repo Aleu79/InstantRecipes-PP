@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,  StatusBar, BackHandler,Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, StatusBar, BackHandler, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext'; 
@@ -9,6 +9,8 @@ import Categories from '../components/Categories';
 import Recipes from '../components/Recipes';
 import axios from 'axios';
 import BottomNavBar from '../components/BottomNavbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LottieView from 'lottie-react-native';
 
 const HomeScreen = ({ navigation }) => {
   const { isDarkTheme } = useTheme();  
@@ -19,20 +21,33 @@ const HomeScreen = ({ navigation }) => {
   const [activeCategory, setActiveCategory] = useState('Beef');
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
+  const [isFirstVisit, setIsFirstVisit] = useState(false); 
   const db = getFirestore();
 
   useEffect(() => {
     handleUpdateProfile();
     getCategories();
-    getRecipes(); 
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    getRecipes();
+    checkFirstVisit();  
 
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     return () => {
       backHandler.remove(); 
     };
   }, []);
   
-    
+  const checkFirstVisit = async () => {
+    try {
+      const firstVisit = await AsyncStorage.getItem('isFirstVisit');
+      if (!firstVisit) {
+        setIsFirstVisit(true);
+        await AsyncStorage.setItem('isFirstVisit', 'false');
+      }
+    } catch (error) {
+      console.error('Error checking first visit:', error);
+    }
+  };
+
   const handleUpdateProfile = async () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -54,7 +69,6 @@ const HomeScreen = ({ navigation }) => {
       const response = await axios.get('https://themealdb.com/api/json/v1/1/categories.php');
       if (response && response.data) {
         setCategories(response.data.categories);
-        console.log(response);
       }
     } catch (error) {
       console.log("error", error.message);
@@ -80,6 +94,7 @@ const HomeScreen = ({ navigation }) => {
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
   };
+
   const handleBackPress = () => {
     if (navigation.isFocused()) {
       Alert.alert(
@@ -92,17 +107,15 @@ const HomeScreen = ({ navigation }) => {
           },
           {
             text: 'Salir',
-            onPress: () => BackHandler.exitApp(), 
+            onPress: () => BackHandler.exitApp(),
           },
         ],
         { cancelable: true }
       );
-      return true; 
+      return true;
     }
-  
-    return false; 
+    return false;
   };
-
 
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
@@ -123,7 +136,24 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Search bar  */}
+        {/* Show de la primera visita */}
+        {isFirstVisit && (
+          <View style={styles.welcomeMessageContainer}>
+            <LottieView 
+              source={require('../assets/celebration.json')} 
+              autoPlay 
+              loop 
+              style={styles.animation} 
+            />
+            <Text style={styles.welcomeMessage}>
+              ¡Bienvenido a la app de recetas instantáneas! La hicimos con mucho esfuerzo y dedicación. 
+              Espero que te guste. 
+              <Text style={styles.emphasizedText}> Es para aprobar las prácticas profesionalizantes, ¡y ya casi está terminada!</Text>
+            </Text>
+          </View>
+        )}
+
+        {/* Search bar */}
         <TouchableOpacity 
           style={styles.searchContainer} 
           onPress={() => navigation.navigate('SearchScreen')}
@@ -134,7 +164,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
 
-        <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text> 
+        <Text style={[styles.sectionTitle, isDarkTheme ? styles.darkText : styles.lightText]}>Categorías</Text>
         <ScrollView
           ref={categoriesScrollRef}
           horizontal
@@ -146,7 +176,7 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Recipes */}
         <View>
-          <Recipes meals={meals} categories={categories} />        
+          <Recipes meals={meals} categories={categories} />
         </View>
       </ScrollView>
 
@@ -208,91 +238,109 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   lightText: {
-    color: '#000',
+    color: '#333',
   },
   username: {
-    fontWeight: 'bold',
-    color: '#FFA500',
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 16,
-    marginHorizontal: 16,
-  },
-  searchContainer:{
-    flexDirection: "row", 
-    borderRadius: 30, 
-    borderColor: '#e6e6e6',  
-    backgroundColor: "#f5f5f5", 
-    alignItems: "center", 
-    marginVertical: 20,
-    width: '90%',
-    alignSelf: 'center',
-    paddingLeft: 20,
-    justifyContent: 'space-between',
-  },
-  searchInput: {
-    fontSize: 16, 
-    flex: 1, 
-    textAlign: "justify", 
-    paddingLeft: 10
-  },
-  searchPlaceholder: {
-    color: "#aaaaaa",
-    fontSize: 16,
-  },  
-  searchIcon:{
-    alignItems: "center", 
-    justifyContent: "center", 
-    padding: 10, 
-    borderRadius: 20, 
-    marginRight: 5
-  },
-  categoriesContainer: {
-    paddingHorizontal: 15,
-    marginBottom: 20,
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 90,
-    right: 20,
-    backgroundColor: '#ff783b',
-    borderRadius: 50,
-    padding: 15,
-  },
-  menuContainer: {
-    position: 'absolute',
-    bottom: 150,
-    right: 20,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 5,
-    marginBottom: 10,
-    width: 200,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-  },
-  menuItemText: {
-    marginLeft: 10,
-    fontSize: 16,
+    fontSize: 28,
+    color: '#c7254e', 
   },
   containernot: {
-    flexDirection: 'row',
-  },
-  notificacion: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingHorizontal: 5,
   },
   profileImage: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    marginLeft: 20,
+    borderRadius: 40 / 2,
+    borderWidth: 1,
+    borderColor: '#666',
   },
+  welcomeMessageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  welcomeMessage: {
+    fontSize: 18,
+    marginVertical: 10,
+    textAlign: 'center',
+    color: '#333',
+  },
+  emphasizedText: {
+    fontWeight: 'bold',
+    color: '#c7254e',
+  },
+  animation: {
+    width: 150,
+    height: 150,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderWidth: 1,
+    borderRadius: 20,
+    borderColor: '#e0e0e0',
+    marginBottom: 15,
+  },
+  searchPlaceholder: {
+    fontSize: 18,
+    color: '#808080',
+  },
+  searchIcon: {
+    paddingLeft: 10,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  categoriesContainer: {
+    paddingHorizontal: 10,
+  },
+  floatingButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#c7254e',
+    padding: 20,
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+    elevation: 5,
+  },
+  menuContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 100,
+    backgroundColor: '#fff',
+    width: 200,
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingVertical: 10,
+  },
+  menuItemText: {
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  menuicon: {
+    marginRight: 10,
+  }
 });
 
 export default HomeScreen;

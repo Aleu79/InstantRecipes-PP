@@ -1,21 +1,31 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons'; 
+import { MaterialIcons } from '@expo/vector-icons';
 import Header from '../components/Headers/Header';
+import * as Animatable from 'react-native-animatable';
 
-const SupportScreen = () => {
+const SupportScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Header title="SupportScreen" goBack={() => navigation.goBack()} />
       </View>
       <View style={styles.content}>
-        <MaterialIcons name="support-agent" size={200} color="#4CAF50" />
-        <Text style={styles.header}>¡Próximamente!</Text>
-        <Text style={styles.text}>
-          Estamos trabajando para habilitar esta sección y ofrecerte la mejor experiencia de soporte. 
+        {/* Animación para el ícono */}
+        <Animatable.View animation="fadeIn" duration={1000}>
+          <MaterialIcons name="support-agent" size={200} color="#4CAF50" />
+        </Animatable.View>
+
+        {/* Animación para el título */}
+        <Animatable.Text animation="bounceIn" duration={1500} style={styles.header}>
+          ¡Próximamente!
+        </Animatable.Text>
+
+        {/* Animación para el texto */}
+        <Animatable.Text animation="fadeInUpBig" duration={1500} style={styles.text}>
+          Estamos trabajando para habilitar esta sección y ofrecerte la mejor experiencia de soporte.
           ¡Gracias por tu paciencia!
-        </Text>
+        </Animatable.Text>
       </View>
     </View>
   );
