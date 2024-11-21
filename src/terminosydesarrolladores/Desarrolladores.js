@@ -16,7 +16,7 @@ const DevelopersScreen = ({ navigation }) => {
           <Text style={styles.titleText}>Desarrolladores</Text>
         </View>
 
-        <Icon name="construct-outline" size={150} color="#4CAF50" style={styles.icon} />
+        <Icon name="construct-outline" size={200} color="#4CAF50" style={styles.icon} />
 
         <Text style={styles.infoText}>
           Aún no tenemos información sobre desarrolladores en esta sección.

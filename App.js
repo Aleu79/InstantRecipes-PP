@@ -24,7 +24,8 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoadingScreen from './src/screens/LoadingScreen'; 
 import MyRecipeScreen from './src/screens/MyRecipeScreen';
 import SearchScreenCateg from './src/screens/SearchScreen';
-import Toast from 'react-native-toast-message'; 
+import Toast from 'react-native-toast-message';
+import SupportScreen from './src/screens/SupportScreen';
 
 const Stack = createStackNavigator();
 
@@ -84,6 +85,8 @@ function AppNavigation() {
       <Stack.Screen name="RecipeDetailsScreen" component={RecipeDetailsScreen} options={{headerShown:false}}/>
       <Stack.Screen name="MyRecipeScreen" component={MyRecipeScreen} options={{headerShown:false}}/>
       <Stack.Screen name="SearchScreenCateg" component={SearchScreenCateg} options={{headerShown:false}}/>
+      <Stack.Screen name="SupportScreen" component={SupportScreen} options={{headerShown:false}}/>
+
     </Stack.Navigator>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,  StatusBar } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image,  StatusBar, BackHandler,Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import { UserContext } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext'; 
@@ -25,8 +25,14 @@ const HomeScreen = ({ navigation }) => {
     handleUpdateProfile();
     getCategories();
     getRecipes(); 
-  }, []);
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
 
+    return () => {
+      backHandler.remove(); 
+    };
+  }, []);
+  
+    
   const handleUpdateProfile = async () => {
     const currentUser = auth.currentUser;
     if (currentUser) {
@@ -71,20 +77,32 @@ const HomeScreen = ({ navigation }) => {
     getRecipes(category);
   };
 
-  const categoryImages = {
-    Beef: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
-    Vegano: 'https://i.pinimg.com/564x/80/9a/a7/809aa70dd33e3afef618f139a7c50b43.jpg',
-    'Sin Lacteos': 'https://i.pinimg.com/564x/fb/fd/a2/fbfda2193d781e9e357860bbea548fa2.jpg',
-    Vegetariano: 'https://www.anitahealthy.com/wp-content/uploads/2020/02/Veggie-Bowl-de-Lentilhas-e-abo%CC%81bora-2-1-600x800.jpg',
-    'Sin Tacc': 'https://i.pinimg.com/564x/6a/d3/3d/6ad33d29ebcbfe87b8fd7a1d4086749b.jpg',
-  };
-
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);
   };
-  const handlePress = () => {
-    navigation.navigate('SearchScreen');
+  const handleBackPress = () => {
+    if (navigation.isFocused()) {
+      Alert.alert(
+        'Salir de la aplicación',
+        '¿Estás seguro de que quieres salir?',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Salir',
+            onPress: () => BackHandler.exitApp(), 
+          },
+        ],
+        { cancelable: true }
+      );
+      return true; 
+    }
+  
+    return false; 
   };
+
 
   return (
     <View style={[styles.container, isDarkTheme ? styles.darkContainer : styles.lightContainer]}>
