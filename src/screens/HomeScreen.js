@@ -158,9 +158,15 @@ const HomeScreen = ({ navigation }) => {
           <LottieView
             source={require('../../assets/celebration.json')}
             autoPlay
-            loop={false}
+            loop={true} 
+            onAnimationFinish={() => {
+              setTimeout(() => {
+                setIsFirstVisit(true); 
+              }, 1000); 
+            }}
             style={styles.animation}
           />
+
           <Text style={styles.welcomeMessage}>
             ¡Bienvenido a la app de recetas instantáneas! La hicimos con mucho esfuerzo y dedicación.
             Espero que te guste.{' '}
