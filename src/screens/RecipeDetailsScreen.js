@@ -4,17 +4,16 @@ import { CachedImage } from '../helpers/image';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import axios from 'axios';
 import Loading from '../components/Loading';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { FontAwesome } from '@expo/vector-icons';
-import { capitalizeFirstLetter } from '../helpers/utils';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { db } from '../../firebase/firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase/firebase-config';
 import { UserContext } from '../context/UserContext';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Toast from 'react-native-toast-message';
 import ToastWrapper from '../components/ToastWrapper';
+import { Share } from 'react-native';
+
 
 
 const RecipeDetailsScreen = (props) => {
@@ -44,6 +43,37 @@ const RecipeDetailsScreen = (props) => {
         return true;
     };
 
+    // Compartir receta
+    const handleShareRecipe = async (recipe) => {
+        if (!validarReceta(recipe)) {
+            Alert.alert('Error', 'No hay información suficiente para compartir esta receta.');
+            return;
+        }
+    
+        try {
+            if (!recipe || !recipe.strMeal || !recipe.idMeal || !recipe.strMealThumb) {
+                throw new Error('La receta o el item no están definidos.');
+            }
+    
+            const urlexpo = 'https://expo.dev/accounts/aleu79/projects/InstantRecipes/builds/3afae65c-e1e5-4387-a5f2-9458eb4e8309';
+    
+            const shareOptions = {
+                title: recipe.strMeal,
+                message: `¡Mira esta receta: ${recipe.strMeal}!\nPuedes verla aquí: ${recipe.strSource}\nSi quieres ver más recetas, instala nuestra app en Expo: ${urlexpo}`,
+                url: recipe.strMealThumb,
+            };
+    
+            // Compartir la receta
+            await Share.share(shareOptions);
+    
+            addNotification('Receta Compartida', `Has compartido la receta: ${recipe.strMeal}`);
+            } catch (error) {
+            console.error('Error al compartir la receta:', error);
+            Alert.alert('Error', 'No se pudo compartir la receta.');
+        }
+    };
+    
+    
     // Verificar si la receta está guardada
     const checkIfRecipeIsSaved = async (recipeId, userEmail) => {
         try {
@@ -107,9 +137,12 @@ const RecipeDetailsScreen = (props) => {
                     });
                     setFavourite(true);
     
-                 
-                    ToastWrapper({ text1: 'Receta guardada con éxito!' });
-    
+                    ToastWrapper({
+                        text1: 'Receta guardada con éxito!',
+                        textColor: 'green',
+                        borderColor: 'green',
+                      });
+                          
                     addNotification('Receta Guardada', 'Has guardado una receta.');
     
                     // Guardamos en AsyncStorage
@@ -172,8 +205,9 @@ const RecipeDetailsScreen = (props) => {
             style={styles.container}
             contentContainerStyle={styles.scrollContainer}
         >
-            <StatusBar style='light' />
+            <StatusBar style="light" />
     
+            {/* Imagen de la receta */}
             <View style={styles.imageContainer}>
                 {Platform.OS === 'ios' ? (
                     <CachedImage
@@ -191,57 +225,80 @@ const RecipeDetailsScreen = (props) => {
                 <View style={styles.ondulatedBackground} />
             </View>
     
-            <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.headerContainer}>
-                <TouchableOpacity style={styles.backButton} onPress={() => props.navigation.goBack()}>
-                    <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
-                </TouchableOpacity>
-    
+            {/* Header con botón de retroceso y acciones */}
+            <View style={styles.headerContainer}>
                 <TouchableOpacity
-                    style={styles.bookmarkButton}
-                    onPress={() => handleRecipeSaveToggle(meals)}
-                    disabled={isLoading}  
+                    style={styles.backButton}
+                    onPress={() => props.navigation.goBack()}
                 >
-                    {isLoading ? (
-                        <Loading />
-                    ) : (
-                        <FontAwesome 
-                            name={isFavourite ? "bookmark" : "bookmark-o"} 
-                            size={28} 
-                            color={isFavourite ? "#FFD700" : "#fff"} 
-                        />
-                    )}
+                    <ChevronLeftIcon
+                        size={28}
+                        strokeWidth={2.5}
+                        color="#fff"
+                        width={30}
+                        height={30}
+                    />
                 </TouchableOpacity>
-            </Animated.View>
     
+                <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                        style={styles.bookmarkButton}
+                        onPress={() => handleRecipeSaveToggle(meals)}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <Loading />
+                        ) : (
+                            <FontAwesome
+                                name={isFavourite ? "bookmark" : "bookmark-o"}
+                                size={28}
+                                color={isFavourite ? "#FFD700" : "#fff"}
+                            />
+                        )}
+                    </TouchableOpacity>
+    
+                    <TouchableOpacity
+    style={styles.shareButton}
+    onPress={() => handleShareRecipe(meals)} 
+>
+    <Ionicons name="share-social-outline" size={28} color="#fff" />
+</TouchableOpacity>
+                </View>
+            </View>
+    
+            {/* Contenido principal */}
             {loading ? (
                 <Loading size="large" style={styles.loading} />
             ) : (
                 <View style={styles.detailsContainer}>
+                    {/* Nombre de la receta */}
                     <View style={styles.contentContainer}>
                         <Text style={styles.recipeName}>{meals?.strMeal}</Text>
                     </View>
     
                     <View style={styles.separator} />
     
+                    {/* Tabs para ingredientes y preparación */}
                     <View style={styles.tabsContainer}>
-                        <TabButton 
-                            isActive={activeTab === 'ingredients'} 
-                            onPress={() => setActiveTab('ingredients')} 
-                            text="Ingredientes" 
+                        <TabButton
+                            isActive={activeTab === 'ingredients'}
+                            onPress={() => setActiveTab('ingredients')}
+                            text="Ingredientes"
                         />
-                        <TabButton 
-                            isActive={activeTab === 'preparation'} 
-                            onPress={() => setActiveTab('preparation')} 
-                            text="Preparación" 
+                        <TabButton
+                            isActive={activeTab === 'preparation'}
+                            onPress={() => setActiveTab('preparation')}
+                            text="Preparación"
                         />
                     </View>
     
+                    {/* Contenido de cada tab */}
                     {activeTab === 'ingredients' ? (
-                        <IngredientsList 
-                            ingredients={ingredientsIndexes(meals).map(i => ({
+                        <IngredientsList
+                            ingredients={ingredientsIndexes(meals).map((i) => ({
                                 name: meals['strIngredient' + i],
-                                measure: meals['strMeasure' + i]
-                            }))} 
+                                measure: meals['strMeasure' + i],
+                            }))}
                         />
                     ) : (
                         <PreparationList preparationSteps={preparationSteps} />
@@ -250,6 +307,7 @@ const RecipeDetailsScreen = (props) => {
             )}
         </ScrollView>
     );
+    
     
 };
 
@@ -336,6 +394,13 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
     },
+    actionButtons: {
+        flexDirection: 'row',
+    },
+    shareButton: {
+        paddingHorizontal: 10,
+    },
+    
     headerContainer: {
         position: 'absolute',
         alignItems: "flex-start",
@@ -456,4 +521,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RecipeDetailsScreen;
+export default RecipeDetailsScreen;    

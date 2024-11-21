@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, Linking } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -24,9 +24,10 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoadingScreen from './src/screens/LoadingScreen'; 
 import MyRecipeScreen from './src/screens/MyRecipeScreen';
 import SearchScreenCateg from './src/screens/SearchScreen';
-import Toast from 'react-native-toast-message'; // Importamos el componente de Toast
+import Toast from 'react-native-toast-message'; 
 
 const Stack = createStackNavigator();
+
 
 function AppNavigation() {
   const { user } = useContext(UserContext); 
@@ -44,7 +45,7 @@ function AppNavigation() {
 
     const delay = setTimeout(() => {
       setIsVerifying(false); 
-    }, 2500); 
+    }, 3000); 
 
     return () => clearTimeout(delay); 
   }, [user]);
@@ -91,9 +92,9 @@ export default function App() {
   return (
     <UserProvider>
       <ThemeProvider>
-          <NavigationContainer>
-            <AppNavigation /> 
-            <Toast ref={(ref) => Toast.setRef(ref)} /> 
+        <NavigationContainer> 
+          <AppNavigation /> 
+            <Toast />
           </NavigationContainer>
       </ThemeProvider>
     </UserProvider>

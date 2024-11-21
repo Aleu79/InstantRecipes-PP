@@ -1,4 +1,3 @@
-import React from 'react';
 import Toast from 'react-native-toast-message';
 
 const ToastWrapper = ({
@@ -42,8 +41,6 @@ const ToastWrapper = ({
       textAlign,
     },
   });
-
-  return null; // No es necesario renderizar nada
 };
 
 export default ToastWrapper;

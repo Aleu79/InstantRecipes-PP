@@ -35,9 +35,9 @@ const Notifications = ({ navigation }) => {
       {selectedNotification === item.id && (
         <View style={styles.actionsContainer}>
           <Icon
-            name="trash-outline"
+            name="trash-outline"  
             size={20}
-            color="#FF0000"
+            color="#FF6347"  
             onPress={() => handleRemoveNotification(item.id)}
           />
         </View>
@@ -123,12 +123,9 @@ const Notifications = ({ navigation }) => {
           </View>
         )}
         {notifications && notifications.length >= 2 && (
-          <Icon
-            name="trash-outline"
-            size={28}
-            color="#FF0000"
-            onPress={handleClearNotifications}
-          />
+          <TouchableOpacity style={styles.clearButton} onPress={handleClearNotifications}>
+            <Icon name="trash-outline" size={28} color="#FF6347" /> 
+          </TouchableOpacity>
         )}
       </View>
       <BottomNavBar navigation={navigation} />
@@ -205,6 +202,15 @@ const styles = StyleSheet.create({
   readNotificationItem: {
     fontSize: 14,
     color: '#666',
+  },
+  clearButton: {
+    position: 'absolute',
+    bottom: 60,
+    right: 20,
+    backgroundColor: '#f0f0f0',  
+    padding: 10,
+    borderRadius: 30,
+    elevation: 5,
   },
 });
 

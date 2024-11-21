@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext'; 
 import { UserContext } from '../context/UserContext';
@@ -18,7 +18,9 @@ const BottomNavBar = ({ navigation }) => {
         <View style={styles.iconWrapper}>
           <Icon name="mail-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
           {unreadNotifications > 0 && (
-            <View style={styles.notificationDot}></View>
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationText}>{unreadNotifications}</Text>
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -56,16 +58,22 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
   },
-  notificationDot: {
+  notificationBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    top: -4,
+    right: -4,
     backgroundColor: 'red',
-    borderWidth: 2,
-    borderColor: '#fff',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  notificationText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   navButton: {
     flex: 1,
