@@ -233,72 +233,153 @@ const SignUpScreen = ({ navigation }) => {
   
             <TouchableOpacity style={styles.termsContainer} onPress={() => setModalVisible(true)}>
               <Icon name="document-text-outline" size={20} color="#FF4500" />
-              <Text style={styles.termsText}>Términos y condiciones de uso    </Text>
+              <Text style={styles.termsText}>Información del Proyecto</Text>
             </TouchableOpacity>
           </View>
-  
           <Modal animationType="slide" transparent={true} visible={modalVisible}>
-            <View style={styles.modalBackground}>
-              <View style={styles.modalView}>
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Icon name="arrow-back-outline" size={24} color="#FF4500" />
-                </TouchableOpacity>
-  
-                <Text style={styles.modalTitle}>Términos y Condiciones</Text>
-                <Text style={styles.modalText}>
-                  {"\n\n"}**Última actualización:** 17 de octubre de 2024
-                </Text>
-                
-                <ScrollView style={styles.scrollContainer}>
-                  <Text style={styles.modalText}>
-                    Al registrarte en esta aplicación, aceptas los siguientes términos y condiciones:
-                    {"\n\n"}1. **Uso de los datos personales:** Los datos personales proporcionados durante el
-                    registro serán utilizados únicamente con el propósito de gestionar tu cuenta en la aplicación.
-                    {"\n\n"}2. **Seguridad:** Nos comprometemos a proteger la privacidad de tus datos, y no compartiremos
-                    tu información con terceros sin tu consentimiento expreso.
-                    {"\n\n"}3. **Responsabilidad:** No somos responsables por el uso indebido de esta aplicación ni por
-                    la divulgación accidental de información personal debido a violaciones de seguridad fuera de nuestro
-                    control.
-                    {"\n\n"}4. **Modificaciones:** Nos reservamos el derecho de actualizar estos términos en cualquier
-                    momento. Te notificaremos si realizamos cambios sustanciales.
-                    {"\n\n"}5. **Uso adecuado:** Los usuarios se comprometen a utilizar la aplicación de manera adecuada,
-                    respetando las leyes locales y los derechos de otros usuarios.
-                    {"\n\n"}Al aceptar estos términos, confirmas que has leído y comprendido nuestra política de privacidad.
-                  </Text>
-                </ScrollView>
-  
-                <TouchableOpacity
-                  style={[
-                    styles.termsCheckbox,
-                    !termsAccepted ? { borderColor: 'gray' } : {},
-                  ]}
-                  onPress={() => setTermsAccepted(!termsAccepted)}
-                >
-                  <Icon
-                    name={termsAccepted ? 'checkbox-outline' : 'square-outline'}
-                    size={24}
-                    color="#FF4500"
-                  />
-                  <Text style={styles.checkboxText}>Acepto los términos y condiciones   </Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.acceptButton,
-                    !termsAccepted ? { backgroundColor: 'gray' } : {},
-                  ]}
-                  disabled={!termsAccepted}
-                  onPress={handleAcceptTerms}
-                >
-                  <Text style={styles.acceptButtonText}>Aceptar y registrar    </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-  
+  <View style={styles.modalBackground}>
+    <View style={styles.modalView}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => setModalVisible(false)}
+      >
+        <Icon name="arrow-back-outline" size={24} color="#FF4500" />
+      </TouchableOpacity>
+
+      <Text style={styles.modalTitle}>Sobre este Proyecto</Text>
+      <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+        **Última actualización:** 12 de diciembre de 2024
+      </Text>
+
+      <ScrollView style={styles.scrollContainer}>
+        <Text style={styles.modalText}>
+          Este proyecto fue desarrollado como parte de nuestras prácticas profesionalizantes para{' '}
+          <Text style={{ fontWeight: 'bold' }}> Calipso S.A.</Text>
+        </Text>
+
+        <Text style={styles.modalText}>
+          La aplicación tiene como objetivo facilitar la organización y gestión de recetas culinarias, 
+          permitiendo a los usuarios explorar distintas categorías, guardar sus recetas favoritas y personalizar su experiencia.
+        </Text>
+
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Objetivo:
+        </Text>
+        <Text style={styles.modalText}>
+          Aprender y aplicar tecnologías modernas para resolver problemas reales, contribuyendo al entorno profesional 
+          y adquiriendo experiencia significativa en desarrollo de software.
+        </Text>
+
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Aprendizajes Clave:
+        </Text>
+        <Text style={styles.modalText}>
+          - En mi caso,{' '}
+          <Text style={{ fontWeight: 'bold' }}> Damian Aguero</Text>, este proyecto me permitió profundizar completamente 
+          en <Text style={{ fontWeight: 'bold' }}>JavaScript</Text> y <Text style={{ fontWeight: 'bold' }}>React</Text>, 
+          entendiendo cómo integrar servicios externos y trabajar con componentes reutilizables.
+        </Text>
+
+        <Text style={styles.modalText}>
+          - En el caso de{' '}
+          <Text style={{ fontWeight: 'bold' }}> Rocio</Text>, su enfoque fue en aprender 
+          <Text style={{ fontWeight: 'bold' }}> React Native</Text>, ganando habilidades para desarrollar aplicaciones 
+          móviles multiplataforma con interfaces intuitivas y funcionales.
+        </Text>
+
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Desafíos y Logros:
+        </Text>
+        <Text style={styles.modalText}>
+          A lo largo del proyecto, enfrentamos retos como la integración con Firebase, la gestión de estados complejos, 
+          y la creación de una navegación fluida entre las distintas pantallas. Estos retos nos ayudaron a consolidar 
+          nuestras habilidades y a aprender nuevas estrategias para la resolución de problemas.
+        </Text>
+
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Agradecimientos:
+        </Text>
+        <Text style={styles.modalText}>
+          Queremos expresar nuestro agradecimiento a <Text style={{ fontWeight: 'bold' }}>Calipso S.A</Text> 
+          {"\n"}por brindarnos esta oportunidad . Este proyecto marcó un 
+          antes y un después en nuestra formación profesional y personal.
+        </Text>
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Lo que falta por completar:
+        </Text>
+        <Text style={styles.modalText}>
+          Aunque el proyecto está bastante avanzado, aún hay varias áreas que requieren pulir. Una de ellas es el buscador, 
+          que actualmente permite buscar pero no tiene una pantalla de detalle donde el usuario pueda ver la receta o el ingrediente 
+          seleccionado. Esto debería implementarse para que la experiencia sea más fluida y funcional. 
+        </Text>
+
+        <Text style={styles.modalText}>
+          Además, falta incorporar un filtro por ingredientes, que permita al usuario buscar recetas basadas en los ingredientes que tiene disponibles.
+          Esto ayudaría a personalizar aún más la experiencia y hacerlo más útil para los usuarios.
+        </Text>
+
+        <Text style={styles.modalText}>
+          En la sección de "Recetas Guardadas", hemos detectado un problema con el "bookmark". Cuando eliminas una receta de la sección de guardados, 
+          desaparece correctamente, pero si vuelves a la receta en el Home, sigue marcándola como guardada (en amarillo). Esto requiere una revisión 
+          para que los estados entre las distintas pantallas estén completamente sincronizados y reflejen los cambios correctamente.
+        </Text>
+
+        <Text style={[styles.modalText, { fontWeight: 'bold', marginTop: 10 }]}>
+          Reflexión y cambios a futuro:
+        </Text>
+        <Text style={styles.modalText}>
+          A lo largo de este proyecto, tanto Rocio Gutiérrez como yo, <Text style={{ fontWeight: 'bold' }}>Damian Aguero</Text>, 
+          aprendimos muchísimo, no solo sobre las tecnologías involucradas, sino también sobre el proceso de desarrollo de software en equipo. 
+          La experiencia fue enriquecedora y nos permitió aplicar conocimientos en situaciones reales. Sin embargo, hoy en día, 
+          cambiaría algunas cosas del proyecto, sobre todo en términos de arquitectura.
+        </Text>
+
+        <Text style={styles.modalText}>
+          A medida que el proyecto fue creciendo, empezamos a notar que la arquitectura actual ya no era la más eficiente para manejar 
+          la complejidad y la escala del código. Si tuviera que rehacerlo, probablemente dividiría la aplicación en más módulos y 
+          servicios, y utilizaría una arquitectura basada en patrones como MVC (Modelo-Vista-Controlador) o Redux para manejar el 
+          estado de forma más predecible. Esto también facilitaría la escalabilidad y el mantenimiento del proyecto a largo plazo.
+        </Text>
+
+        <Text style={styles.modalText}>
+          Además, la integración de nuevas funcionalidades como el filtrado por ingredientes y la visualización de recetas en una nueva 
+          pantalla requiere un enfoque más modular, y la separación de responsabilidades dentro del código es clave para evitar que 
+          se vuelva difícil de manejar conforme el proyecto siga creciendo.
+        </Text>
+
+        <Text style={styles.modalText}>
+          Bueno, todo esto lo sé hoy en día gracias a la complicación que tuvimos a lo largo del proyecto, especialmente por la forma en 
+          que fuimos aprendiendo a medida que íbamos haciendo la aplicación. Los desafíos y los problemas que enfrentamos nos han dado una 
+          comprensión mucho más profunda de lo que implica desarrollar una aplicación completa y escalable. Por lo tanto, estoy muy conforme 
+          con lo aprendido, y aunque hoy cambiaría algunas decisiones, estoy orgulloso del crecimiento que tuvimos tanto Rocio como yo.
+        </Text>
+      </ScrollView>
+      <TouchableOpacity
+        style={[styles.termsCheckbox]}
+        onPress={() => setTermsAccepted(!termsAccepted)}
+      >
+        <Icon
+          name={termsAccepted ? 'checkbox-outline' : 'square-outline'}
+          size={24}
+          color="#FF4500"
+        />
+        <Text style={styles.checkboxText}>He leído y entendido la información sobre este proyecto</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.acceptButton,
+          !termsAccepted ? { backgroundColor: 'gray' } : {},
+        ]}
+        disabled={!termsAccepted}
+        onPress={handleAcceptTerms}
+      >
+        <Text >Aceptar y continuar</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -419,32 +500,46 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',  
   },
   modalView: {
-    width: '80%',
+    width: '85%',
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
+    borderRadius: 15,
+    padding: 25,
+    elevation: 10,  
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    paddingTop:20,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
+    color: '#333',  
+    marginBottom: 12,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#555',  
     marginBottom: 10,
   },
   scrollContainer: {
     maxHeight: 400,
+    marginBottom: 20,  
   },
   acceptButton: {
     backgroundColor: '#FF4500',
     borderRadius: 25,
-    width: '90%',
+    width: '100%',
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    marginTop: 30,
+    marginTop: 25,
+    borderWidth: 1, 
+    borderColor: '#FF4500',
   },
   backButton: {
     marginBottom: 10,
@@ -455,9 +550,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
+  termsCheckbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   checkboxText: {
-    marginLeft: 5,
-  }, 
+    color: '#333',  
+    fontSize: 14,
+    marginLeft: 8,
+  },
 });
 
 export default SignUpScreen;
