@@ -1,42 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
-  Button,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 const FilterByIngredients = () => {
   const navigation = useNavigation();
-  const [includeIngredients, setIncludeIngredients] = useState('');
-  const [excludeIngredients, setExcludeIngredients] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestedIngredients, setSuggestedIngredients] = useState([]);
   const [includedList, setIncludedList] = useState([]);
-  const [excludedList, setExcludedList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleAddIncluded = () => {
-    if (includeIngredients.trim()) {
-      setIncludedList([...includedList, includeIngredients.trim()]);
-      setIncludeIngredients('');
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          `https://api.spoonacular.com/food/ingredients/autocomplete?query=&apiKey=7049b3cba3134fb090258c4f100093ff&number=50`
+        );
+        setSuggestedIngredients(response.data);
+        setError(null);
+      } catch (err) {
+        setError('Opss nos quedamos sin peticiones');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchIngredients();
+  }, []);
+
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (query.length > 1) {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          `https://api.spoonacular.com/food/ingredients/autocomplete?query=${query}&apiKey=7049b3cba3134fb090258c4f100093ff&number=10`
+        );
+        setSuggestedIngredients(response.data);
+      } catch (err) {
+        console.error('Error buscando ingredientes:', err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleAddExcluded = () => {
-    if (excludeIngredients.trim()) {
-      setExcludedList([...excludedList, excludeIngredients.trim()]);
-      setExcludeIngredients('');
+  const handleSelectIngredient = (ingredient) => {
+    if (!includedList.some((item) => item.name === ingredient.name)) {
+      setIncludedList([...includedList, ingredient]);
     }
+    setSearchQuery('');
   };
 
-  const handleRemoveItem = (list, setList, item) => {
-    setList(list.filter((i) => i !== item));
+  const handleRemoveIngredient = (ingredient) => {
+    setIncludedList(includedList.filter((item) => item.name !== ingredient.name));
   };
+
+  const applyFilters = () => {
+    console.log("enviando filtros:", includedList);  
+    navigation.navigate('SearchScreen', { includedList });
+  };
+
+  const isButtonEnabled = includedList.length > 0;
 
   return (
     <KeyboardAvoidingView
@@ -44,72 +83,75 @@ const FilterByIngredients = () => {
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="black" />
+        </TouchableOpacity>
         <Text style={styles.title}>Filtros</Text>
 
-        <View style={[styles.section, { marginTop: 50 }]}>
-          <Text style={styles.subtitle}>Mostrarme recetas con:</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Escribí ingredientes..."
-              placeholderTextColor="#888"
-              value={includeIngredients}
-              onChangeText={setIncludeIngredients}
-            />
-            <Button title="Agregar" onPress={handleAddIncluded} />
-          </View>
-          <View style={styles.tagContainer}>
-            {includedList.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.tag}
-                onPress={() =>
-                  handleRemoveItem(includedList, setIncludedList, item)
-                }
-              >
-                 <Text style={styles.tagText}>{item} <Icon name="close" size={20} color="#000"/></Text>
-              </TouchableOpacity>
-            ))}
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Buscar ingredientes:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Escribí ingredientes..."
+            placeholderTextColor="#888"
+            value={searchQuery}
+            onChangeText={handleSearch}
+          />
+          {loading && <ActivityIndicator size="small" color="#000" />}
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          {searchQuery && suggestedIngredients.length > 0 && (
+            <ScrollView style={styles.suggestionsContainer} contentContainerStyle={{ paddingBottom: 10 }}>
+              {suggestedIngredients.map((ingredient, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestion}
+                  onPress={() => handleSelectIngredient(ingredient)}
+                >
+                  <Image
+                    source={{
+                      uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`,
+                    }}
+                    style={styles.suggestionImage}
+                  />
+                  <Text style={styles.suggestionText}>{ingredient.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+          <View style={styles.tagScrollContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {includedList.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.tag}
+                  onPress={() => handleRemoveIngredient(item)}
+                >
+                  <Text style={styles.tagText}>
+                    {item.name} <Ionicons name="close" size={16} color="#000" />
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.subtitle}>Mostrarme recetas sin:</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Escribí ingredientes..."
-              placeholderTextColor="#888"
-              value={excludeIngredients}
-              onChangeText={setExcludeIngredients}
-            />
-            <Button title="Agregar" onPress={handleAddExcluded} />
-          </View>
-          <View style={styles.tagContainer}>
-            {excludedList.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.tag}
-                onPress={() =>
-                  handleRemoveItem(excludedList, setExcludedList, item)
-                }
-              >
-                <Text style={styles.tagText}>{item} <Icon name="close" size={20} color="#000"/></Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('SearchScreen')}
+          style={[
+            styles.applyButton,
+            isButtonEnabled ? styles.applyButtonEnabled : styles.applyButtonDisabled,
+          ]}
+          onPress={applyFilters}
+          disabled={!isButtonEnabled} 
         >
-          <Text style={styles.backText}>Volver</Text>
+          <Text style={styles.applyText}>Aplicar filtros</Text>
+          <Ionicons
+            name={isButtonEnabled ? "lock-open" : "lock-closed"}
+            size={24}
+            color={isButtonEnabled ? "green" : "red"}
+            style={styles.lockIcon}
+          />
         </TouchableOpacity>
       </ScrollView>
-
-      <TouchableOpacity style={styles.showRecipesButton}>
-        <Text style={styles.showRecipesText}>Mostrar 131562 recetas</Text>
-      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
@@ -120,6 +162,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 40,
     backgroundColor: '#fafafa',
+  },
+  backButton: {
+    padding: 5,
   },
   title: {
     fontSize: 26,
@@ -136,25 +181,42 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 8,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   input: {
-    flex: 1,
     backgroundColor: '#fff',
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 40,
-    marginRight: 8,
+    marginBottom: 8,
     color: '#333',
   },
-  tagContainer: {
+  suggestionsContainer: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    maxHeight: 150, 
+    overflow: 'hidden',
+  },
+  suggestion: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    padding: 10,
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
+  },
+  suggestionImage: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    borderRadius: 4,
+  },
+  suggestionText: {
+    color: '#333',
+  },
+  tagScrollContainer: {
+    marginTop: 10,
   },
   tag: {
     backgroundColor: '#e0e0e0',
@@ -169,27 +231,33 @@ const styles = StyleSheet.create({
   tagText: {
     color: '#333',
   },
-  backButton: {
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  backText: {
-    color: '#f57c00',
-    textDecorationLine: 'underline',
-    fontSize: 16,
-  },
-  showRecipesButton: {
-    backgroundColor: '#f57c00',
+  applyButton: {
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginHorizontal: 16,
     marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
-  showRecipesText: {
+  applyButtonEnabled: {
+    backgroundColor: '#f57c00', 
+  },
+  applyButtonDisabled: {
+    backgroundColor: '#555', 
+  },
+  applyText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+    marginRight: 10,
+  },
+  lockIcon: {
+    marginLeft: 10,
+  },
+  errorText: {
+    color: 'red',
+    marginTop: 10,
   },
 });
 

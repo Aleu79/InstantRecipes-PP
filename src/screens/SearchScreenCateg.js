@@ -3,6 +3,8 @@ import { View, TouchableOpacity, Text, FlatList, Image, ScrollView, StyleSheet }
 import { FontAwesome } from '@expo/vector-icons';
 
 const SearchScreenCateg = ({ categories = [], filterRecipes, navigation }) => {
+  console.log('Categories:', categories);  
+
   const renderRecipeItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate('RecipeScreen', { recipe: item })}
@@ -18,9 +20,8 @@ const SearchScreenCateg = ({ categories = [], filterRecipes, navigation }) => {
       <Text style={styles.recipeName}>{item.title}</Text>
     </TouchableOpacity>
   );
-
   if (!categories || categories.length === 0) {
-    return <Text>No hay categorías disponibles.</Text>;
+    return <Text style={styles.noCategoriesText}>No hay categorías disponibles.</Text>;
   }
 
   return (
@@ -35,8 +36,9 @@ const SearchScreenCateg = ({ categories = [], filterRecipes, navigation }) => {
               <Text style={styles.verMasButton}>Ver más</Text>
             </TouchableOpacity>
           </View>
+          
           <FlatList
-            data={filterRecipes(category)}
+            data={filterRecipes(category)}  
             renderItem={renderRecipeItem}
             keyExtractor={(item) => item.id.toString()}
             horizontal
@@ -101,6 +103,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginTop: 5,
+  },
+  noCategoriesText: {
+    fontSize: 16,
+    color: 'gray',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

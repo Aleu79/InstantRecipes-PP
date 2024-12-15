@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList, Image } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, FlatList, Image, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomNavBar from '../components/BottomNavbar';
 import axios from 'axios';
 import SearchScreenCateg from './SearchScreenCateg';
 
-const SearchScreen = ({ navigation }) => {
+const SearchScreen = ({ navigation, route }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  const apiKeys = [
-    '7049b3cba3134fb090258c4f100093ff',
-  ];
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState(route.params?.includedList || []);  
+  const [hasFilters, setHasFilters] = useState(false);
+  const [categoriesAvailable, setCategoriesAvailable] = useState(false); 
+
+  const { includedList = [] } = route.params || {};  
+
+  const apiKeys = ['7049b3cba3134fb090258c4f100093ff'];
+  console.log("es verdado o falso:  ", hasFilters);
 
   const attemptRequest = async (url) => {
     let validKeys = [...apiKeys];
@@ -44,16 +49,29 @@ const SearchScreen = ({ navigation }) => {
 
   useEffect(() => {
     const fetchRecipes = async () => {
-      const url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey={apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+      setLoading(true);
+      let url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey={apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
+      if (includedList?.length > 0) {
+        const ingredientsQuery = includedList.map(ingredient => ingredient.name).join(',');
+        url += `&ingredients=${ingredientsQuery}`;
+      }
       try {
         const response = await attemptRequest(url);
         setRecipes(response.data.results);
+        setHasFilters(true);
+        setCategoriesAvailable(response.data.results.length > 0); 
       } catch (error) {
-        console.error('Error fetching recipes:', error);
+        setError('Error al obtener recetas');
+        setCategoriesAvailable(false); 
+      } finally {
+        setLoading(false);
       }
     };
-    fetchRecipes();
-  }, []);
+
+    if (includedList.length > 0 || searchQuery.length > 2) {
+      fetchRecipes();
+    }
+  }, [includedList, searchQuery]);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -63,13 +81,18 @@ const SearchScreen = ({ navigation }) => {
         const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
         const response = await attemptRequest(url);
         setRecipes(response.data.results);
+        setHasFilters(true);
+        setCategoriesAvailable(response.data.results.length > 0);
       } catch (error) {
-        console.error('Error searching recipes:', error);
+        setError('Error al realizar la búsqueda');
+        setCategoriesAvailable(false);  
       } finally {
         setLoading(false);
       }
     } else {
       setRecipes([]);
+      setHasFilters(false);
+      setCategoriesAvailable(false);  
     }
   };
 
@@ -92,25 +115,41 @@ const SearchScreen = ({ navigation }) => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
+        <TouchableOpacity onPress={() => navigation.navigate('FilterByIngre')} style={styles.filterButton}>
+          <Ionicons name="filter-outline" size={24} color="black" />
+        </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <Text>Cargando...</Text>
-      ) : (
-        <>
-          {searchQuery.length > 2 ? (
-            <FlatList
-              data={recipes}
-              renderItem={renderRecipeItem}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.recipeList}
-            />
-          ) : (
-            <SearchScreenCateg />
-         )}
-        </>
+      {loading && <ActivityIndicator size="large" color="#000" />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {categoriesAvailable === false && !loading && !error && (
+        <Text>No hay categorías disponibles.</Text>
       )}
 
+      {hasFilters && <Text style={styles.title}>Recetas encontradas</Text>}
+
+      <ScrollView>
+        {recipes.length === 0 && !loading && !error && hasFilters && (
+          <Text>No se encontraron recetas con esos ingredientes.</Text>
+        )}
+        {recipes.map((recipe, index) => (
+          <View key={index} style={styles.recipeCard}>
+            <Text style={styles.recipeName}>{recipe.title}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      {!hasFilters && (
+        <FlatList
+          data={recipes}
+          renderItem={renderRecipeItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.recipeList}
+        />
+      )}
+      {!hasFilters && <SearchScreenCateg />}
+      
       <BottomNavBar navigation={navigation} />
     </View>
   );
@@ -171,6 +210,17 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     flex: 1,
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: 'red',
     textAlign: 'center',
   },
 });
