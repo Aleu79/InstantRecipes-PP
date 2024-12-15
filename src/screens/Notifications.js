@@ -1,49 +1,63 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { UserContext } from '../context/UserContext';
+import { Swipeable } from 'react-native-gesture-handler';
 import Header from '../components/Headers/Header';
 import BottomNavBar from '../components/BottomNavbar';
-import { useNavigation } from '@react-navigation/native';
 
 const Notifications = ({ navigation }) => {
-  const { notifications, removeNotification, clearNotifications, readNotifications, setNotifications } = useContext(UserContext);
+  const { notifications, removeNotification, clearNotifications, setNotifications } = useContext(UserContext);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  // Marcar todas las notificaciones como leídas cuando la pantalla se monta
   useEffect(() => {
     if (notifications && notifications.length > 0) {
       notifications.forEach(notification => {
         if (!notification.read) {
-          handleReadNotification(notification.id); 
+          handleReadNotification(notification.id);
         }
       });
     }
   }, [notifications]);
 
-  const renderNotification = ({ item }) => (
-    <TouchableOpacity
-      style={styles.notificationItem}
-      onLongPress={() => handleLongPress(item)}
-    >
-      <Icon name="notifications-outline" size={28} color="#4CAF50" style={styles.icon} />
-      <View style={styles.notificationContent}>
-        <Text style={styles.notificationTitle}>{item.title}</Text>
-        <Text style={styles.notificationBody}>{item.body}</Text>
-        <Text style={styles.notificationDate}>{item.date}</Text>
-      </View>
-      {selectedNotification === item.id && (
-        <View style={styles.actionsContainer}>
+  const renderNotification = ({ item }) => {
+    const renderRightActions = () => (
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleRemoveNotification(item.id)}
+      >
+        <Icon name="trash-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+    );
+
+    return (
+      <Swipeable renderRightActions={renderRightActions}>
+        <TouchableOpacity
+          style={styles.notificationItem}
+          onLongPress={() => handleLongPress(item)}
+        >
           <Icon
-            name="trash-outline"  
-            size={20}
-            color="#FF6347"  
-            onPress={() => handleRemoveNotification(item.id)}
+            name="notifications-outline"
+            size={28}
+            color="#4CAF50"
+            style={styles.icon}
           />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+          <View style={styles.notificationContent}>
+            <Text style={styles.notificationTitle}>{item.title}</Text>
+            <Text style={styles.notificationBody}>{item.body}</Text>
+            <Text style={styles.notificationDate}>{item.date}</Text>
+          </View>
+        </TouchableOpacity>
+      </Swipeable>
+    );
+  };
 
   const handleLongPress = (item) => {
     setSelectedNotification(item.id === selectedNotification ? null : item.id);
@@ -110,21 +124,9 @@ const Notifications = ({ navigation }) => {
             <Text style={styles.noNotificationsText}>No hay notificaciones</Text>
           </View>
         )}
-        {readNotifications && readNotifications.length > 0 && (
-          <View style={styles.readNotificationsContainer}>
-            <Text style={styles.readNotificationsText}>Notificaciones Leídas:</Text>
-            <FlatList
-              data={readNotifications}
-              renderItem={({ item }) => (
-                <Text style={styles.readNotificationItem}>{item.title}</Text>
-              )}
-              keyExtractor={item => item.id}
-            />
-          </View>
-        )}
         {notifications && notifications.length >= 2 && (
           <TouchableOpacity style={styles.clearButton} onPress={handleClearNotifications}>
-            <Icon name="trash-outline" size={28} color="#FF6347" /> 
+            <Icon name="trash-outline" size={28} color="#fff" />
           </TouchableOpacity>
         )}
       </View>
@@ -155,6 +157,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    backgroundColor: '#FF6347',
+    borderRadius: 10,
+    marginVertical: 5,
+  },
   icon: {
     marginRight: 15,
   },
@@ -176,41 +186,28 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
   },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   noNotificationsContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    textAlign: 'center',
   },
   noNotificationsText: {
     fontSize: 18,
     color: '#888',
     marginTop: 10,
   },
-  readNotificationsContainer: {
-    marginTop: 20,
-  },
-  readNotificationsText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  readNotificationItem: {
-    fontSize: 14,
-    color: '#666',
-  },
   clearButton: {
     position: 'absolute',
     bottom: 60,
     right: 20,
-    backgroundColor: '#f0f0f0',  
-    padding: 10,
-    borderRadius: 30,
+    backgroundColor: '#FF6347',
+    borderRadius: 50,
+    padding: 15,
     elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
 
