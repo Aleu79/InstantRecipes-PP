@@ -1,11 +1,14 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'com.google.gms.google-services' // Google services plugin para Firebase
+}
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "instantrecipes"
+        applicationId "com.aleu79.instantrecipes" // Nombre único del paquete Android
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
@@ -21,5 +24,13 @@ android {
 }
 
 dependencies {
+    // Firebase BoM (Bill of Materials) para gestionar versiones
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+
+    // Agregar dependencias de Firebase según las necesidades
+    // Ejemplo: Firebase Authentication
+    implementation 'com.google.firebase:firebase-auth'
+
+    // Dependencia para React Native
     implementation 'com.facebook.react:react-native:+'
 }

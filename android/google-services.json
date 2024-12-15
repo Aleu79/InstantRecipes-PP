@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "980458678152",
+    "firebase_url": "https://recetas-instantaneas-default-rtdb.firebaseio.com",
+    "project_id": "recetas-instantaneas",
+    "storage_bucket": "recetas-instantaneas.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:980458678152:android:cf325db503bfe6cbdd3c3d",
+        "android_client_info": {
+          "package_name": "com.aleu79.instantrecipes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "980458678152-c97olj9k06ae675jm5irb9l35of8fck1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aleu79.instantrecipes",
+            "certificate_hash": "0fc5965cfb4244a9dfb674ba4a3d628b3a355abc"
+          }
+        },
+        {
+          "client_id": "980458678152-2mtr565ghshuppeer7cmasvvdmc1pgfu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnkn0v46B2jZbrVI3LgTcMP8A_s5pO6J8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "980458678152-2mtr565ghshuppeer7cmasvvdmc1pgfu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

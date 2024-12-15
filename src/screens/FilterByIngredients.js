@@ -14,6 +14,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FilterByIngredients = () => {
   const navigation = useNavigation();
@@ -34,7 +35,7 @@ const FilterByIngredients = () => {
         setSuggestedIngredients(response.data);
         setError(null);
       } catch (err) {
-        setError('Opss nos quedamos sin peticiones');
+        setError("Oops, nos quedamos sin peticiones.")
         console.error(err);
         startRetryTimer();
       } finally {
@@ -79,21 +80,28 @@ const FilterByIngredients = () => {
 
   const isButtonEnabled = includedList.length > 0;
 
-  const startRetryTimer = () => {
-    const timerDuration = 24 * 60 * 60; 
-    const timerInterval = setInterval(() => {
-      setRetryTime((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timerInterval);
-          setRetryTime(null);
-          return null;
-        }
-        return prevTime - 1;
-      });
+  const startRetryTimer = async () => {
+    const timerDuration = 24 * 60 * 60; // Duración inicial (24 horas)
+    const now = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
+    const targetTime = now + timerDuration; // Tiempo futuro al que expira el temporizador
+  
+    // Guardar el tiempo de finalización en AsyncStorage
+    await AsyncStorage.setItem('retryTargetTime', targetTime.toString());
+  
+    const timerInterval = setInterval(async () => {
+      const currentTime = Math.floor(Date.now() / 1000);
+      const remainingTime = targetTime - currentTime;
+  
+      if (remainingTime <= 0) {
+        clearInterval(timerInterval);
+        setRetryTime(null);
+        await AsyncStorage.removeItem('retryTargetTime');
+      } else {
+        setRetryTime(remainingTime);
+      }
     }, 1000);
-
-    setRetryTime(timerDuration);
   };
+  
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / (60 * 60 * 24));

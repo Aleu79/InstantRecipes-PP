@@ -36,7 +36,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "redirectUri": "https://auth.expo.io/@aleu79/instantrecipes",
+      "redirectUri": "https://auth.expo.io/@aleu79/InstantRecipes",
       "eas": {
         "projectId": "da9e0e26-efe3-4133-ba81-5f2616872ced"
       }
