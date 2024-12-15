@@ -22,6 +22,7 @@ const FilterByIngredients = () => {
   const [includedList, setIncludedList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [retryTime, setRetryTime] = useState(null); 
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -35,6 +36,7 @@ const FilterByIngredients = () => {
       } catch (err) {
         setError('Opss nos quedamos sin peticiones');
         console.error(err);
+        startRetryTimer();
       } finally {
         setLoading(false);
       }
@@ -77,6 +79,31 @@ const FilterByIngredients = () => {
 
   const isButtonEnabled = includedList.length > 0;
 
+  const startRetryTimer = () => {
+    const timerDuration = 24 * 60 * 60; 
+    const timerInterval = setInterval(() => {
+      setRetryTime((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timerInterval);
+          setRetryTime(null);
+          return null;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    setRetryTime(timerDuration);
+  };
+
+  const formatTime = (seconds) => {
+    const days = Math.floor(seconds / (60 * 60 * 24));
+    const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${days > 0 ? `${days}d ` : ''}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -89,43 +116,51 @@ const FilterByIngredients = () => {
         <Text style={styles.title}>Filtros</Text>
 
         <View style={styles.section}>
-          <Text style={styles.subtitle}>Buscar ingredientes:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Escribí ingredientes..."
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-          {loading && <ActivityIndicator size="small" color="#000" />}
-          {error && (
+          {error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
               <Image
                 source={require('../../assets/sinpeticiones.png')}  
                 style={styles.errorImage}
               />
+              <Text style={styles.retryText}>
+                {retryTime !== null ? `Reintentar en: ${formatTime(retryTime)}` : ''}
+              </Text>
             </View>
+          ) : (
+            <>
+              <Text style={styles.subtitle}>Buscar ingredientes:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Escribí ingredientes..."
+                placeholderTextColor="#888"
+                value={searchQuery}
+                onChangeText={handleSearch}
+                editable={retryTime === null} 
+              />
+              {loading && <ActivityIndicator size="small" color="#000" />}
+              {searchQuery && suggestedIngredients.length > 0 && (
+                <ScrollView style={styles.suggestionsContainer} contentContainerStyle={{ paddingBottom: 10 }}>
+                  {suggestedIngredients.map((ingredient, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.suggestion}
+                      onPress={() => handleSelectIngredient(ingredient)}
+                    >
+                      <Image
+                        source={{
+                          uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`,
+                        }}
+                        style={styles.suggestionImage}
+                      />
+                      <Text style={styles.suggestionText}>{ingredient.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </>
           )}
-          {searchQuery && suggestedIngredients.length > 0 && (
-            <ScrollView style={styles.suggestionsContainer} contentContainerStyle={{ paddingBottom: 10 }}>
-              {suggestedIngredients.map((ingredient, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.suggestion}
-                  onPress={() => handleSelectIngredient(ingredient)}
-                >
-                  <Image
-                    source={{
-                      uri: `https://spoonacular.com/cdn/ingredients_100x100/${ingredient.image}`,
-                    }}
-                    style={styles.suggestionImage}
-                  />
-                  <Text style={styles.suggestionText}>{ingredient.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
+
           <View style={styles.tagScrollContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {includedList.map((item, index) => (
@@ -263,24 +298,24 @@ const styles = StyleSheet.create({
   lockIcon: {
     marginLeft: 10,
   },
-  errorText: {
-    color: 'red',
-    marginTop: 10,
-  },
   errorContainer: {
-    flexDirection: 'column',  
-    alignItems: 'center',     
+    alignItems: 'center',
     marginTop: 20,
   },
-  errorImage: {
-    width: 300,  
-    height: 300, 
-    marginTop: 10,  
-  },
   errorText: {
     color: 'red',
-    fontSize: 16,  
-    textAlign: 'center',  
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  errorImage: {
+    width: 300,
+    height: 300,
+    marginTop: 10,
+  },
+  retryText: {
+    color: '#888',
+    fontSize: 16,
+    marginTop: 10,
   },
 });
 
