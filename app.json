@@ -2,6 +2,8 @@
   "expo": {
     "name": "InstantRecipes",
     "slug": "InstantRecipes",
+    "scheme": "InstantRecipes",
+
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logoapp.png",
@@ -34,6 +36,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "redirectUri": "https://auth.expo.io/@aleu79/instantrecipes",
       "eas": {
         "projectId": "da9e0e26-efe3-4133-ba81-5f2616872ced"
       }

@@ -9,6 +9,7 @@ import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Alert from '../components/Alerts/Alerts';
 import { ALERT_TYPE } from 'react-native-alert-notification';
+import GoogleSignIn from '../components/GoogleSignIn';
 
 const { height } = Dimensions.get('window');
 
@@ -152,8 +153,14 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Ingresar</Text>
+              <Text style={styles.buttonText}>Iniciar sesion</Text>
             </TouchableOpacity>
+            <View style={styles.separatorContainer}>
+                <View style={styles.separatorLine} />
+                <Text style={styles.separatorText}>O</Text>
+                <View style={styles.separatorLine} />
+              </View>
+            <GoogleSignIn></GoogleSignIn>
             <Text style={styles.footerText}>
               ¿No tienes una cuenta?{' '}
               <Text style={styles.footerLink} onPress={() => navigation.navigate('Sign Up')}>Regístrate  </Text>
@@ -290,6 +297,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
+  separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 16,
+    width: '90%',
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e6e6e6',
+  },
+  separatorText: {
+    marginHorizontal: 8,
+    fontSize: 20,
+    color: '#aaaaaa',
+  },
+  
 });
 
 export default LoginScreen;
