@@ -17,8 +17,7 @@ const SearchScreen = ({ navigation, route }) => {
   const { includedList = [] } = route.params || {};  
 
   const apiKeys = ['7049b3cba3134fb090258c4f100093ff'];
-  console.log("es verdado o falso:  ", hasFilters);
-
+  
   const attemptRequest = async (url) => {
     let validKeys = [...apiKeys];
     for (let i = 0; i < validKeys.length; i++) {
@@ -123,8 +122,19 @@ const SearchScreen = ({ navigation, route }) => {
       {loading && <ActivityIndicator size="large" color="#000" />}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
+      {/* Mostrar mensaje e imagen si no hay categorías disponibles */}
       {categoriesAvailable === false && !loading && !error && (
-        <Text>No hay categorías disponibles.</Text>
+        <View style={styles.noCategoriesContainer}>
+          <Text>No hay categorías disponibles.</Text>
+          <View style={styles.container}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../assets/nohaycat.png')}
+                style={styles.image}
+              />
+            </View>
+          </View>
+        </View>
       )}
 
       {hasFilters && <Text style={styles.title}>Recetas encontradas</Text>}
@@ -158,7 +168,7 @@ const SearchScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
   },
   searchBar: {
@@ -166,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#fafafa',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -222,6 +232,14 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     textAlign: 'center',
+  },
+  image: {
+    width: 300,
+    height: 300,
+  },
+  noCategoriesContainer: {
+    alignItems: 'center',
+    marginTop: 20,
   },
 });
 
