@@ -98,7 +98,15 @@ const FilterByIngredients = () => {
             onChangeText={handleSearch}
           />
           {loading && <ActivityIndicator size="small" color="#000" />}
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <Image
+                source={require('../../assets/sinpeticiones.png')}  
+                style={styles.errorImage}
+              />
+            </View>
+          )}
           {searchQuery && suggestedIngredients.length > 0 && (
             <ScrollView style={styles.suggestionsContainer} contentContainerStyle={{ paddingBottom: 10 }}>
               {suggestedIngredients.map((ingredient, index) => (
@@ -161,7 +169,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 16,
     marginTop: 40,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#fff',
   },
   backButton: {
     padding: 5,
@@ -258,6 +266,21 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     marginTop: 10,
+  },
+  errorContainer: {
+    flexDirection: 'column',  
+    alignItems: 'center',     
+    marginTop: 20,
+  },
+  errorImage: {
+    width: 300,  
+    height: 300, 
+    marginTop: 10,  
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,  
+    textAlign: 'center',  
   },
 });
 

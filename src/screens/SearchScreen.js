@@ -121,8 +121,6 @@ const SearchScreen = ({ navigation, route }) => {
 
       {loading && <ActivityIndicator size="large" color="#000" />}
       {error && <Text style={styles.errorText}>{error}</Text>}
-
-      {/* Mostrar mensaje e imagen si no hay categorías disponibles */}
       {categoriesAvailable === false && !loading && !error && (
         <View style={styles.noCategoriesContainer}>
           <Text>No hay categorías disponibles.</Text>
