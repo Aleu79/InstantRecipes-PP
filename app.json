@@ -2,7 +2,7 @@
   "expo": {
     "name": "InstantRecipes",
     "slug": "InstantRecipes",
-    "scheme": "InstantRecipes",
+    "scheme": "instantrecipes",
 
     "version": "1.0.0",
     "orientation": "portrait",
@@ -36,7 +36,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "redirectUri": "https://auth.expo.io/@aleu79/InstantRecipes",
+      "redirectUri": "https://instantrecipes.guticao.net.ar/api",
       "eas": {
         "projectId": "da9e0e26-efe3-4133-ba81-5f2616872ced"
       }

@@ -6,25 +6,23 @@ import { auth } from '../../firebase/firebase-config';
 import * as AuthSession from 'expo-auth-session';
 
 const GoogleSignIn = () => {
+  const redirectUri = 'https://instantrecipes.guticao.net.ar/api';  
+  
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: '980458678152-2mtr565ghshuppeer7cmasvvdmc1pgfu.apps.googleusercontent.com',
-    redirectUri: 'https://guticao.net.ar/callback',
-
-  })
+    redirectUri: redirectUri,  
+  });
 
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log('Redirect URI generado: ', AuthSession.makeRedirectUri({ useProxy: true }));
-    console.log('Response received:', response); 
-
     if (response?.type === 'dismiss') {
       console.error('El usuario cerró el flujo de inicio de sesión o este falló.');
     } 
     else if (response?.type === 'success') {
       const { id_token } = response.params;
       console.log('Token ID recibido:', id_token);
-
+  
       const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential)
         .then((userCredential) => {
@@ -36,10 +34,10 @@ const GoogleSignIn = () => {
         });
     } 
     else if (response?.type === 'error') {
-      
       console.error('Ocurrió un error durante el inicio de sesión:', response.error);
     }
   }, [response]);
+  
 
   return (
     <TouchableOpacity

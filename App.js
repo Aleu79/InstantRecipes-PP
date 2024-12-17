@@ -27,6 +27,7 @@ import SearchScreenCateg from './src/screens/SearchScreen';
 import Toast from 'react-native-toast-message';
 import SupportScreen from './src/screens/SupportScreen';
 
+
 const Stack = createStackNavigator();
 
 
@@ -34,6 +35,25 @@ function AppNavigation() {
   const { user } = useContext(UserContext); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true); 
+
+  useEffect(() => {
+    const handleDeepLink = (event) => {
+      const url = event.url;
+      console.log('URL recibida:', url);
+      // manejar navegación luego
+    };
+  
+    if (Linking) {
+      Linking.addEventListener('url', handleDeepLink);
+    }
+  
+    return () => {
+      if (Linking) {
+        Linking.removeEventListener('url', handleDeepLink);
+      }
+    };
+  }, []);
+  
 
   useEffect(() => {
     console.log("Valor de user en useEffect:", user);

@@ -49,7 +49,6 @@ const RecipeDetailsScreen = (props) => {
             Alert.alert('Error', 'No hay información suficiente para compartir esta receta.');
             return;
         }
-    
         try {
             if (!recipe || !recipe.strMeal || !recipe.idMeal || !recipe.strMealThumb) {
                 throw new Error('La receta o el item no están definidos.');
