@@ -62,16 +62,8 @@ const Notifications = ({ navigation }) => {
   const handleLongPress = (item) => {
     setSelectedNotification(item.id === selectedNotification ? null : item.id);
   };
-
   const handleRemoveNotification = (id) => {
-    Alert.alert(
-      'Eliminar Notificación',
-      '¿Estás seguro de que deseas eliminar esta notificación?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', onPress: () => removeNotification(id) }
-      ]
-    );
+    removeNotification(id);
     setSelectedNotification(null);
   };
 

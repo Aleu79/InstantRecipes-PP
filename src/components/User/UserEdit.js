@@ -7,7 +7,6 @@ import { UserContext } from '../../context/UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../Headers/Header';
 import { getFirestore, doc, updateDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import BottomNavBar from '../BottomNavbar';
 import { signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 
@@ -278,9 +277,6 @@ return (
         </View>
       </View>
     </Modal>
-
-    {/* Barra de navegación inferior */}
-    <BottomNavBar navigation={navigation} />
   </ScrollView>
 );
 

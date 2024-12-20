@@ -11,13 +11,12 @@ const SearchScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState(route.params?.includedList || []);  
-  const [hasFilters, setHasFilters] = useState(false);
-  const [categoriesAvailable, setCategoriesAvailable] = useState(false); 
+  const [categoriesAvailable, setCategoriesAvailable] = useState(true); 
 
-  const { includedList = [] } = route.params || {};  
+  const { includedList = [] } = route.params || {}; 
 
   const apiKeys = ['7049b3cba3134fb090258c4f100093ff'];
-  
+
   const attemptRequest = async (url) => {
     let validKeys = [...apiKeys];
     for (let i = 0; i < validKeys.length; i++) {
@@ -34,64 +33,37 @@ const SearchScreen = ({ navigation, route }) => {
             validKeys.splice(i, 1); 
             i--;
           } else {
-            console.error('Error in request:', error);
+            console.error('Error en la solicitud:', error);
             throw error;
           }
         } else {
-          console.error('Error in request:', error);
+          console.error('Error en la solicitud:', error);
           throw error;
         }
       }
     }
-    throw new Error('No API keys available or all reached the limit');
+    throw new Error('No hay claves de API disponibles o todas alcanzaron el límite');
   };
 
   useEffect(() => {
-    const fetchRecipes = async () => {
-      setLoading(true);
-      let url = `https://api.spoonacular.com/recipes/complexSearch?number=100&apiKey={apiKey}&addRecipeInformation=true&addRecipeInstructions=true&instructionsRequired=true&fillIngredients=true`;
-      if (includedList?.length > 0) {
-        const ingredientsQuery = includedList.map(ingredient => ingredient.name).join(',');
-        url += `&ingredients=${ingredientsQuery}`;
-      }
-      try {
-        const response = await attemptRequest(url);
-        setRecipes(response.data.results);
-        setHasFilters(true);
-        setCategoriesAvailable(response.data.results.length > 0); 
-      } catch (error) {
-        setError('Error al obtener recetas');
-        setCategoriesAvailable(false); 
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (includedList.length > 0 || searchQuery.length > 2) {
-      fetchRecipes();
-    }
-  }, [includedList, searchQuery]);
+    setCategoriesAvailable(true); 
+  }, []);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
-    if (query.length > 2) {
+    if (query.length > 2) { 
       setLoading(true);
       try {
         const url = `https://api.spoonacular.com/recipes/complexSearch?query=${query}&apiKey={apiKey}`;
         const response = await attemptRequest(url);
         setRecipes(response.data.results);
-        setHasFilters(true);
-        setCategoriesAvailable(response.data.results.length > 0);
       } catch (error) {
         setError('Error al realizar la búsqueda');
-        setCategoriesAvailable(false);  
       } finally {
         setLoading(false);
       }
     } else {
-      setRecipes([]);
-      setHasFilters(false);
-      setCategoriesAvailable(false);  
+      setRecipes([]); 
     }
   };
 
@@ -120,44 +92,34 @@ const SearchScreen = ({ navigation, route }) => {
       </View>
 
       {loading && <ActivityIndicator size="large" color="#000" />}
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {categoriesAvailable === false && !loading && !error && (
-        <View style={styles.noCategoriesContainer}>
-          <Text>No hay categorías disponibles.</Text>
-          <View style={styles.container}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={require('../../assets/nohaycat.png')}
-                style={styles.image}
-              />
-            </View>
-          </View>
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+      {categoriesAvailable && !loading && !error && (
+        <View style={styles.categoriesContainer}>
+          <Text style={styles.title}>Categorías</Text>
+          <SearchScreenCateg />  
         </View>
       )}
 
-      {hasFilters && <Text style={styles.title}>Recetas encontradas</Text>}
-
-      <ScrollView>
-        {recipes.length === 0 && !loading && !error && hasFilters && (
-          <Text>No se encontraron recetas con esos ingredientes.</Text>
-        )}
-        {recipes.map((recipe, index) => (
-          <View key={index} style={styles.recipeCard}>
-            <Text style={styles.recipeName}>{recipe.title}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      {!hasFilters && (
-        <FlatList
-          data={recipes}
-          renderItem={renderRecipeItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.recipeList}
-        />
+      {searchQuery.length > 2 && (
+        <View style={styles.recipeListContainer}>
+          <Text style={styles.title}>Recetas encontradas</Text>
+          <FlatList
+            data={recipes}
+            renderItem={renderRecipeItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.recipeList}
+          />
+        </View>
       )}
-      {!hasFilters && <SearchScreenCateg />}
-      
+
+      {recipes.length === 0 && !loading && searchQuery.length > 2 && !error && (
+        <Text style={styles.noResultsText}>No se encontraron recetas con ese término.</Text>
+      )}
+
       <BottomNavBar navigation={navigation} />
     </View>
   );
@@ -182,6 +144,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    zIndex: 1, 
   },
   backButton: {
     padding: 5,
@@ -194,7 +157,17 @@ const styles = StyleSheet.create({
   filterButton: {
     padding: 5,
   },
-  recipeList: {
+  categoriesContainer: {
+    marginTop: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  recipeListContainer: {
     marginTop: 20,
   },
   recipeItem: {
@@ -220,24 +193,29 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 20,
-    textAlign: 'center',
-  },
   errorText: {
     color: 'red',
     textAlign: 'center',
   },
-  image: {
-    width: 300,
-    height: 300,
-  },
-  noCategoriesContainer: {
-    alignItems: 'center',
+  noResultsText: {
+    textAlign: 'center',
     marginTop: 20,
+    color: 'gray',
+  },
+  recipeList: {
+    marginTop: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',  
+    zIndex: 0, 
   },
 });
 

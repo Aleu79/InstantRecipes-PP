@@ -3,20 +3,36 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext'; 
 import { UserContext } from '../context/UserContext';
+import { useRoute } from '@react-navigation/native';
 
 const BottomNavBar = ({ navigation }) => {
   const { isDarkTheme } = useTheme(); 
   const { notifications } = useContext(UserContext);
   const unreadNotifications = notifications.filter(notification => !notification.read).length;
-
+  const route = useRoute(); 
+  
   return (
     <View style={[styles.navbar, isDarkTheme ? styles.darkNavbar : styles.lightNavbar]}>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('HomeScreen')}>
-        <Icon name="home-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => navigation.navigate('HomeScreen')}
+      >
+        <Icon
+          name={route.name === 'HomeScreen' ? 'home' : 'home-outline'}
+          size={30}
+          color={isDarkTheme ? '#fff' : '#333'}
+        />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Notifications')}>
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => navigation.navigate('Notifications')}
+      >
         <View style={styles.iconWrapper}>
-          <Icon name="mail-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+          <Icon
+            name={route.name === 'Notifications' ? 'mail' : 'mail-outline'}
+            size={30}
+            color={isDarkTheme ? '#fff' : '#333'}
+          />
           {unreadNotifications > 0 && (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationText}>{unreadNotifications}</Text>
@@ -24,11 +40,25 @@ const BottomNavBar = ({ navigation }) => {
           )}
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('SavedRecipes')}>
-        <Icon name="bookmark-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => navigation.navigate('SavedRecipes')}
+      >
+        <Icon
+          name={route.name === 'SavedRecipes' ? 'bookmark' : 'bookmark-outline'}
+          size={30}
+          color={isDarkTheme ? '#fff' : '#333'}
+        />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('UserProfile')}>
-        <Icon name="person-outline" size={30} color={isDarkTheme ? '#fff' : '#333'} />
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => navigation.navigate('UserProfile')}
+      >
+        <Icon
+          name={route.name === 'UserProfile' ? 'person' : 'person-outline'}
+          size={30}
+          color={isDarkTheme ? '#fff' : '#333'}
+        />
       </TouchableOpacity>
     </View>
   );

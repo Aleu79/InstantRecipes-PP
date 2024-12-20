@@ -14,7 +14,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FilterByIngredients = () => {
   const navigation = useNavigation();
@@ -23,7 +22,6 @@ const FilterByIngredients = () => {
   const [includedList, setIncludedList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [retryTime, setRetryTime] = useState(null); 
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -35,13 +33,17 @@ const FilterByIngredients = () => {
         setSuggestedIngredients(response.data);
         setError(null);
       } catch (err) {
-        setError("Oops, nos quedamos sin peticiones.")
+        if (err.response && err.response.status === 402) {
+          setError("Oops, hemos agotado las peticiones. Reintentar más tarde.");
+        } else {
+          setError("Hubo un error, por favor intente nuevamente.");
+        }
         console.error(err);
-        startRetryTimer();
       } finally {
         setLoading(false);
       }
     };
+
     fetchIngredients();
   }, []);
 
@@ -55,6 +57,11 @@ const FilterByIngredients = () => {
         );
         setSuggestedIngredients(response.data);
       } catch (err) {
+        if (err.response && err.response.status === 402) {
+          setError("Oops, hemos agotado las peticiones. Reintentar más tarde.");
+        } else {
+          setError("Hubo un error, por favor intente nuevamente.");
+        }
         console.error('Error buscando ingredientes:', err);
       } finally {
         setLoading(false);
@@ -74,43 +81,11 @@ const FilterByIngredients = () => {
   };
 
   const applyFilters = () => {
-    console.log("enviando filtros:", includedList);  
+    console.log("enviando filtros:", includedList);
     navigation.navigate('SearchScreen', { includedList });
   };
 
   const isButtonEnabled = includedList.length > 0;
-
-  const startRetryTimer = async () => {
-    const timerDuration = 24 * 60 * 60; // Duración inicial (24 horas)
-    const now = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
-    const targetTime = now + timerDuration; // Tiempo futuro al que expira el temporizador
-  
-    // Guardar el tiempo de finalización en AsyncStorage
-    await AsyncStorage.setItem('retryTargetTime', targetTime.toString());
-  
-    const timerInterval = setInterval(async () => {
-      const currentTime = Math.floor(Date.now() / 1000);
-      const remainingTime = targetTime - currentTime;
-  
-      if (remainingTime <= 0) {
-        clearInterval(timerInterval);
-        setRetryTime(null);
-        await AsyncStorage.removeItem('retryTargetTime');
-      } else {
-        setRetryTime(remainingTime);
-      }
-    }, 1000);
-  };
-  
-
-  const formatTime = (seconds) => {
-    const days = Math.floor(seconds / (60 * 60 * 24));
-    const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${days > 0 ? `${days}d ` : ''}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-  };
 
   return (
     <KeyboardAvoidingView
@@ -128,12 +103,9 @@ const FilterByIngredients = () => {
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
               <Image
-                source={require('../../assets/sinpeticiones.png')}  
+                source={require('../../assets/sinpeticiones.png')}
                 style={styles.errorImage}
               />
-              <Text style={styles.retryText}>
-                {retryTime !== null ? `Reintentar en: ${formatTime(retryTime)}` : ''}
-              </Text>
             </View>
           ) : (
             <>
@@ -144,7 +116,6 @@ const FilterByIngredients = () => {
                 placeholderTextColor="#888"
                 value={searchQuery}
                 onChangeText={handleSearch}
-                editable={retryTime === null} 
               />
               {loading && <ActivityIndicator size="small" color="#000" />}
               {searchQuery && suggestedIngredients.length > 0 && (
@@ -192,7 +163,7 @@ const FilterByIngredients = () => {
             isButtonEnabled ? styles.applyButtonEnabled : styles.applyButtonDisabled,
           ]}
           onPress={applyFilters}
-          disabled={!isButtonEnabled} 
+          disabled={!isButtonEnabled}
         >
           <Text style={styles.applyText}>Aplicar filtros</Text>
           <Ionicons
@@ -318,11 +289,6 @@ const styles = StyleSheet.create({
   errorImage: {
     width: 300,
     height: 300,
-    marginTop: 10,
-  },
-  retryText: {
-    color: '#888',
-    fontSize: 16,
     marginTop: 10,
   },
 });
