@@ -1,46 +1,48 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Animated, ActivityIndicator } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../../firebase/firebase-config'; 
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { capitalizeFirstLetter } from '../helpers/utils';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import DietDetails from '../helpers/DietDetails';
-import { UserContext } from '../context/UserContext';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
-const RecipeScreen = ({ route }) => {
-  const { addNotification } = useContext(UserContext); 
+const RecipeScreen = ({ route, navigation }) => {
   const { recipe } = route.params;
+  const [fullRecipeDetails, setFullRecipeDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('ingredients');
   const [scrollY] = useState(new Animated.Value(0));
   const [isSaved, setIsSaved] = useState(false); 
-  const navigation = useNavigation();
 
   useEffect(() => {
-    const checkSavedStatus = async () => {
-      const userEmail = await AsyncStorage.getItem('userEmail');
-      if (!userEmail) return;
-
-      const userDoc = doc(db, 'users', userEmail);
-      const userDocData = await getDoc(userDoc);
-
-      if (userDocData.exists()) {
-        const misRecetas = userDocData.data().misRecetas || [];
-        const isAlreadySaved = misRecetas.some((rec) => rec.id === recipe.id);
-        setIsSaved(isAlreadySaved); 
+    const loadRecipeDetails = async () => {
+      try {
+        const details = await getRecipeDetails(recipe.id);
+        setFullRecipeDetails({
+          ...recipe,
+          ...details
+        });
+      } catch (error) {
+        console.error('Error loading recipe details:', error);
+        Alert.alert('Error', 'No se pudieron cargar los detalles de la receta');
+      } finally {
+        setLoading(false);
       }
     };
 
-    checkSavedStatus();
-  }, [recipe]);
+    loadRecipeDetails();
+  }, [recipe.id]);
 
   const handleRecipeSaveToggle = async () => {
     try {
       const userEmail = await AsyncStorage.getItem('userEmail');
       if (!userEmail) {
-        Alert.alert('Error', 'No se pudo obtener el correo del usuario.');
+        Alert.alert('Error', 'Debes iniciar sesión para guardar recetas');
         return;
       }
 
@@ -48,22 +50,24 @@ const RecipeScreen = ({ route }) => {
       const userDocData = await getDoc(userDoc);
 
       if (!userDocData.exists()) {
-        Alert.alert('Error', 'No hay recetas guardadas para este usuario.');
-        return;
+        await setDoc(userDoc, { misRecetas: [] });
       }
 
-      const misRecetas = userDocData.data().misRecetas || [];
-      const recipeIndex = misRecetas.findIndex((rec) => rec.id === recipe.id);
+      const currentRecipes = userDocData.exists() ? userDocData.data().misRecetas || [] : [];
+      const recipeIndex = currentRecipes.findIndex(r => r.id === recipe.id);
 
       if (recipeIndex !== -1) {
-        // Si la receta ya está guardada, eliminarla
-        misRecetas.splice(recipeIndex, 1);
-        await updateDoc(userDoc, { misRecetas });
-        Alert.alert('Receta eliminada con éxito!');
-        addNotification('Receta Eliminada', 'Has eliminado receta.');   
-        setIsSaved(false); 
+        currentRecipes.splice(recipeIndex, 1);
+        await updateDoc(userDoc, { misRecetas: currentRecipes });
+        
+        const cachedRecipes = JSON.parse(await AsyncStorage.getItem('savedRecipes') || '[]');
+        const updatedCache = cachedRecipes.filter(r => r.id !== recipe.id);
+        await AsyncStorage.setItem('savedRecipes', JSON.stringify(updatedCache));
+        
+        setIsSaved(false);
+        addNotification('Receta Eliminada', 'La receta se ha eliminado de tus favoritos');
       } else {
-        const recipeData = {
+        const recipeToSave = {
           id: recipe.id,
           name: recipe.name,
           image: recipe.image,
@@ -75,30 +79,70 @@ const RecipeScreen = ({ route }) => {
           prepTime: recipe.preparationMinutes,
           servings: recipe.servings,
           dairyFree: recipe.dairyFree,
+          savedAt: new Date().toISOString()
         };
 
-        misRecetas.push(recipeData);
-        await updateDoc(userDoc, { misRecetas });
-        Alert.alert('Receta guardada con éxito!');
-        addNotification('Receta Guardada', 'Has guardado una receta.');      
-        setIsSaved(true); 
+        currentRecipes.push(recipeToSave);
+        await updateDoc(userDoc, { misRecetas: currentRecipes });
+        
+        const cachedRecipes = JSON.parse(await AsyncStorage.getItem('savedRecipes') || '[]');
+        cachedRecipes.push(recipeToSave);
+        await AsyncStorage.setItem('savedRecipes', JSON.stringify(cachedRecipes));
+        
+        setIsSaved(true);
+        addNotification('Receta Guardada', 'La receta se ha guardado en tus favoritos');
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar o eliminar la receta.');
-      addNotification('Error', 'No se pudo guardar o eliminar la receta.');
+      console.error('Error toggling recipe:', error);
+      Alert.alert('Error', 'No se pudo procesar la operación');
     }
   };
 
-  if (!recipe) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Cargando receta...</Text>
-      </View>
-    );
-  }
-
-  const preparationSteps = recipe.instructions ? recipe.instructions.split('. ') : [];
   
+  const handleShareRecipe = async () => {
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Error', 'El compartir no está disponible en tu dispositivo');
+        return;
+      }
+  
+      const urlexpo = 'https://expo.dev/accounts/aleu79/projects/InstantRecipes/builds/09550098-5109-4086-819c-ddd8acf414ac';
+  
+      const shareMessage = 
+        `¡Mira esta receta de ${recipe.name}!\n\n` +
+        `Tiempo de preparación: ${recipe.preparationMinutes} minutos\n` +
+        `Porciones: ${recipe.servings}\n\n` +
+        `Ingredientes:\n${recipe.ingredients.map(ing => `- ${ing.amount} ${ing.unit} ${ing.name}`).join('\n')}\n\n` +
+        `Descarga la app para ver más recetas como esta: ${urlexpo}`;
+  
+      const localUri = `${FileSystem.cacheDirectory}recipe-${recipe.id}.jpg`;
+  
+      try {
+        await FileSystem.downloadAsync(recipe.image, localUri);
+        
+        await Sharing.shareAsync(localUri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: `Compartir receta: ${recipe.name}`,
+          UTI: 'public.jpeg',
+        });
+  
+        await Sharing.shareAsync(shareMessage);
+      } catch (downloadError) {
+        console.error('Error al descargar la imagen:', downloadError);
+        await Sharing.shareAsync(shareMessage);
+      }
+    } catch (error) {
+      console.error('Error al compartir la receta:', error);
+      Alert.alert('Error', 'No se pudo compartir la receta');
+    }
+  };
+  
+  
+  
+    
+  const preparationSteps = recipe.instructions ? recipe.instructions.split('. ') : [];
+
   const imageOpacity = scrollY.interpolate({
     inputRange: [0, 300],
     outputRange: [1, 0],
@@ -111,19 +155,65 @@ const RecipeScreen = ({ route }) => {
     extrapolate: 'clamp',
   });
 
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      try {
+        const userEmail = await AsyncStorage.getItem('userEmail');
+        if (!userEmail) return;
+
+        const cachedRecipes = JSON.parse(await AsyncStorage.getItem('savedRecipes') || '[]');
+        const isCached = cachedRecipes.some(r => r.id === recipe.id);
+        
+        if (isCached) {
+          setIsSaved(true);
+          return;
+        }
+
+        const userDoc = doc(db, 'users', userEmail);
+        const userDocData = await getDoc(userDoc);
+        
+        if (userDocData.exists()) {
+          const misRecetas = userDocData.data().misRecetas || [];
+          const isInFirestore = misRecetas.some(r => r.id === recipe.id);
+          setIsSaved(isInFirestore);
+          
+          if (isInFirestore && !isCached) {
+            cachedRecipes.push(misRecetas.find(r => r.id === recipe.id));
+            await AsyncStorage.setItem('savedRecipes', JSON.stringify(cachedRecipes));
+          }
+        }
+      } catch (error) {
+        console.error('Error checking saved status:', error);
+      }
+    };
+
+    checkSavedStatus();
+  }, [recipe.id]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#f57c00" />
+      </View>
+    );
+  }
   return (
     <>
       {/* Header fijo */}
       <View style={styles.headerContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ChevronLeftIcon size={28} strokeWidth={2.5} color="#fff" width={30} height={30} />
+          <ChevronLeftIcon size={28} strokeWidth={2.5} color="#000" width={30} height={30} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bookmarkButton} onPress={handleRecipeSaveToggle}>
-          <FontAwesome name={isSaved ? "bookmark" : "bookmark-o"} size={28} strokeWidth={2.5} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.bookmarkButton} onPress={handleRecipeSaveToggle}>
+            <FontAwesome name={isSaved ? "bookmark" : "bookmark-o"} size={28} strokeWidth={2.5} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.shareButton} onPress={handleShareRecipe}>
+            <Ionicons name="share-social-outline" size={28} color="#000" />
+          </TouchableOpacity>
+        </View>
       </View>
-
       <Animated.ScrollView
         style={styles.container}
         onScroll={Animated.event(
@@ -235,7 +325,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-
   ondulatedBackground: {
     position: 'absolute',
     bottom: 0,
@@ -248,23 +337,28 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between',  
     padding: 10,
-    alignContent: 'flex-start',
     alignItems: 'center',
-    position: 'absolute', 
-    top: 20, 
+    position: 'absolute',
+    top: 20,
     left: 0,
     right: 0,
-    zIndex: 1, 
+    zIndex: 1,
   },
-  backIcon: {
+  backButton: {
     paddingLeft: 10,
   },
+  buttonsContainer: {
+    flexDirection: 'row',  
+    justifyContent: 'flex-end',  
+    alignItems: 'center',  
+  },
   bookmarkButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 5,
-    padding: 5,
+    paddingHorizontal: 10,
+  },
+  shareButton: {
+    paddingHorizontal: 10,
   },
   imageContainer: {
     height: 400,

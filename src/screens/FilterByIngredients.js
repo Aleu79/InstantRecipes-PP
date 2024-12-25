@@ -81,7 +81,7 @@ const FilterByIngredients = () => {
   };
 
   const applyFilters = () => {
-    console.log("enviando filtros:", includedList);
+    console.log("Filtros enviados:", includedList);  
     navigation.navigate('SearchScreen', { includedList });
   };
 

@@ -3,14 +3,13 @@
     "name": "InstantRecipes",
     "slug": "InstantRecipes",
     "scheme": "instantrecipes",
-
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logoapp.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
-      "rezizeMode": "cover",
+      "resizeMode": "cover",
       "backgroundColor": "#f7f7f8"
     },
     "ios": {
@@ -40,6 +39,14 @@
       "eas": {
         "projectId": "da9e0e26-efe3-4133-ba81-5f2616872ced"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-file-system",
+        {
+          "photosPermission": "La aplicación necesita acceso a tus fotos para compartir recetas."
+        }
+      ]
+    ]
   }
 }

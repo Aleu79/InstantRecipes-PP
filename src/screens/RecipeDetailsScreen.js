@@ -71,8 +71,6 @@ const RecipeDetailsScreen = (props) => {
             Alert.alert('Error', 'No se pudo compartir la receta.');
         }
     };
-    
-    
     // Verificar si la receta está guardada
     const checkIfRecipeIsSaved = async (recipeId, userEmail) => {
         try {
@@ -233,7 +231,7 @@ const RecipeDetailsScreen = (props) => {
                     <ChevronLeftIcon
                         size={28}
                         strokeWidth={2.5}
-                        color="#fff"
+                        color="#000"
                         width={30}
                         height={30}
                     />
@@ -251,7 +249,7 @@ const RecipeDetailsScreen = (props) => {
                             <FontAwesome
                                 name={isFavourite ? "bookmark" : "bookmark-o"}
                                 size={28}
-                                color={isFavourite ? "#FFD700" : "#fff"}
+                                color={isFavourite ? "#FFD700" : "#000"}
                             />
                         )}
                     </TouchableOpacity>
@@ -260,7 +258,7 @@ const RecipeDetailsScreen = (props) => {
     style={styles.shareButton}
     onPress={() => handleShareRecipe(meals)} 
 >
-    <Ionicons name="share-social-outline" size={28} color="#fff" />
+    <Ionicons name="share-social-outline" size={28} color="#000" />
 </TouchableOpacity>
                 </View>
             </View>
@@ -399,7 +397,6 @@ const styles = StyleSheet.create({
     shareButton: {
         paddingHorizontal: 10,
     },
-    
     headerContainer: {
         position: 'absolute',
         alignItems: "flex-start",
