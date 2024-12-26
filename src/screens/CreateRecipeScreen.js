@@ -123,10 +123,28 @@ const CreateRecipeScreen = () => {
   };
   
 
+  const sanitizeInput = (input) => {
+    return input.trim(); // Elimina espacios en blanco al inicio y al final
+  };
+  
   const saveRecipe = async () => {
-    const user = auth.currentUser; 
+    const user = auth.currentUser ; 
     if (!user) {
       Alert.alert('Error', 'Debes estar autenticado para guardar una receta.');
+      return;
+    }
+  
+    const sanitizedRecipeName = sanitizeInput(recipeName);
+    const sanitizedServings = sanitizeInput(servings);
+    const sanitizedPrepTime = sanitizeInput(prepTime);
+  
+    if (!recipeImage) {
+      Alert.alert('Error', 'Debes subir una imagen para la receta.');
+      return;
+    }
+  
+    if (ingredients.length === 0 || ingredients.every(ingredient => !ingredient.name.trim())) {
+      Alert.alert('Error', 'Debes agregar al menos un ingrediente.');
       return;
     }
   
@@ -141,13 +159,12 @@ const CreateRecipeScreen = () => {
       if (currentRecipes.length >= 10) {
         Alert.alert('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');
         addNotification('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');   
-
         return;
       }
   
       const recipeData = {
         id: generateId(),
-        recipeName,
+        recipeName: sanitizedRecipeName,
         recipeImage,
         ingredients,
         preparation,
@@ -155,8 +172,8 @@ const CreateRecipeScreen = () => {
         vegan: isVegan,
         vegetarian: isVegetarian,
         dairyFree: isDairyFree,
-        prepTime,
-        servings,
+        prepTime: sanitizedPrepTime,
+        servings: sanitizedServings,
         category: selectedCategory,
       };
   
@@ -164,16 +181,15 @@ const CreateRecipeScreen = () => {
         await setDoc(userDocRef, {
           misRecetas: [...currentRecipes, recipeData],
         }, { merge: true }); 
-        ToastWrapper({ text1: `Receta "${recipeName}" guardada con éxito.` });
-        addNotification(`Receta "${recipeName}" guardada con éxito.`, 'Receta guardada con éxito');   
-
+        ToastWrapper({ text1: `Receta "${sanitizedRecipeName}" guardada con éxito.` });
+        addNotification(`Receta "${sanitizedRecipeName}" guardada con éxito.`, 'Receta guardada con éxito');   
+  
         handleNavigateToRecipe();
-
+  
       } catch (error) {
         console.error('Error al guardar la receta:', error);
         Alert.alert('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');
         addNotification('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');   
-
       }
     } else {
       Alert.alert('Error', 'No se encontraron datos para este usuario.');
@@ -374,7 +390,6 @@ const CreateRecipeScreen = () => {
       </ScrollView>
     </>
   );
-  
 };
 
 const styles = StyleSheet.create({
