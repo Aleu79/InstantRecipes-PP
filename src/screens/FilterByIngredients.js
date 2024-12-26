@@ -22,6 +22,7 @@ const FilterByIngredients = () => {
   const [includedList, setIncludedList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [noResults, setNoResults] = useState(false); 
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -49,12 +50,17 @@ const FilterByIngredients = () => {
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
+    setNoResults(false); 
+
     if (query.length > 1) {
       setLoading(true);
       try {
         const response = await axios.get(
           `https://api.spoonacular.com/food/ingredients/autocomplete?query=${query}&apiKey=7049b3cba3134fb090258c4f100093ff&number=10`
         );
+        if (response.data.length === 0) {
+          setNoResults(true); 
+        }
         setSuggestedIngredients(response.data);
       } catch (err) {
         if (err.response && err.response.status === 402) {
@@ -110,14 +116,23 @@ const FilterByIngredients = () => {
           ) : (
             <>
               <Text style={styles.subtitle}>Buscar ingredientes:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Escribí ingredientes..."
-                placeholderTextColor="#888"
-                value={searchQuery}
-                onChangeText={handleSearch}
-              />
+              <View style={styles.inputContainer}>
+                <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Escribí ingredientes..."
+                  placeholderTextColor="#888"
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                />
+              </View>
               {loading && <ActivityIndicator size="small" color="#000" />}
+              {noResults && (
+                <View style={styles.noResultsContainer}>
+                  <Ionicons name="sad" size={300} color="#888" />
+                  <Text style={styles.noResultsText}>No se encontraron resultados</Text>
+                </View>
+              )}
               {searchQuery && suggestedIngredients.length > 0 && (
                 <ScrollView style={styles.suggestionsContainer} contentContainerStyle={{ paddingBottom: 10 }}>
                   {suggestedIngredients.map((ingredient, index) => (
@@ -157,22 +172,24 @@ const FilterByIngredients = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[
-            styles.applyButton,
-            isButtonEnabled ? styles.applyButtonEnabled : styles.applyButtonDisabled,
-          ]}
-          onPress={applyFilters}
-          disabled={!isButtonEnabled}
-        >
-          <Text style={styles.applyText}>Aplicar filtros</Text>
-          <Ionicons
-            name={isButtonEnabled ? "lock-open" : "lock-closed"}
-            size={24}
-            color={isButtonEnabled ? "green" : "red"}
-            style={styles.lockIcon}
-          />
-        </TouchableOpacity>
+        <View style={styles.bottomContainer}>
+          <TouchableOpacity
+            style={[
+              styles.applyButton,
+              isButtonEnabled ? styles.applyButtonEnabled : styles.applyButtonDisabled,
+            ]}
+            onPress={applyFilters}
+            disabled={!isButtonEnabled}
+          >
+            <Text style={styles.applyText}>Aplicar filtros</Text>
+            <Ionicons
+              name={isButtonEnabled ? "lock-open" : "lock-closed"}
+              size={24}
+              color={isButtonEnabled ? "green" : "red"}
+              style={styles.lockIcon}
+            />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -203,22 +220,38 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#fff',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
     marginBottom: 8,
+  },
+  searchIcon: {
+    marginLeft: 10,
+  },
+  input: {
+    backgroundColor: '#fff',
+    height: 40,
+    flex: 1,
+    paddingHorizontal: 12,
     color: '#333',
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#888',
   },
   suggestionsContainer: {
     backgroundColor: '#fff',
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 8,
-    maxHeight: 150, 
+    maxHeight: 150,
     overflow: 'hidden',
   },
   suggestion: {
@@ -258,15 +291,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginHorizontal: 16,
-    marginBottom: 16,
     flexDirection: 'row',
     justifyContent: 'center',
   },
   applyButtonEnabled: {
-    backgroundColor: '#f57c00', 
+    backgroundColor: '#f57c00',
   },
   applyButtonDisabled: {
-    backgroundColor: '#555', 
+    backgroundColor: '#555',
   },
   applyText: {
     color: '#fff',
@@ -290,6 +322,10 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     marginTop: 10,
+  },
+  bottomContainer: {
+    marginTop: 'auto',
+    marginBottom: 16,
   },
 });
 
