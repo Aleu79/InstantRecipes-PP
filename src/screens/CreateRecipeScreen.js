@@ -1,5 +1,5 @@
 import React, { useState, useEffect , useContext} from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Header from '../components/Headers/Header';
 import * as ImagePicker from 'expo-image-picker'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
@@ -34,6 +34,7 @@ const CreateRecipeScreen = () => {
   const [categories] = useState(['Sin TACC', 'Sin lácteos', 'Vegetariano', 'Vegano']); 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
  
 
@@ -124,7 +125,7 @@ const CreateRecipeScreen = () => {
   
 
   const sanitizeInput = (input) => {
-    return input.trim(); // Elimina espacios en blanco al inicio y al final
+    return typeof input === 'string' ? input.trim() : ''; // Verifica si es una cadena
   };
   
   const saveRecipe = async () => {
@@ -133,35 +134,41 @@ const CreateRecipeScreen = () => {
       Alert.alert('Error', 'Debes estar autenticado para guardar una receta.');
       return;
     }
-  
+
     const sanitizedRecipeName = sanitizeInput(recipeName);
     const sanitizedServings = sanitizeInput(servings);
     const sanitizedPrepTime = sanitizeInput(prepTime);
-  
+
     if (!recipeImage) {
       Alert.alert('Error', 'Debes subir una imagen para la receta.');
       return;
     }
-  
-    if (ingredients.length === 0 || ingredients.every(ingredient => !ingredient.name.trim())) {
+
+    if (ingredients.length === 0 || ingredients.every(ingredient => !ingredient.name || !ingredient.name.trim())) {
       Alert.alert('Error', 'Debes agregar al menos un ingrediente.');
       return;
     }
-  
+
     const userDocRef = doc(db, 'users', user.email);
     const userDoc = await getDoc(userDocRef);
-  
+
     if (userDoc.exists()) {
       const userData = userDoc.data();
       const currentRecipes = userData.misRecetas || [];
-  
-      // Verificar cuántas recetas tiene el usuario
+
+      // Verificar si la receta ya existe
+      const recipeExists = currentRecipes.some(recipe => recipe.recipeName === sanitizedRecipeName);
+      if (recipeExists) {
+        Alert.alert('Error', 'Ya existe una receta con este nombre.');
+        return;
+      }
+
       if (currentRecipes.length >= 10) {
         Alert.alert('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');
         addNotification('Error', 'Ya has alcanzado el límite de 10 recetas por mes.');   
         return;
       }
-  
+
       const recipeData = {
         id: generateId(),
         recipeName: sanitizedRecipeName,
@@ -176,37 +183,53 @@ const CreateRecipeScreen = () => {
         servings: sanitizedServings,
         category: selectedCategory,
       };
-  
+
       try {
+        setLoading(true); 
         await setDoc(userDocRef, {
           misRecetas: [...currentRecipes, recipeData],
         }, { merge: true }); 
         ToastWrapper({ text1: `Receta "${sanitizedRecipeName}" guardada con éxito.` });
         addNotification(`Receta "${sanitizedRecipeName}" guardada con éxito.`, 'Receta guardada con éxito');   
-  
+
+        setRecipeName('');
+        setRecipeImage(null);
+        setIngredients([{ name: '', quantity: '', unit: '' }]);
+        setPreparation(['']);
+        setServings('');
+        setPrepTime('');
+        setIsVegan(false);
+        setIsVegetarian(false);
+        setIsGlutenFree(false);
+        setIsDairyFree(false);
+        setSelectedCategory('');
         handleNavigateToRecipe();
-  
       } catch (error) {
         console.error('Error al guardar la receta:', error);
         Alert.alert('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');
         addNotification('Error', 'No se pudo guardar la receta. Inténtalo de nuevo más tarde.');   
+      } finally {
+        setLoading(false); 
       }
     } else {
       Alert.alert('Error', 'No se encontraron datos para este usuario.');
     }
   };
-    
-  const handleAddIngredient = () => {
-    setIngredients([...ingredients, '']);
-  };
+
 
   const handleAddStep = () => {
     setPreparation([...preparation, '']);
   };
-
-  const handleIngredientChange = (text, index) => {
+  const handleAddIngredient = () => {
+    setIngredients([...ingredients, { name: '', quantity: '', unit: '' }]); 
+  };
+  
+  const handleIngredientChange = (text, index, field) => {
     const newIngredients = [...ingredients];
-    newIngredients[index] = text;
+    newIngredients[index] = {
+      ...newIngredients[index],  
+      [field]: text, 
+    };
     setIngredients(newIngredients);
   };
 
@@ -226,6 +249,7 @@ const CreateRecipeScreen = () => {
     setPreparation(newPreparation);
   };
 
+
   return (
     <>
       <View style={styles.imageContainer}>
@@ -234,7 +258,9 @@ const CreateRecipeScreen = () => {
         ) : (
           <TouchableOpacity onPress={pickImage}>
             <Image
-              source={{ uri: recipeImage || 'https://dummyimage.com/400x200/c4c4c4/787878.png&text=Inserta+tu+imagen' }}
+              source={{
+                uri: recipeImage || 'https://dummyimage.com/400x200/c4c4c4/787878.png&text=Inserta+tu+imagen',
+              }}
               style={styles.recipeImage}
             />
           </TouchableOpacity>
@@ -384,12 +410,24 @@ const CreateRecipeScreen = () => {
         )}
   
         {/* Botón para Guardar */}
-        <TouchableOpacity style={styles.saveButton} onPress={saveRecipe}>
-          <Text style={styles.saveButtonText}>Guardar Receta</Text>
+        <TouchableOpacity style={styles.saveButton} onPress={saveRecipe} disabled={loading}>
+          <View style={styles.saveButtonContent}>
+            {loading && (
+              <ActivityIndicator
+                size="small"
+                style={styles.loadingIndicator}
+                animating={loading}
+                color="rgba(0, 123, 255, 0.8)" 
+              />
+            )}
+            <Text style={styles.saveButtonText}>
+              {loading ? 'Guardando...' : 'Guardar Receta'}
+            </Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </>
-  );
+  );  
 };
 
 const styles = StyleSheet.create({
@@ -621,21 +659,37 @@ const styles = StyleSheet.create({
     color: '#008CBA',
     fontSize: 16,
   },
-  saveButton: {
-    backgroundColor: '#e86900',
-    borderRadius: 30,
-    padding: 15,
-    alignItems: 'center',
-    width: '80%',
-    justifyContent:'center',
-    marginVertical: 15,
-    margin:'auto',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+    saveButton: {
+      backgroundColor: '#e86900',
+      borderRadius: 30,
+      padding: 15,
+      alignItems: 'center',
+      width: '80%',
+      justifyContent: 'center',
+      marginVertical: 15,
+      marginLeft: 'auto',  
+      marginRight: 'auto', 
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    saveButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%', 
+      justifyContent: 'space-between', 
+    },
+    saveButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+      textAlign: 'center', 
+      flex: 1, 
+    },
+    loadingIndicator: {
+      marginLeft: 10,  
+      transform: [{ scale: 2 }], 
+    },
+  
   separator: {
     height: 1,
     backgroundColor: '#ddd',

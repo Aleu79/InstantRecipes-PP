@@ -29,7 +29,7 @@ const MyRecipeScreen = ({ route }) => {
       Alert.alert('Error', 'No se encontraron datos de receta.');
       return;
     }
-    console.log(recipe);
+    console.log("y esto q es", recipe);
   }, [recipe]);
 
   const [scrollY] = useState(new Animated.Value(0));
